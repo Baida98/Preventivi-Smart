@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Preventivi AI</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Smart Preventivi AI</h1>
+
+<!-- LOGIN -->
+<div id="login">
+  <h3>Accesso</h3>
+  <input id="email" placeholder="Email">
+  <input id="password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- APP -->
+<div id="app" class="hidden">
+
+  <h2>Seleziona lavoro</h2>
+
+  <select id="work" onchange="loadWizard()">
+    <option value="imbianchitura">Imbiancatura</option>
+    <option value="piastrelle">Piastrelle</option>
+    <option value="elettrico">Elettrico</option>
+    <option value="bagno">Bagno</option>
+    <option value="idraulica">Idraulica</option>
+    <option value="cartongesso">Cartongesso</option>
+    <option value="pulizie">Pulizie</option>
+    <option value="giardino">Giardino</option>
+  </select>
+
+  <div id="wizard"></div>
+
+  <button onclick="calcola()">Calcola preventivo</button>
+
+  <div id="result"></div>
+
+  <hr>
+
+  <button onclick="loadHistory()">Storico</button>
+  <div id="history"></div>
+
+</div>
+
+</div>
+
+<script src="firebase.js"></script>
+<script src="data.js"></script>
+<script src="app.js"></script>
+
+</body>
+</html>
