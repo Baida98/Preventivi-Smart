@@ -136,11 +136,14 @@
                 </div>
             </div>
 
-            <!-- STEP 2: DETTAGLI LAVORO (VISUAL FEEDBACK) -->
+            <!--             <!-- STEP 2: DETTAGLI -->
             <div class="step-content hidden" id="step2">
                 <div class="step-header">
                     <h2 class="step-title">Configura i dettagli</h2>
                     <p class="step-subtitle">L'AI userà questi dati per il benchmark</p>
+                    <div style="background: var(--gray-50); padding: 12px; border-radius: 8px; margin-top: 12px; border-left: 4px solid var(--primary);">
+                        <p style="margin: 0; font-size: 0.9rem; color: var(--gray-900);"><strong id="tradeNameDisplay">Lavoro</strong> - Prezzo base: <span id="basePriceDisplay">€0</span></p>
+                    </div>
                 </div>
                 
                 <div class="form-grid">
@@ -165,6 +168,11 @@
                 </div>
 
                 <div id="dynamicQuestions" class="dynamic-questions"></div>
+
+                <div class="form-group" id="receivedPriceGroup" style="display: none;">
+                    <label class="form-label">Prezzo Ricevuto (€)</label>
+                    <input type="number" id="receivedPriceInput" class="form-input" placeholder="Es. 500" step="0.01">
+                </div>
 
                 <div class="form-group">
                     <label class="form-label">Note aggiuntive (Opzionale)</label>
