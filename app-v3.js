@@ -9,9 +9,13 @@ import { getAllTrades, getTradeById, REGIONAL_COEFFICIENTS } from "./engine/data
 import { analyzeQuote, computeStats, analyzeTrend } from "./engine/ai-analyzer.js";
 import { renderDashboard } from "./engine/dashboard-ui.js";
 
-// ===== INIT SICUREZZA =====
-initSecurityShield();
-initUIProtection();
+// ===== INIT SICUREZZA (NON BLOCCANTE) =====
+try {
+  initSecurityShield();
+  initUIProtection();
+} catch (e) {
+  console.warn("Security init skipped:", e);
+}
 
 // ===== STATO GLOBALE =====
 let currentStep = 1;

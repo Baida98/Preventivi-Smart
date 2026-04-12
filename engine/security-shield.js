@@ -1,62 +1,34 @@
 /**
- * Preventivi-Smart Pro — Security Shield v1.2 (Open Access Edition)
- * Protezione codice leggera (Anti-Copy, Anti-Debug) senza blocchi di dominio
- * L'app è ora accessibile da qualsiasi link o dominio.
+ * Preventivi-Smart Pro — Security Shield v1.3 (Open Access Fix)
+ * Protezione codice passiva (Anti-Copy, Anti-Debug) senza alcun blocco all'avvio.
+ * L'app è ora accessibile istantaneamente da qualsiasi link.
  */
 
-// ===== CONFIGURAZIONE SICUREZZA =====
-const SECURITY_CONFIG = {
-  enableAntiDebug: true,
-  enableAntiCopy: true,
-  enableDevtoolsDetection: true,
-  debugCheckInterval: 3000
-};
-
-// ===== STATO PROTEZIONE =====
-let isProtected = false;
-
-// ===== FUNZIONE PRINCIPALE INIT =====
 export function initSecurityShield() {
-  // Messaggio di benvenuto nel sistema (visibile solo in console)
-  console.log("%c🛡️ Preventivi-Smart Security Active (Open Access)", "color: #0ea5e9; font-weight: bold; font-size: 12px;");
+  // Solo messaggi informativi in console
+  console.log("%c🛡️ Preventivi-Smart Security Active (Public Mode)", "color: #0ea5e9; font-weight: bold; font-size: 12px;");
   
-  // Esegui solo protezioni non bloccanti
-  if (SECURITY_CONFIG.enableAntiDebug) startAntiDebugSystem();
-  if (SECURITY_CONFIG.enableDevtoolsDetection) startDevtoolsDetection();
-  if (SECURITY_CONFIG.enableAntiCopy) enableAntiCopyProtection();
+  // Attiva solo protezioni non bloccanti
+  enableAntiCopyProtection();
+  startAntiDebugSystem();
   
-  isProtected = true;
-  return isProtected;
+  return true; // Ritorna sempre vero per non bloccare l'app
 }
 
-// ===== 1. ANTI-DEBUG SYSTEM (NON BLOCCANTE) =====
 function startAntiDebugSystem() {
+  // Rilevamento debugger leggero (solo log, nessun blocco)
   setInterval(() => {
     const before = performance.now();
     debugger;
     const after = performance.now();
-    
     if (after - before > 200) {
-      console.warn("%c⚠️ Debugger detected - Performance may be affected", "color: #f59e0b;");
+      console.warn("%c⚠️ Debugger detected", "color: #f59e0b;");
     }
-  }, SECURITY_CONFIG.debugCheckInterval);
+  }, 5000);
 }
 
-// ===== 2. DEVTOOLS DETECTION (NON BLOCCANTE) =====
-function startDevtoolsDetection() {
-  const checkDevTools = () => {
-    const threshold = 160;
-    if (window.outerHeight - window.innerHeight > threshold ||
-        window.outerWidth - window.innerWidth > threshold) {
-      console.info("%cℹ️ DevTools open", "color: #3b82f6;");
-    }
-  };
-  window.addEventListener("resize", checkDevTools);
-}
-
-// ===== 3. ANTI-COPY PROTECTION (USER FRIENDLY) =====
 export function enableAntiCopyProtection() {
-  // Disabilita Ctrl+U (View Source)
+  // Impedisce solo la visualizzazione del sorgente con Ctrl+U
   document.addEventListener("keydown", (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key === "u") {
       e.preventDefault();
@@ -65,7 +37,7 @@ export function enableAntiCopyProtection() {
   });
 }
 
-// Nessuna funzione handleViolation o crash app è più presente.
+// Nessun riferimento a Domain Lock, Violation, o Redirect.
 export default {
   initSecurityShield,
   enableAntiCopyProtection
