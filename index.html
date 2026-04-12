@@ -58,13 +58,29 @@
           </div>
         </div>
 
-        <div class="hero-actions">
-          <button class="btn btn-primary btn-lg pulse" id="startAnalysisBtn">
-            <i class="fas fa-magnifying-glass-chart"></i> ANALIZZA UN PREVENTIVO
-          </button>
-          <button class="btn btn-outline btn-lg" id="startQuickBtn">
-            <i class="fas fa-bolt"></i> STIMA RAPIDA
-          </button>
+        <div class="hero-actions-grid">
+          <div class="action-card premium-card" onclick="startWizard('professional')">
+            <div class="card-badge">CONSIGLIATO</div>
+            <div class="card-icon premium-icon"><i class="fas fa-magnifying-glass-chart"></i></div>
+            <h3 class="card-title">Analisi Professionale</h3>
+            <p class="card-desc">Confronta il tuo preventivo con i dati reali. Scopri se stai pagando il giusto prezzo.</p>
+            <div class="card-features">
+              <div class="feature"><i class="fas fa-check"></i> Benchmark orario</div>
+              <div class="feature"><i class="fas fa-check"></i> Consigli negoziazione</div>
+              <div class="feature"><i class="fas fa-check"></i> Certificato AI</div>
+            </div>
+            <button class="btn btn-primary btn-full pulse">Inizia Analisi</button>
+          </div>
+          <div class="action-card free-card" onclick="startWizard('quick')">
+            <div class="card-icon free-icon"><i class="fas fa-bolt"></i></div>
+            <h3 class="card-title">Stima Rapida</h3>
+            <p class="card-desc">Calcolo veloce del prezzo medio di mercato per il tuo lavoro.</p>
+            <div class="card-features">
+              <div class="feature"><i class="fas fa-check"></i> Istantaneo</div>
+              <div class="feature"><i class="fas fa-check"></i> Senza dati</div>
+            </div>
+            <button class="btn btn-outline btn-full">Stima Veloce</button>
+          </div>
         </div>
       </div>
     </section>
