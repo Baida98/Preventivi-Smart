@@ -1,336 +1,241 @@
 /**
- * Database Professionale Preventivi-Smart v4.5
- * Dati basati su ISTAT 2025, DEI e Prezzari Regionali
- * Logica di calcolo di precisione per ogni mestiere
+ * Database Professionale Preventivi-Smart v5.0
+ * Dati aggiornati 2025/2026 basati su Prezzari Regionali e Indici DEI
+ * Logica di calcolo granulare per preventivi accurati
  */
 
-// ===== COEFFICIENTI REGIONALI ISTAT 2025 =====
+// ===== COEFFICIENTI REGIONALI AGGIORNATI 2025/2026 =====
 export const REGIONAL_COEFFICIENTS = {
-  "Lombardia": 1.25,
-  "Trentino-Alto Adige": 1.22,
-  "Valle d'Aosta": 1.18,
-  "Lazio": 1.15,
-  "Veneto": 1.12,
-  "Emilia-Romagna": 1.10,
-  "Piemonte": 1.08,
-  "Liguria": 1.08,
-  "Toscana": 1.05,
-  "Friuli-Venezia Giulia": 1.02,
-  "Marche": 0.98,
-  "Umbria": 0.95,
-  "Abruzzo": 0.92,
-  "Campania": 0.90,
-  "Sardegna": 0.88,
-  "Puglia": 0.85,
-  "Sicilia": 0.82,
-  "Basilicata": 0.80,
-  "Calabria": 0.78,
-  "Molise": 0.75
+  "Lombardia": 1.28,
+  "Trentino-Alto Adige": 1.25,
+  "Valle d'Aosta": 1.20,
+  "Lazio": 1.18,
+  "Veneto": 1.15,
+  "Emilia-Romagna": 1.12,
+  "Piemonte": 1.10,
+  "Liguria": 1.10,
+  "Toscana": 1.08,
+  "Friuli-Venezia Giulia": 1.05,
+  "Marche": 1.00,
+  "Umbria": 0.98,
+  "Abruzzo": 0.95,
+  "Campania": 0.92,
+  "Sardegna": 0.90,
+  "Puglia": 0.88,
+  "Sicilia": 0.85,
+  "Basilicata": 0.82,
+  "Calabria": 0.80,
+  "Molise": 0.78
 };
 
 // ===== MOLTIPLICATORI QUALITÀ MATERIALI =====
 export const QUALITY_MULTIPLIERS = {
   "economica": 0.85,
   "standard": 1.00,
-  "premium": 1.30,
-  "lusso": 1.60
+  "premium": 1.35,
+  "lusso": 1.75
 };
 
-// ===== MESTIERI CON DATI REALI =====
+// ===== MESTIERI CON DOMANDE TECNICHE AVANZATE =====
 export const TRADES = [
   {
     id: "imbiancatura",
-    name: "Imbiancatura",
-    description: "Tinteggiatura interni ed esterni",
+    name: "Imbiancatura Professionale",
+    description: "Tinteggiatura interni ed esterni con trattamenti specifici",
     icon: "icon_imbiancatura.png",
     unit: "mq",
-    basePrice: 12.00, // €/mq base nazionale
+    basePrice: 10.50, // €/mq base
     category: "finiture",
-    color: "rgba(100, 150, 200, 0.7)",
     questions: [
-      {
-        id: "wall_condition",
-        label: "Stato dei muri",
-        type: "select",
-        options: [
-          { value: "ottimo", label: "Ottimo (già pitturato)", multiplier: 1.0 },
-          { value: "buono", label: "Buono (poche imperfezioni)", multiplier: 1.15 },
-          { value: "medio", label: "Medio (rasatura necessaria)", multiplier: 1.35 },
-          { value: "rovinato", label: "Rovinato (restauro completo)", multiplier: 1.65 }
-        ]
-      },
-      {
-        id: "paint_type",
-        label: "Tipo di pittura",
-        type: "select",
-        options: [
-          { value: "acrilica", label: "Acrilica standard", multiplier: 1.0 },
-          { value: "lavabile", label: "Lavabile", multiplier: 1.15 },
-          { value: "antimuffa", label: "Antimuffa", multiplier: 1.35 },
-          { value: "premium", label: "Premium/Naturale", multiplier: 1.55 }
-        ]
-      },
-      {
-        id: "coats",
-        label: "Numero di mani",
-        type: "select",
-        options: [
-          { value: "una", label: "Una mano", multiplier: 0.85 },
-          { value: "due", label: "Due mani", multiplier: 1.0 },
-          { value: "tre", label: "Tre mani", multiplier: 1.25 }
-        ]
-      },
-      {
-        id: "colors",
-        label: "Colori speciali",
-        type: "select",
-        options: [
-          { value: "bianco", label: "Bianco standard", multiplier: 1.0 },
-          { value: "colorato", label: "Colorato", multiplier: 1.10 },
-          { value: "personalizzato", label: "Personalizzato/Effetti", multiplier: 1.35 }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: "piastrellista",
-    name: "Piastrellista",
-    description: "Posa piastrelle e rivestimenti",
-    icon: "icon_piastrellista.png",
-    unit: "mq",
-    basePrice: 35.00,
-    category: "finiture",
-    color: "rgba(200, 120, 80, 0.7)",
-    questions: [
-      {
-        id: "tile_size",
-        label: "Dimensione piastrelle",
-        type: "select",
-        options: [
-          { value: "piccola", label: "Piccola (10x10 - 20x20)", multiplier: 1.25 },
-          { value: "media", label: "Media (30x30 - 40x40)", multiplier: 1.0 },
-          { value: "grande", label: "Grande (60x60+)", multiplier: 1.35 },
-          { value: "mosaico", label: "Mosaico/Piccoli pezzi", multiplier: 1.65 }
-        ]
-      },
       {
         id: "surface_prep",
-        label: "Preparazione superficie",
+        label: "Preparazione Superficie",
         type: "select",
         options: [
-          { value: "buona", label: "Buona (poche correzioni)", multiplier: 1.0 },
-          { value: "media", label: "Media (livellamento)", multiplier: 1.20 },
-          { value: "cattiva", label: "Cattiva (demolizione vecchie)", multiplier: 1.50 }
+          { value: "nessuna", label: "Superficie già pronta", multiplier: 1.0 },
+          { value: "stuccatura", label: "Stuccatura fori e crepe", multiplier: 1.20 },
+          { value: "rasatura", label: "Rasatura completa (intonaco civile)", multiplier: 1.60 },
+          { value: "rimozione", label: "Rimozione vecchia carta da parati", multiplier: 1.40 }
         ]
       },
       {
-        id: "grout_type",
-        label: "Tipo di stucco",
+        id: "paint_tech",
+        label: "Tecnica e Materiale",
         type: "select",
         options: [
-          { value: "standard", label: "Standard", multiplier: 1.0 },
-          { value: "epossidico", label: "Epossidico", multiplier: 1.30 },
-          { value: "colorato", label: "Colorato/Speciale", multiplier: 1.15 }
+          { value: "idropittura", label: "Idropittura traspirante", multiplier: 1.0 },
+          { value: "lavabile", label: "Smalto all'acqua / Lavabile", multiplier: 1.25 },
+          { value: "silicati", label: "Pittura ai silicati (esterno)", multiplier: 1.50 },
+          { value: "decorativo", label: "Effetti decorativi (velatura/spatolato)", multiplier: 2.10 }
+        ]
+      },
+      {
+        id: "muffa",
+        label: "Trattamento Antimuffa",
+        type: "select",
+        options: [
+          { value: "no", label: "Non necessario", multiplier: 1.0 },
+          { value: "si", label: "Trattamento igienizzante preventivo", multiplier: 1.30 }
         ]
       }
     ]
   },
-
   {
     id: "elettricista",
-    name: "Elettricista",
-    description: "Impianti elettrici e illuminazione",
+    name: "Impianto Elettrico",
+    description: "Realizzazione e messa a norma impianti civili",
     icon: "icon_elettrico.png",
-    unit: "punto",
-    basePrice: 55.00,
+    unit: "punti",
+    basePrice: 65.00, // € per punto luce/presa
     category: "impianti",
-    color: "rgba(255, 200, 50, 0.7)",
     questions: [
       {
-        id: "point_type",
-        label: "Tipo di punto",
+        id: "impianto_tipo",
+        label: "Tipo di Impianto",
         type: "select",
         options: [
-          { value: "luce", label: "Punto luce semplice", multiplier: 1.0 },
-          { value: "presa", label: "Presa corrente", multiplier: 0.95 },
-          { value: "interruttore", label: "Interruttore", multiplier: 0.90 },
-          { value: "complesso", label: "Punto complesso (domotica)", multiplier: 2.0 }
+          { value: "nuovo", label: "Nuovo impianto sottotraccia", multiplier: 1.0 },
+          { value: "rifacimento", label: "Rifacimento su tubazioni esistenti", multiplier: 0.85 },
+          { value: "esterno", label: "Impianto esterno a vista", multiplier: 0.90 },
+          { value: "domotica", label: "Impianto Domotico (Smart Home)", multiplier: 1.80 }
         ]
       },
       {
-        id: "installation_type",
-        label: "Tipo di posa",
+        id: "quadro",
+        label: "Quadro Elettrico",
         type: "select",
         options: [
-          { value: "esterno", label: "Esterno (tracce)", multiplier: 1.0 },
-          { value: "incasso", label: "Incasso (scanalature)", multiplier: 1.35 },
-          { value: "sottopavimento", label: "Sottopavimento", multiplier: 1.65 }
+          { value: "standard", label: "Quadro standard (fino a 12 moduli)", multiplier: 1.0 },
+          { value: "avanzato", label: "Quadro sezionato (protezioni avanzate)", multiplier: 1.40 }
         ]
       },
       {
-        id: "urgency",
-        label: "Urgenza lavori",
+        id: "certificazione",
+        label: "Certificazione Di.Co.",
         type: "select",
         options: [
-          { value: "normale", label: "Normale", multiplier: 1.0 },
-          { value: "urgente", label: "Urgente (48h)", multiplier: 1.25 },
-          { value: "emergenza", label: "Emergenza (24h)", multiplier: 1.50 }
+          { value: "si", label: "Inclusa (obbligatoria per legge)", multiplier: 1.10 }
         ]
       }
     ]
   },
-
   {
     id: "idraulico",
-    name: "Idraulico",
-    description: "Impianti idrici e sanitari",
+    name: "Impianto Idraulico",
+    description: "Distribuzione idrica e scarichi sanitari",
     icon: "icon_idraulica.png",
-    unit: "punto",
-    basePrice: 180.00,
+    unit: "punti",
+    basePrice: 195.00, // € per punto acqua
     category: "impianti",
-    color: "rgba(100, 200, 200, 0.7)",
     questions: [
       {
-        id: "point_type",
-        label: "Tipo di punto",
+        id: "tubazioni",
+        label: "Materiale Tubazioni",
         type: "select",
         options: [
-          { value: "rubinetto", label: "Rubinetto semplice", multiplier: 0.80 },
-          { value: "scarico", label: "Scarico (WC/Lavandino)", multiplier: 1.0 },
-          { value: "punto_acqua", label: "Punto acqua completo", multiplier: 1.20 },
-          { value: "caldaia", label: "Caldaia/Scaldabagno", multiplier: 2.5 }
+          { value: "multistrato", label: "Multistrato (standard moderno)", multiplier: 1.0 },
+          { value: "rame", label: "Rame saldato", multiplier: 1.35 },
+          { value: "ppr", label: "Polipropilene a saldare", multiplier: 0.95 }
         ]
       },
       {
-        id: "pipe_material",
-        label: "Materiale tubature",
+        id: "scarichi",
+        label: "Sistema di Scarico",
         type: "select",
         options: [
-          { value: "pvc", label: "PVC", multiplier: 1.0 },
-          { value: "multistrato", label: "Multistrato", multiplier: 1.15 },
-          { value: "rame", label: "Rame", multiplier: 1.35 },
-          { value: "acciaio", label: "Acciaio inox", multiplier: 1.50 }
+          { value: "standard", label: "PVC/PP standard", multiplier: 1.0 },
+          { value: "insonorizzato", label: "Scarichi insonorizzati (Geberit Silent)", multiplier: 1.45 }
         ]
       },
       {
-        id: "routing",
-        label: "Percorso tubature",
+        id: "collettore",
+        label: "Distribuzione",
         type: "select",
         options: [
-          { value: "esterno", label: "Esterno (tracce)", multiplier: 1.0 },
-          { value: "incasso", label: "Incasso (scanalature)", multiplier: 1.40 },
-          { value: "sottopavimento", label: "Sottopavimento", multiplier: 1.70 }
+          { value: "serie", label: "In serie (tradizionale)", multiplier: 1.0 },
+          { value: "collettore", label: "A collettore (singola intercettazione)", multiplier: 1.25 }
         ]
       }
     ]
   },
-
+  {
+    id: "piastrellista",
+    name: "Posa Pavimenti e Rivestimenti",
+    description: "Installazione professionale ceramica e gres",
+    icon: "icon_piastrellista.png",
+    unit: "mq",
+    basePrice: 32.00, // €/mq posa
+    category: "finiture",
+    questions: [
+      {
+        id: "formato",
+        label: "Formato Piastrelle",
+        type: "select",
+        options: [
+          { value: "standard", label: "Standard (30x30, 60x60)", multiplier: 1.0 },
+          { value: "piccolo", label: "Piccolo / Mosaico", multiplier: 1.50 },
+          { value: "grande", label: "Grandi Lastre (120x120+)", multiplier: 1.80 },
+          { value: "listoni", label: "Effetto Legno (posa sfalsata)", multiplier: 1.20 }
+        ]
+      },
+      {
+        id: "posa_tipo",
+        label: "Schema di Posa",
+        type: "select",
+        options: [
+          { value: "dritta", label: "Posa dritta a giunto unito", multiplier: 1.0 },
+          { value: "diagonale", label: "Posa in diagonale", multiplier: 1.25 },
+          { value: "spina", label: "A spina di pesce", multiplier: 1.45 }
+        ]
+      },
+      {
+        id: "massetto",
+        label: "Stato Sottofondo",
+        type: "select",
+        options: [
+          { value: "pronto", label: "Massetto esistente planare", multiplier: 1.0 },
+          { value: "autolivellante", label: "Necessario autolivellante", multiplier: 1.30 },
+          { value: "sovrapposizione", label: "Incollaggio su vecchio pavimento", multiplier: 1.15 }
+        ]
+      }
+    ]
+  },
   {
     id: "muratore",
-    name: "Muratore",
-    description: "Muratura e strutture",
+    name: "Opere Murarie",
+    description: "Costruzione pareti, intonaci e massetti",
     icon: "icon_muratore.png",
     unit: "mq",
-    basePrice: 45.00,
+    basePrice: 55.00, // €/mq
     category: "strutture",
-    color: "rgba(180, 120, 60, 0.7)",
     questions: [
       {
-        id: "work_type",
-        label: "Tipo di lavoro",
+        id: "parete_tipo",
+        label: "Tipologia Parete",
         type: "select",
         options: [
-          { value: "demolizione", label: "Demolizione tramezzi", multiplier: 1.0 },
-          { value: "ricostruzione", label: "Ricostruzione pareti", multiplier: 1.35 },
-          { value: "completo", label: "Demolizione + Ricostruzione", multiplier: 1.75 }
+          { value: "foratini", label: "Laterizio forato 8-10cm", multiplier: 1.0 },
+          { value: "gasbeton", label: "Blocchi cemento cellulare (Ytong)", multiplier: 0.90 },
+          { value: "portante", label: "Muratura portante", multiplier: 1.80 }
         ]
       },
       {
-        id: "material_type",
-        label: "Materiale muratura",
+        id: "intonaco",
+        label: "Finitura Intonaco",
         type: "select",
         options: [
-          { value: "laterizio", label: "Laterizio (mattoni)", multiplier: 1.0 },
-          { value: "cemento", label: "Blocchi cemento", multiplier: 0.95 },
-          { value: "pietra", label: "Pietra naturale", multiplier: 1.50 }
+          { value: "grezzo", label: "Solo rinzaffo grezzo", multiplier: 0.80 },
+          { value: "civile", label: "Intonaco civile finito", multiplier: 1.0 },
+          { value: "premiscelato", label: "Premiscelato a macchina", multiplier: 0.95 }
         ]
       },
       {
-        id: "debris",
-        label: "Gestione macerie",
+        id: "macerie",
+        label: "Smaltimento",
         type: "select",
         options: [
-          { value: "incluso", label: "Incluso (smaltimento)", multiplier: 1.0 },
-          { value: "escluso", label: "Escluso (cliente)", multiplier: 0.75 }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: "cartongesso",
-    name: "Cartongessista",
-    description: "Pareti e controsoffitti",
-    icon: "icon_cartongesso.png",
-    unit: "mq",
-    basePrice: 38.00,
-    category: "finiture",
-    color: "rgba(200, 200, 150, 0.7)",
-    questions: [
-      {
-        id: "wall_type",
-        label: "Tipo di parete",
-        type: "select",
-        options: [
-          { value: "singola", label: "Singola lastra", multiplier: 0.85 },
-          { value: "doppia", label: "Doppia lastra", multiplier: 1.0 },
-          { value: "isolamento", label: "Con isolamento", multiplier: 1.35 },
-          { value: "acustica", label: "Acustica/Speciale", multiplier: 1.50 }
-        ]
-      },
-      {
-        id: "finish_level",
-        label: "Livello di finitura",
-        type: "select",
-        options: [
-          { value: "base", label: "Base (tappabuchi)", multiplier: 1.0 },
-          { value: "standard", label: "Standard (stuccatura)", multiplier: 1.15 },
-          { value: "premium", label: "Premium (rasatura completa)", multiplier: 1.40 }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: "serramenti",
-    name: "Serramentista",
-    description: "Finestre, porte e infissi",
-    icon: "icon_serramenti.png",
-    unit: "mq",
-    basePrice: 450.00,
-    category: "infissi",
-    color: "rgba(100, 100, 100, 0.7)",
-    questions: [
-      {
-        id: "material",
-        label: "Materiale infisso",
-        type: "select",
-        options: [
-          { value: "pvc", label: "PVC", multiplier: 1.0 },
-          { value: "alluminio", label: "Alluminio", multiplier: 1.20 },
-          { value: "legno", label: "Legno", multiplier: 1.45 },
-          { value: "legno_alluminio", label: "Legno-Alluminio", multiplier: 1.65 }
-        ]
-      },
-      {
-        id: "glass_type",
-        label: "Tipo di vetro",
-        type: "select",
-        options: [
-          { value: "doppio", label: "Doppio vetro standard", multiplier: 1.0 },
-          { value: "triplo", label: "Triplo vetro", multiplier: 1.25 },
-          { value: "selettivo", label: "Basso emissivo/Selettivo", multiplier: 1.40 }
+          { value: "incluso", label: "Carico e trasporto a discarica incluso", multiplier: 1.25 },
+          { value: "escluso", label: "Solo accatastamento in cantiere", multiplier: 1.0 }
         ]
       }
     ]
@@ -339,38 +244,26 @@ export const TRADES = [
 
 // ===== FUNZIONI DI SUPPORTO =====
 
-/**
- * Ottiene tutti i mestieri
- */
 export function getAllTrades() {
   return TRADES;
 }
 
-/**
- * Ottiene un mestiere specifico per ID
- */
 export function getTradeById(id) {
   return TRADES.find(t => t.id === id);
 }
 
-/**
- * Calcola il prezzo finale considerando tutti i fattori
- */
 export function calculateFinalPrice(tradeId, quantity, region, quality, answers) {
   const trade = getTradeById(tradeId);
   if (!trade) return 0;
   
-  const basePrice = trade.basePrice * quantity;
+  const basePriceTotal = trade.basePrice * quantity;
   const regionalCoeff = REGIONAL_COEFFICIENTS[region] || 1.0;
   const qualityCoeff = QUALITY_MULTIPLIERS[quality] || 1.0;
   const answerMultiplier = calculateAnswerMultiplier(tradeId, answers);
 
-  return Math.round(basePrice * regionalCoeff * qualityCoeff * answerMultiplier * 100) / 100;
+  return Math.round(basePriceTotal * regionalCoeff * qualityCoeff * answerMultiplier * 100) / 100;
 }
 
-/**
- * Calcola il moltiplicatore basato sulle risposte alle domande
- */
 export function calculateAnswerMultiplier(tradeId, answers) {
   const trade = getTradeById(tradeId);
   if (!trade) return 1.0;
@@ -389,18 +282,11 @@ export function calculateAnswerMultiplier(tradeId, answers) {
   return multiplier;
 }
 
-/**
- * Calcola il breakdown manodopera vs materiali
- */
 export function calculateCostBreakdown(tradeId, totalPrice) {
-  // Percentuali medie per categoria
   const breakdownRatios = {
-    "finiture": { manodopera: 0.40, materiali: 0.60 },
-    "impianti": { manodopera: 0.50, materiali: 0.50 },
-    "strutture": { manodopera: 0.35, materiali: 0.65 },
-    "infissi": { manodopera: 0.30, materiali: 0.70 },
-    "esterni": { manodopera: 0.45, materiali: 0.55 },
-    "servizi": { manodopera: 0.85, materiali: 0.15 }
+    "finiture": { manodopera: 0.45, materiali: 0.55 },
+    "impianti": { manodopera: 0.40, materiali: 0.60 },
+    "strutture": { manodopera: 0.55, materiali: 0.45 }
   };
 
   const trade = getTradeById(tradeId);
@@ -409,40 +295,5 @@ export function calculateCostBreakdown(tradeId, totalPrice) {
   return {
     manodopera: Math.round(totalPrice * ratio.manodopera * 100) / 100,
     materiali: Math.round(totalPrice * ratio.materiali * 100) / 100
-  };
-}
-
-/**
- * Valida i dati di input
- */
-export function validateInput(quantity, region, quality) {
-  const errors = [];
-
-  if (!quantity || quantity <= 0) {
-    errors.push("Quantità deve essere maggiore di 0");
-  }
-
-  if (!region || !REGIONAL_COEFFICIENTS[region]) {
-    errors.push("Regione non valida");
-  }
-
-  if (!quality || !QUALITY_MULTIPLIERS[quality]) {
-    errors.push("Qualità non valida");
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
-// ===== EXPORT DATI PER ANALYTICS =====
-export function getTradeStats() {
-  return {
-    totalTrades: TRADES.length,
-    categories: [...new Set(TRADES.map(t => t.category))],
-    averageBasePrice: Math.round(
-      TRADES.reduce((sum, t) => sum + t.basePrice, 0) / TRADES.length * 100
-    ) / 100
   };
 }

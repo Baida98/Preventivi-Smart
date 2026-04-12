@@ -1,6 +1,6 @@
 /**
- * Preventivi-Smart Pro v3.0 - Corretto e Ottimizzato
- * Applicazione completa con gestione sessione, mestieri dinamici e calcoli regionali
+ * Preventivi-Smart Pro v5.0 - Core Application Logic
+ * Gestione preventivazione avanzata con breakdown dettagliato
  */
 
 import { auth, db } from "./firebase.js";
@@ -8,6 +8,7 @@ import {
   getAllTrades, 
   getTradeById, 
   calculateFinalPrice, 
+  calculateCostBreakdown,
   REGIONAL_COEFFICIENTS, 
   QUALITY_MULTIPLIERS 
 } from "./engine/database.js";
@@ -120,69 +121,55 @@ function formatCurrency(value) {
 function showStep(stepNumber) {
   document.querySelectorAll(".step-section").forEach(s => s.style.display = "none");
   const targetStep = document.getElementById(`step${stepNumber}`);
-  if (targetStep) targetStep.style.display = "block";
+  if (targetStep) {
+    targetStep.style.display = "block";
+    targetStep.style.animation = "fadeIn 0.6s ease-out";
+  }
   
   backBtn.style.display = stepNumber > 1 ? "block" : "none";
   
-  if (stepNumber === 1) headerTitle.textContent = "Accedi";
-  else if (stepNumber === 2) headerTitle.textContent = "Seleziona Mestiere";
-  else if (stepNumber === 3) headerTitle.textContent = "Dettagli Preventivo";
-  else if (stepNumber === 4) headerTitle.textContent = "Preventivo Calcolato";
+  const titles = {
+    1: "Autenticazione",
+    2: "Seleziona il Mestiere",
+    3: "Configurazione Tecnica",
+    4: "Preventivo Dettagliato"
+  };
+  headerTitle.textContent = titles[stepNumber] || "Preventivo";
   
   currentStep = stepNumber;
-  window.scrollTo(0, 0);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ===== STEP 1: AUTH (LOGIN / REGISTER) =====
-
-// Gestione Tab
+// ===== STEP 1: AUTH =====
 authTabs.forEach(tab => {
   tab.addEventListener("click", () => {
     const targetTab = tab.getAttribute("data-tab");
-    
     authTabs.forEach(t => t.classList.remove("active"));
     tab.classList.add("active");
-    
     authForms.forEach(form => {
       form.classList.remove("active");
-      if (form.id === `${targetTab}Form`) {
-        form.classList.add("active");
-      }
+      if (form.id === `${targetTab}Form`) form.classList.add("active");
     });
   });
 });
 
-// Validazione Real-time
-if (loginEmail && loginEmailError) setupRealtimeValidation(loginEmail, showEmailError, loginEmailError);
-if (loginPassword && loginPasswordError) setupRealtimeValidation(loginPassword, showPasswordError, loginPasswordError);
-if (registerEmail && registerEmailError) setupRealtimeValidation(registerEmail, showEmailError, registerEmailError);
-if (registerPassword && registerPasswordError) setupRealtimeValidation(registerPassword, showPasswordError, registerPasswordError);
+if (loginEmail) setupRealtimeValidation(loginEmail, showEmailError, loginEmailError);
+if (loginPassword) setupRealtimeValidation(loginPassword, showPasswordError, loginPasswordError);
 
-// Submit Login
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = loginEmail.value.trim();
   const password = loginPassword.value;
-  
-  const validation = validateForm({ email, password });
-  if (!validation.isValid) {
-    loginError.textContent = Object.values(validation.errors)[0];
-    return;
-  }
-  
-  loginError.textContent = "";
   const result = await loginUser(email, password);
-  
   if (result.success) {
     showSuccessMessage("Bentornato!");
     showStep(2);
   } else {
-    loginError.textContent = "Errore: " + result.error;
+    loginError.textContent = result.error;
     showErrorMessage("Login fallito");
   }
 });
 
-// Submit Registrazione
 registerForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const name = registerName.value.trim();
@@ -190,27 +177,22 @@ registerForm.addEventListener("submit", async (e) => {
   const password = registerPassword.value;
   const passwordConfirm = registerPasswordConfirm.value;
   
-  const validation = validateForm({ name, email, password, passwordConfirm });
-  if (!validation.isValid) {
-    registerError.textContent = Object.values(validation.errors)[0];
+  if (password !== passwordConfirm) {
+    registerError.textContent = "Le password non coincidono";
     return;
   }
-  
-  registerError.textContent = "";
+
   const result = await registerUser(email, password, name);
-  
   if (result.success) {
     showSuccessMessage("Account creato!");
     showStep(2);
   } else {
-    registerError.textContent = "Errore: " + result.error;
+    registerError.textContent = result.error;
     showErrorMessage("Registrazione fallita");
   }
 });
 
-skipLoginBtn.addEventListener("click", () => {
-  showStep(2);
-});
+skipLoginBtn.addEventListener("click", () => showStep(2));
 
 // ===== STEP 2: MESTIERI =====
 function renderTrades() {
@@ -219,9 +201,13 @@ function renderTrades() {
     const card = document.createElement("div");
     card.className = "trade-card";
     card.innerHTML = `
-      <img src="assets/${trade.icon}" alt="${trade.name}" onerror="this.src='https://via.placeholder.com/80?text=${trade.name}'">
-      <h3>${trade.name}</h3>
-      <p>${trade.description}</p>
+      <div class="trade-icon-wrapper">
+        <img src="assets/${trade.icon}" alt="${trade.name}" onerror="this.src='https://via.placeholder.com/80?text=${trade.name}'">
+      </div>
+      <div class="trade-info">
+        <h3>${trade.name}</h3>
+        <p>${trade.description}</p>
+      </div>
     `;
     card.addEventListener("click", (e) => selectTrade(trade.id, e));
     tradesGrid.appendChild(card);
@@ -231,41 +217,33 @@ function renderTrades() {
 function selectTrade(tradeId, event) {
   currentTrade = getTradeById(tradeId);
   document.querySelectorAll(".trade-card").forEach(card => card.classList.remove("active"));
-  
-  const selectedCard = event.currentTarget;
-  selectedCard.classList.add("active");
+  event.currentTarget.classList.add("active");
   
   setTimeout(() => {
     unitLabel.textContent = currentTrade.unit;
     renderDynamicQuestions();
     showStep(3);
-  }, 300);
+  }, 400);
 }
 
 // ===== STEP 3: DETTAGLI =====
 function renderDynamicQuestions() {
   dynamicQuestions.innerHTML = "";
-  
   currentTrade.questions.forEach(question => {
     const group = document.createElement("div");
     group.className = "form-group";
-    
     let html = `<label for="${question.id}">${question.label}</label>`;
-    
     if (question.type === "select") {
-      html += `<select id="${question.id}" required>
-        <option value="">-- Seleziona --</option>`;
+      html += `<select id="${question.id}" required><option value="">-- Seleziona opzione --</option>`;
       question.options.forEach(opt => {
         html += `<option value="${opt.value}">${opt.label}</option>`;
       });
       html += `</select>`;
     }
-    
     group.innerHTML = html;
     dynamicQuestions.appendChild(group);
   });
-  
-  step3Title.textContent = `Dettagli - ${currentTrade.name}`;
+  step3Title.textContent = `Configurazione: ${currentTrade.name}`;
 }
 
 calculateBtn.addEventListener("click", () => {
@@ -274,71 +252,44 @@ calculateBtn.addEventListener("click", () => {
   const qual = qualitySelect.value;
   
   if (!qty || !reg || !qual) {
-    showErrorMessage("Compila tutti i campi obbligatori");
+    showErrorMessage("Tutti i campi sono obbligatori");
     return;
   }
   
-  // Raccogli risposte dinamiche
   const answers = {};
-  let allQuestionsAnswered = true;
-  currentTrade.questions.forEach(question => {
-    const val = document.getElementById(question.id).value;
-    if (!val) allQuestionsAnswered = false;
-    answers[question.id] = val;
+  let valid = true;
+  currentTrade.questions.forEach(q => {
+    const val = document.getElementById(q.id).value;
+    if (!val) valid = false;
+    answers[q.id] = val;
   });
 
-  if (!allQuestionsAnswered) {
-    showErrorMessage("Rispondi a tutte le domande specifiche");
+  if (!valid) {
+    showErrorMessage("Rispondi a tutte le domande tecniche");
     return;
   }
   
-  // Calcola prezzo tramite database engine
   const finalPrice = calculateFinalPrice(currentTrade.id, qty, reg, qual, answers);
+  const breakdown = calculateCostBreakdown(currentTrade.id, finalPrice);
   
-  // Recupera coefficienti per il breakdown visivo
-  const basePrice = currentTrade.basePrice * qty;
-  const regionalCoeff = REGIONAL_COEFFICIENTS[reg];
-  const qualityCoeff = QUALITY_MULTIPLIERS[qual];
-  
-  // Calcola moltiplicatore dalle risposte per il breakdown
-  let answerMultiplier = 1;
-  currentTrade.questions.forEach(question => {
-    const answer = answers[question.id];
-    const option = question.options.find(opt => opt.value === answer);
-    if (option && option.multiplier) {
-      answerMultiplier *= option.multiplier;
-    }
-  });
-  
-  const minPrice = Math.round(finalPrice * 0.85 * 100) / 100;
-  const maxPrice = Math.round(finalPrice * 1.2 * 100) / 100;
-  
-  // Salva quote nello stato corrente
   currentQuote = {
-    trade: currentTrade.id,
+    ...currentTrade,
+    tradeId: currentTrade.id,
     tradeName: currentTrade.name,
     quantity: qty,
     unit: currentTrade.unit,
     region: reg,
     quality: qual,
     answers: answers,
-    basePrice: basePrice,
-    regionalCoeff: regionalCoeff,
-    qualityCoeff: qualityCoeff,
-    answerMultiplier: answerMultiplier,
-    minPrice: minPrice,
     midPrice: finalPrice,
-    maxPrice: maxPrice,
-    timestamp: new Date().toLocaleString('it-IT')
+    minPrice: Math.round(finalPrice * 0.90),
+    maxPrice: Math.round(finalPrice * 1.15),
+    manodopera: breakdown.manodopera,
+    materiali: breakdown.materiali,
+    timestamp: new Date().toISOString()
   };
   
-  // Aggiungi alla cronologia locale (genera ID e timestamp ISO internamente)
   quoteHistory.add(currentQuote);
-  
-  // Recupera l'ultimo preventivo con ID generato per l'esportazione corretta
-  const history = quoteHistory.getAll();
-  currentQuote = history[0];
-  
   displayQuote();
   showStep(4);
 });
@@ -346,20 +297,37 @@ calculateBtn.addEventListener("click", () => {
 // ===== STEP 4: RISULTATI =====
 function displayQuote() {
   quoteTrade.textContent = currentQuote.tradeName;
-  quoteDetails.textContent = `${currentQuote.quantity} ${currentQuote.unit} - ${currentQuote.region}`;
+  quoteDetails.textContent = `${currentQuote.quantity} ${currentQuote.unit} • ${currentQuote.region} • Qualità ${currentQuote.quality.toUpperCase()}`;
   
-  quoteIcon.innerHTML = `<img src="assets/icon_${currentQuote.trade}.png" alt="${currentQuote.tradeName}" style="width: 60px; height: 60px; object-fit: contain;" onerror="this.innerHTML='<i class=\"fas fa-tools\"></i>'">`;
-  
-  priceMin.textContent = formatCurrency(currentQuote.minPrice);
   priceMid.textContent = formatCurrency(currentQuote.midPrice);
+  priceMin.textContent = formatCurrency(currentQuote.minPrice);
   priceMax.textContent = formatCurrency(currentQuote.maxPrice);
   
-  breakdownBase.textContent = formatCurrency(currentQuote.basePrice);
-  breakdownRegional.textContent = currentQuote.regionalCoeff.toFixed(2) + "x";
-  breakdownQuality.textContent = currentQuote.qualityCoeff.toFixed(2) + "x";
-  breakdownSpecifics.textContent = currentQuote.answerMultiplier.toFixed(2) + "x";
+  // Breakdown dettagliato nel DOM
+  const breakdownContainer = document.querySelector(".quote-breakdown");
+  if (breakdownContainer) {
+    breakdownContainer.innerHTML = `
+      <h4>Analisi dei Costi</h4>
+      <div class="breakdown-item">
+        <span>Manodopera Specializzata</span>
+        <span>${formatCurrency(currentQuote.manodopera)}</span>
+      </div>
+      <div class="breakdown-item">
+        <span>Materiali e Forniture</span>
+        <span>${formatCurrency(currentQuote.materiali)}</span>
+      </div>
+      <div class="breakdown-item">
+        <span>Oneri e Sicurezza</span>
+        <span>Inclusi</span>
+      </div>
+      <div class="breakdown-item" style="border-top: 2px solid rgba(255,255,255,0.2); margin-top: 1rem; padding-top: 1rem;">
+        <span style="font-weight: 800;">TOTALE STIMATO</span>
+        <span style="font-weight: 800; color: var(--accent-light);">${formatCurrency(currentQuote.midPrice)}</span>
+      </div>
+    `;
+  }
   
-  saveQuoteBtn.style.display = currentUser ? "block" : "none";
+  saveQuoteBtn.style.display = currentUser ? "flex" : "none";
 }
 
 newQuoteBtn.addEventListener("click", () => {
@@ -370,60 +338,39 @@ newQuoteBtn.addEventListener("click", () => {
 });
 
 saveQuoteBtn.addEventListener("click", async () => {
-  if (!currentUser) {
-    showErrorMessage("Devi essere loggato per salvare");
-    return;
-  }
-  
+  if (!currentUser) return;
   try {
     await addDoc(collection(db, "quotes"), {
       ...currentQuote,
       uid: currentUser.uid,
       createdAt: new Date()
     });
-    showSuccessMessage("Preventivo salvato nel cloud!");
+    showSuccessMessage("Salvato nel Cloud!");
   } catch (e) {
-    showErrorMessage("Errore salvataggio: " + e.message);
+    showErrorMessage("Errore Cloud: " + e.message);
   }
 });
 
-exportPdfBtn.addEventListener("click", () => {
-  generatePDF(currentQuote);
-});
+exportPdfBtn.addEventListener("click", () => generatePDF(currentQuote));
 
-// ===== CRONOLOGIA =====
+// ===== CRONOLOGIA & NAVIGAZIONE =====
 historyBtn.addEventListener("click", () => {
   renderHistory();
   historyModal.style.display = "flex";
 });
 
-closeHistoryBtn.addEventListener("click", () => {
-  historyModal.style.display = "none";
-});
+closeHistoryBtn.addEventListener("click", () => historyModal.style.display = "none");
 
 function renderHistory() {
   const history = quoteHistory.getAll();
-  historyList.innerHTML = "";
-  
-  if (history.length === 0) {
-    historyList.innerHTML = "<p style='text-align: center; color: var(--text-secondary);'>Nessun preventivo nella cronologia</p>";
-    return;
-  }
-  
+  historyList.innerHTML = history.length ? "" : "<p>Nessun preventivo salvato.</p>";
   history.forEach(quote => {
     const item = document.createElement("div");
     item.className = "history-item";
-    
-    // Gestione timestamp se ISO o già formattato
-    let displayTime = quote.timestamp;
-    if (displayTime.includes('T')) {
-      displayTime = new Date(displayTime).toLocaleString('it-IT');
-    }
-
     item.innerHTML = `
       <div class="history-item-info">
         <h4>${quote.tradeName}</h4>
-        <p>${displayTime}</p>
+        <p>${new Date(quote.timestamp).toLocaleDateString('it-IT')}</p>
       </div>
       <div class="history-item-price">${formatCurrency(quote.midPrice)}</div>
     `;
@@ -437,40 +384,30 @@ function renderHistory() {
   });
 }
 
-// ===== NAVIGAZIONE =====
 backBtn.addEventListener("click", () => {
   if (currentStep > 1) showStep(currentStep - 1);
 });
 
 startBtn.addEventListener("click", () => {
   heroSection.style.display = "none";
-  appContainer.style.display = "flex";
+  appContainer.style.display = "block";
   showStep(currentUser ? 2 : 1);
 });
 
 logoutBtn.addEventListener("click", async () => {
-  const result = await logoutUser();
-  if (result.success) {
-    showSuccessMessage("Logout effettuato");
-    location.reload(); // Ricarica per resettare lo stato
-  }
+  await logoutUser();
+  location.reload();
 });
 
-// ===== AUTH STATE =====
 onAuthStateChange((user) => {
   currentUser = user;
   if (user) {
-    if (skipLoginBtn) skipLoginBtn.style.display = "none";
-    if (logoutBtn) logoutBtn.style.display = "block";
-    // Se siamo nello step 1 e l'utente si logga, passiamo allo step 2
-    if (currentStep === 1 && appContainer.style.display !== "none") {
-      showStep(2);
-    }
+    if (logoutBtn) logoutBtn.style.display = "flex";
+    if (currentStep === 1 && appContainer.style.display !== "none") showStep(2);
   } else {
-    if (skipLoginBtn) skipLoginBtn.style.display = "block";
     if (logoutBtn) logoutBtn.style.display = "none";
   }
 });
 
-// ===== INIT =====
+// Init
 renderTrades();
