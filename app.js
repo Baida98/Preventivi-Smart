@@ -1,61 +1,82 @@
-import { loginFirebase, salvaPreventivo, getTuttiPreventivi, auth } from "./firebase.js";
-import { calcolaAI } from "./ai.js";
+import { db, auth } from "./firebase.js";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-let prezzi = {};
+import { wizard } from "./engine/wizard.js";
+import { calculate } from "./engine/core.js";
+import { buildStats } from "./engine/analytics.js";
 
-fetch("data.json")
-  .then(r => r.json())
-  .then(d => prezzi = d);
+let user = null;
+let i = 0;
+let data = {};
+let stats = {};
 
-// LOGIN
 window.login = async () => {
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const { signInWithPopup, GoogleAuthProvider } =
+    await import("https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js");
 
-  await loginFirebase(email, password);
-  alert("Login effettuato");
+  await signInWithPopup(auth, new GoogleAuthProvider());
 };
 
-// CALCOLO
-document.getElementById("calcola").onclick = async () => {
+window.logout = () => auth.signOut();
 
-  const tipo = document.getElementById("tipo").value;
-  const q = parseFloat(document.getElementById("quantita").value);
-  const zona = document.getElementById("zona").value;
-  const qualita = document.getElementById("qualita").value;
+auth.onAuthStateChanged(async u => {
+  user = u;
+  document.getElementById("user").innerText = u ? u.email : "non loggato";
 
-  const base = prezzi[tipo];
+  if(u){
+    const snap = await getDocs(collection(db,"preventivi"));
+    const arr = snap.docs.map(d=>d.data());
+    stats = await buildStats(arr);
+    render();
+  }
+});
 
-  let mol = 1;
+function render(){
 
-  if (zona === "Nord") mol *= 1.15;
-  if (zona === "Sud") mol *= 0.9;
-  if (qualita === "alta") mol *= 1.3;
-  if (qualita === "bassa") mol *= 0.85;
+  const step = wizard[i];
 
-  const stima = base.medio * q * mol;
-
-  let ai = null;
-
-  const dati = await getTuttiPreventivi();
-  ai = calcolaAI(dati, tipo, zona);
-
-  let output = `
-  💰 Base: €${stima.toFixed(0)}
+  document.getElementById("wizard").innerHTML = `
+    <p>${step.label}</p>
+    ${
+      step.type==="select"
+      ? `<select id="inp">${step.options.map(o=>`<option>${o}</option>`).join("")}</select>`
+      : step.type==="number"
+      ? `<input id="inp" type="number">`
+      : `<select id="inp"><option>no</option><option>si</option></select>`
+    }
   `;
+}
 
-  if (ai) {
-    output += `<br>🤖 AI: €${ai.medio.toFixed(0)} (Affidabilità ${ai.affidabilita}%)`;
+render();
+
+document.getElementById("next").onclick = async () => {
+
+  const step = wizard[i];
+  const val = document.getElementById("inp").value;
+
+  data[step.key] = step.type==="number" ? Number(val) : val;
+
+  i++;
+
+  if(i < wizard.length){
+    render();
+    return;
   }
 
-  document.getElementById("risultato").innerHTML = output;
+  const res = calculate(data, stats);
 
-  if (auth.currentUser) {
-    await salvaPreventivo({
-      uid: auth.currentUser.uid,
-      tipo,
-      zona,
-      stima
-    });
-  }
+  document.getElementById("result").innerText =
+    `€ ${res.min.toFixed(0)} - ${res.mid.toFixed(0)} - ${res.max.toFixed(0)}`;
+
+  await addDoc(collection(db,"preventivi"),{
+    ...data,
+    prezzo: res.mid,
+    uid: user?.uid || null,
+    createdAt: serverTimestamp()
+  });
 };
