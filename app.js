@@ -1,4 +1,5 @@
-import { auth, db, provider } from "./firebase.js";
+import { auth, provider, db } from "./firebase.js";
+
 import {
   signInWithPopup,
   signOut,
@@ -13,11 +14,16 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let userGlobal = null;
+let user = null;
 
-/* LOGIN */
+/* LOGIN GOOGLE */
 window.login = async () => {
-  await signInWithPopup(auth, provider);
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    console.error("LOGIN ERROR:", e);
+    alert("Errore login");
+  }
 };
 
 /* LOGOUT */
@@ -25,16 +31,16 @@ window.logout = async () => {
   await signOut(auth);
 };
 
-/* AUTH STATE */
-onAuthStateChanged(auth, (user) => {
-  userGlobal = user;
+/* STATO UTENTE */
+onAuthStateChanged(auth, async (u) => {
+  user = u;
 
   if (user) {
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("app").style.display = "block";
     document.getElementById("userEmail").innerText = user.email;
 
-    loadPreventivi();
+    await loadPreventivi();
   } else {
     document.getElementById("loginBox").style.display = "block";
     document.getElementById("app").style.display = "none";
@@ -50,21 +56,21 @@ window.creaPreventivo = async () => {
   if (!cliente || !servizio || !prezzo) return;
 
   await addDoc(collection(db, "preventivi"), {
-    uid: userGlobal.uid,
+    uid: user.uid,
     cliente,
     servizio,
     prezzo,
     createdAt: Date.now()
   });
 
-  loadPreventivi();
+  await loadPreventivi();
 };
 
 /* CARICA PREVENTIVI */
 async function loadPreventivi() {
   const q = query(
     collection(db, "preventivi"),
-    where("uid", "==", userGlobal.uid)
+    where("uid", "==", user.uid)
   );
 
   const snap = await getDocs(q);
@@ -73,10 +79,12 @@ async function loadPreventivi() {
 
   snap.forEach((doc) => {
     const d = doc.data();
+
     html += `
       <div class="card">
         <b>${d.cliente}</b><br>
-        ${d.servizio} - ${d.prezzo}€
+        ${d.servizio}<br>
+        ${d.prezzo} €
       </div>
     `;
   });
