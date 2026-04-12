@@ -1,13 +1,25 @@
-export function exportPDF(data) {
+export function generatePDF(quote) {
 
-  const win = window.open("");
+  const content = `
+Preventivo
 
-  win.document.write(`
-    <h1>Preventivo</h1>
-    <p>Tipo: ${data.tipo}</p>
-    <p>MQ: ${data.mq}</p>
-    <p>Prezzo: €${data.mid}</p>
-  `);
+Tipo: ${quote.tipo}
+MQ: ${quote.mq}
+Qualità: ${quote.qualita}
+Città: ${quote.citta}
 
-  win.print();
+Min: €${quote.min}
+Prezzo: €${quote.mid}
+Max: €${quote.max}
+
+AI Confidence: ${quote.aiConfidence}%
+`;
+
+  const blob = new Blob([content], { type: "text/plain" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "preventivo.txt";
+  a.click();
 }
