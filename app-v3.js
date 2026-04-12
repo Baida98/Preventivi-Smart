@@ -1,7 +1,16 @@
 /**
- * Preventivi-Smart Pro v6.0 — Core Application
- * Wizard 5-step, Analisi AI, Dashboard Storico, Google Login
+ * Preventivi-Smart Pro v7.0 — Core Application
+ * Wizard 5-step, Analisi AI, Dashboard, Google Login + Security Shield
  */
+
+// ===== SECURITY FIRST =====
+import { initSecurityShield } from "./engine/security-shield.js";
+import { initUIProtection } from "./engine/ui-protection.js";
+import { secureLoader } from "./engine/secure-loader.js";
+
+// Inizializza protezione PRIMA di qualsiasi altra cosa
+initSecurityShield();
+initUIProtection();
 
 import { auth, db } from "./firebase.js";
 import {

@@ -1,0 +1,167 @@
+/**
+ * Preventivi-Smart Pro — Firestore Security Rules v1.0
+ * Protezione massima dei dati nel cloud
+ */
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ===== FUNZIONI HELPER =====
+    
+    // Verifica se utente è autenticato
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Verifica se è il proprietario del documento
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // Verifica se è admin (opzionale)
+    function isAdmin() {
+      return isAuthenticated() && 
+             get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
+    }
+
+    // Valida struttura quote
+    function isValidQuote(data) {
+      return data.keys().hasAll(['uid', 'tradeName', 'quantity', 'region', 'quality', 'midPrice', 'receivedPrice', 'timestamp']) &&
+             data.uid is string &&
+             data.tradeName is string &&
+             data.quantity is number &&
+             data.region is string &&
+             data.quality is string &&
+             data.midPrice is number &&
+             data.receivedPrice is number &&
+             data.timestamp is timestamp;
+    }
+
+    // Valida che i numeri siano positivi
+    function isPositiveNumber(num) {
+      return num is number && num > 0;
+    }
+
+    // Verifica rate limiting (max 100 quote al giorno)
+    function isWithinRateLimit() {
+      let userQuotesToday = firestore.query(
+        /databases/$(database)/documents/quotes,
+        ['where', 'uid', '==', request.auth.uid],
+        ['where', 'createdAt', '>=', request.time.toDate().toDateString()]
+      ).size();
+      
+      return userQuotesToday < 100;
+    }
+
+    // ===== COLLECTION: quotes =====
+    match /quotes/{document=**} {
+      
+      // LETTURA: Solo il proprietario può leggere i propri preventivi
+      allow read: if isOwner(resource.data.uid);
+      
+      // CREAZIONE: Utente autenticato può creare solo i propri preventivi
+      allow create: if isAuthenticated() &&
+                       isValidQuote(request.resource.data) &&
+                       request.resource.data.uid == request.auth.uid &&
+                       isPositiveNumber(request.resource.data.quantity) &&
+                       isPositiveNumber(request.resource.data.midPrice) &&
+                       isPositiveNumber(request.resource.data.receivedPrice) &&
+                       isWithinRateLimit();
+      
+      // AGGIORNAMENTO: Solo il proprietario può modificare
+      allow update: if isOwner(resource.data.uid) &&
+                       request.resource.data.uid == resource.data.uid &&
+                       isValidQuote(request.resource.data);
+      
+      // ELIMINAZIONE: Solo il proprietario può eliminare
+      allow delete: if isOwner(resource.data.uid);
+    }
+
+    // ===== COLLECTION: users =====
+    match /users/{uid} {
+      
+      // LETTURA: Utente può leggere solo il suo profilo
+      allow read: if isAuthenticated() && request.auth.uid == uid;
+      
+      // CREAZIONE: Utente autenticato crea il suo profilo
+      allow create: if isAuthenticated() &&
+                       request.auth.uid == uid &&
+                       request.resource.data.uid == uid &&
+                       request.resource.data.email is string;
+      
+      // AGGIORNAMENTO: Solo il proprietario del profilo
+      allow update: if isAuthenticated() &&
+                       request.auth.uid == uid &&
+                       request.resource.data.uid == uid;
+      
+      // ELIMINAZIONE: Solo il proprietario
+      allow delete: if isAuthenticated() && request.auth.uid == uid;
+    }
+
+    // ===== COLLECTION: analytics (dati aggregati) =====
+    match /analytics/{document=**} {
+      
+      // LETTURA: Pubblico (per statistiche aggregate)
+      allow read: if true;
+      
+      // SCRITTURA: Solo admin
+      allow write: if isAdmin();
+    }
+
+    // ===== COLLECTION: admins =====
+    match /admins/{uid} {
+      
+      // LETTURA: Solo admin
+      allow read: if isAdmin();
+      
+      // SCRITTURA: Solo admin
+      allow write: if isAdmin();
+    }
+
+    // ===== COLLECTION: security-logs =====
+    match /security-logs/{document=**} {
+      
+      // LETTURA: Solo admin
+      allow read: if isAdmin();
+      
+      // CREAZIONE: Sistema può scrivere log di sicurezza
+      allow create: if request.auth != null;
+      
+      // SCRITTURA: Solo admin
+      allow write: if isAdmin();
+    }
+
+    // ===== COLLECTION: feedback =====
+    match /feedback/{document=**} {
+      
+      // CREAZIONE: Utente autenticato può inviare feedback
+      allow create: if isAuthenticated() &&
+                       request.resource.data.uid == request.auth.uid &&
+                       request.resource.data.message is string &&
+                       request.resource.data.message.size() > 0 &&
+                       request.resource.data.message.size() < 5000;
+      
+      // LETTURA: Solo admin
+      allow read: if isAdmin();
+      
+      // ELIMINAZIONE: Solo admin
+      allow delete: if isAdmin();
+    }
+
+    // ===== COLLECTION: api-keys (per backend) =====
+    match /api-keys/{document=**} {
+      
+      // LETTURA: Solo admin
+      allow read: if isAdmin();
+      
+      // SCRITTURA: Solo admin
+      allow write: if isAdmin();
+    }
+
+    // ===== DEFAULT: NEGA TUTTO =====
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
