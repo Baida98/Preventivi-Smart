@@ -1,0 +1,10 @@
+.git
+.gitignore
+node_modules
+*.md
+.DS_Store
+firestore.rules
+SECURITY.md
+*.backup
+.env.local
+.env.*.local
