@@ -1,19 +1,35 @@
 export function generatePDF(quote) {
 
+  const separator = "=".repeat(50);
+  const divider = "-".repeat(50);
+  
   const content = `
-Preventivo
+${separator}
+PREVENTIVO SMART
+${separator}
 
-Tipo: ${quote.tipo}
-MQ: ${quote.mq}
-Qualità: ${quote.qualita}
-Città: ${quote.citta}
+DATA: ${new Date().toLocaleString('it-IT')}
 
-Min: €${quote.min.toFixed(2)}
-Prezzo: €${quote.mid.toFixed(2)}
-Max: €${quote.max.toFixed(2)}
+DETTAGLI LAVORO
+${divider}
+Tipo Lavoro:     ${quote.tipo}
+Metri Quadri:    ${quote.mq} mq
+Qualita:         ${quote.qualita}
+Citta:           ${quote.citta}
 
-AI Confidence: ${quote.aiConfidence}%
-Data: ${new Date().toLocaleString('it-IT')}
+STIMA PREZZO
+${divider}
+Prezzo Minimo:   EUR ${quote.min.toFixed(2)}
+Prezzo Stimato:  EUR ${quote.mid.toFixed(2)}
+Prezzo Massimo:  EUR ${quote.max.toFixed(2)}
+
+INFORMAZIONI AI
+${divider}
+Affidabilita:    ${quote.aiConfidence}%
+
+${separator}
+Generato da Preventivi-Smart
+${separator}
 `;
 
   const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
@@ -21,7 +37,7 @@ Data: ${new Date().toLocaleString('it-IT')}
 
   const a = document.createElement("a");
   a.href = url;
-  a.download = "preventivo.txt";
+  a.download = `preventivo_${quote.tipo}_${new Date().getTime()}.txt`;
   a.click();
   
   URL.revokeObjectURL(url);

@@ -20,23 +20,31 @@
 
   <h2>Dashboard Preventivi</h2>
 
-  <select id="tipo">
-    <option>imbiancatura</option>
-    <option>piastrelle</option>
-    <option>bagno</option>
+  <label for="tipo" style="display: block; margin-top: 15px; font-size: 12px; color: #9ca3af;">Tipo di Lavoro</label>
+  <select id="tipo" required>
+    <option value="">-- Seleziona un tipo --</option>
+    <option value="imbiancatura">Imbiancatura</option>
+    <option value="piastrelle">Piastrelle</option>
+    <option value="bagno">Ristrutturazione Bagno</option>
   </select>
 
-  <input id="mq" placeholder="Inserisci mq">
-  <select id="qualita">
-    <option>bassa</option>
-    <option>media</option>
-    <option>alta</option>
+  <label for="mq" style="display: block; margin-top: 15px; font-size: 12px; color: #9ca3af;">Metri Quadri</label>
+  <input id="mq" type="number" placeholder="Inserisci mq" min="1" step="0.5" required>
+  
+  <label for="qualita" style="display: block; margin-top: 15px; font-size: 12px; color: #9ca3af;">Qualita</label>
+  <select id="qualita" required>
+    <option value="">-- Seleziona qualita --</option>
+    <option value="bassa">Bassa</option>
+    <option value="media">Media</option>
+    <option value="alta">Alta</option>
   </select>
 
-  <select id="citta">
-    <option>milano</option>
-    <option>roma</option>
-    <option>napoli</option>
+  <label for="citta" style="display: block; margin-top: 15px; font-size: 12px; color: #9ca3af;">Citta</label>
+  <select id="citta" required>
+    <option value="">-- Seleziona citta --</option>
+    <option value="milano">Milano</option>
+    <option value="roma">Roma</option>
+    <option value="napoli">Napoli</option>
   </select>
 
   <button id="calcola">Calcola</button>

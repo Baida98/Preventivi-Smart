@@ -35,15 +35,24 @@ h3 {
   color: #4ade80;
 }
 
+label {
+  display: block;
+  margin-top: 15px;
+  font-size: 12px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
 input, select {
   width: 100%;
   padding: 10px;
-  margin-top: 10px;
+  margin-top: 8px;
   background: #1f2937;
   border: 1px solid #374151;
   color: white;
   border-radius: 6px;
   font-size: 14px;
+  font-family: inherit;
 }
 
 input::placeholder {
@@ -81,4 +90,57 @@ button:active {
 canvas {
   margin-top: 20px;
   max-width: 100%;
+  height: auto;
+}
+
+.quote-result {
+  background: #1f2937;
+  padding: 15px;
+  border-radius: 8px;
+  margin-top: 10px;
+  border-left: 4px solid #4ade80;
+}
+
+.quote-result-label {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 8px;
+}
+
+.quote-result-price {
+  font-size: 28px;
+  font-weight: bold;
+  color: #4ade80;
+  margin-bottom: 8px;
+}
+
+.quote-result-range {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.quote-result-confidence {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 8px;
+}
+
+@media (max-width: 600px) {
+  .app {
+    padding: 20px;
+    max-width: 100%;
+  }
+
+  h2 {
+    font-size: 20px;
+  }
+
+  .quote-result-price {
+    font-size: 24px;
+  }
+
+  button {
+    padding: 10px;
+    font-size: 13px;
+  }
 }

@@ -2,6 +2,9 @@ import { auth, db } from "./firebase.js";
 import { calcolaBase } from "./engine/core.js";
 import { aiPredict, aiTrain } from "./engine/ai.js";
 import { generatePDF } from "./engine/pdf.js";
+import { validateInput, formatCurrency } from "./engine/validation.js";
+import { quoteHistory } from "./engine/history.js";
+import { renderChart } from "./engine/charts.js";
 
 import {
   GoogleAuthProvider,
@@ -41,6 +44,13 @@ document.getElementById("calcola").onclick = async () => {
     citta: document.getElementById("citta").value
   };
 
+  // Validazione input
+  const validation = validateInput(input);
+  if (!validation.isValid) {
+    alert("Errori di validazione:\n" + validation.errors.join("\n"));
+    return;
+  }
+
   // 1. CORE (base matematica)
   const base = calcolaBase(input);
 
@@ -49,7 +59,9 @@ document.getElementById("calcola").onclick = async () => {
 
   try {
     ai = await aiPredict(input.tipo, input.citta);
-  } catch {}
+  } catch (e) {
+    console.warn("AI prediction non disponibile:", e);
+  }
 
   // 3. MERGE UNICO (UN SOLO PUNTO DECISIONE)
   let finalPrice = base.mid;
@@ -69,9 +81,33 @@ document.getElementById("calcola").onclick = async () => {
     aiConfidence: ai.confidence
   };
 
-  // 5. UI
-  document.getElementById("output").innerText =
-    `€ ${finalPrice.toFixed(0)} (AI ${ai.confidence}%)`;
+  // Aggiungi alla history
+  quoteHistory.add(currentQuote);
+
+  // 5. UI - Aggiorna il display con formattazione migliorata
+  const outputElement = document.getElementById("output");
+  outputElement.innerHTML = `
+    <div style="background: #1f2937; padding: 15px; border-radius: 8px; margin-top: 10px;">
+      <div style="font-size: 14px; color: #9ca3af; margin-bottom: 8px;">Prezzo Stimato</div>
+      <div style="font-size: 28px; font-weight: bold; color: #4ade80; margin-bottom: 8px;">${formatCurrency(finalPrice)}</div>
+      <div style="font-size: 12px; color: #6b7280;">
+        Min: ${formatCurrency(base.min)} | Max: ${formatCurrency(base.max)}
+      </div>
+      <div style="font-size: 11px; color: #9ca3af; margin-top: 8px;">
+        Affidabilità AI: ${ai.confidence}%
+      </div>
+    </div>
+  `;
+
+  // Renderizza il grafico con la history
+  const chartCanvas = document.getElementById("chart");
+  if (chartCanvas && quoteHistory.getAll().length > 0) {
+    try {
+      renderChart(chartCanvas, quoteHistory.getAll());
+    } catch (e) {
+      console.warn("Errore nel rendering del grafico:", e);
+    }
+  }
 };
 
 /* ---------------- EXPORT PDF ---------------- */
@@ -117,8 +153,8 @@ document.getElementById("save").onclick = async () => {
     alert("Salvato + AI aggiornata");
 
   } catch (e) {
-    console.log(e);
-    alert("Errore salvataggio");
+    console.error("Errore salvataggio:", e);
+    alert("Errore salvataggio: " + (e.message || "Errore sconosciuto"));
   }
 };
 
