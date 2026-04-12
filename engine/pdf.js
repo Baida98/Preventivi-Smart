@@ -1,6 +1,6 @@
 /**
- * Preventivi-Smart Pro — PDF Professionale v6.0
- * Include: dati cliente, analisi AI, confronto mercato, risultato chiaro
+ * Preventivi-Smart Pro — PDF Professionale v10.0
+ * Include: dati cliente, analisi AI, confronto mercato, timeline, breakdown orario, consigli killer
  */
 
 export function generatePDF(quote, analysisResult = null) {

@@ -36,6 +36,8 @@ export const TRADES_DATABASE = [
     unit: "intervento",
     urgencyMultiplier: 1.5,
     complexity: "media",
+    estimatedHours: 2.5,
+    hourlyRate: 60,
     questions: [
       {
         id: "perdita_location",
@@ -96,6 +98,8 @@ export const TRADES_DATABASE = [
     unit: "intervento",
     urgencyMultiplier: 1.3,
     complexity: "bassa",
+    estimatedHours: 1.5,
+    hourlyRate: 60,
     questions: [
       {
         id: "scarico_dove",
@@ -145,6 +149,8 @@ export const TRADES_DATABASE = [
     unit: "intervento",
     urgencyMultiplier: 2.0,
     complexity: "alta",
+    estimatedHours: 4.0,
+    hourlyRate: 70,
     questions: [
       {
         id: "caldaia_problema",
@@ -193,6 +199,8 @@ export const TRADES_DATABASE = [
     unit: "intervento",
     urgencyMultiplier: 1.0,
     complexity: "bassa",
+    estimatedHours: 0.75,
+    hourlyRate: 60,
     questions: [
       {
         id: "rubinetto_tipo",
@@ -231,6 +239,8 @@ export const TRADES_DATABASE = [
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "molto_alta",
+    estimatedHours: 80,
+    hourlyRate: 65,
     questions: [
       {
         id: "bagno_metratura",
@@ -270,6 +280,8 @@ export const TRADES_DATABASE = [
     unit: "intervento",
     urgencyMultiplier: 1.8,
     complexity: "media",
+    estimatedHours: 2.0,
+    hourlyRate: 65,
     questions: [
       {
         id: "corto_sintomi",
@@ -318,6 +330,8 @@ export const TRADES_DATABASE = [
     unit: "intervento",
     urgencyMultiplier: 1.1,
     complexity: "bassa",
+    estimatedHours: 0.5,
+    hourlyRate: 65,
     questions: [
       {
         id: "presa_tipo",
@@ -355,6 +369,8 @@ export const TRADES_DATABASE = [
     unit: "intervento",
     urgencyMultiplier: 1.0,
     complexity: "bassa",
+    estimatedHours: 0.25,
+    hourlyRate: 65,
     questions: [
       {
         id: "lampada_tipo",
@@ -392,6 +408,8 @@ export const TRADES_DATABASE = [
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "molto_alta",
+    estimatedHours: 120,
+    hourlyRate: 70,
     questions: [
       {
         id: "impianto_metratura",
@@ -431,6 +449,8 @@ export const TRADES_DATABASE = [
     unit: "metro",
     urgencyMultiplier: 1.2,
     complexity: "media",
+    estimatedHours: 3.0,
+    hourlyRate: 55,
     questions: [
       {
         id: "crepa_dimensione",
@@ -469,6 +489,8 @@ export const TRADES_DATABASE = [
     unit: "mq",
     urgencyMultiplier: 1.4,
     complexity: "alta",
+    estimatedHours: 6.0,
+    hourlyRate: 60,
     questions: [
       {
         id: "umidita_tipo",
@@ -506,6 +528,8 @@ export const TRADES_DATABASE = [
     unit: "mq",
     urgencyMultiplier: 1.1,
     complexity: "media",
+    estimatedHours: 4.0,
+    hourlyRate: 55,
     questions: [
       {
         id: "intonaco_estensione",
@@ -533,6 +557,8 @@ export const TRADES_DATABASE = [
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "bassa",
+    estimatedHours: 0.5,
+    hourlyRate: 50,
     questions: [
       {
         id: "pittura_tipo",
@@ -570,6 +596,8 @@ export const TRADES_DATABASE = [
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "media",
+    estimatedHours: 1.5,
+    hourlyRate: 55,
     questions: [
       {
         id: "pavimento_tipo",
@@ -607,6 +635,8 @@ export const TRADES_DATABASE = [
     unit: "intervento",
     urgencyMultiplier: 1.1,
     complexity: "bassa",
+    estimatedHours: 1.0,
+    hourlyRate: 55,
     questions: [
       {
         id: "riparazione_danno",
@@ -633,6 +663,8 @@ export const TRADES_DATABASE = [
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "bassa",
+    estimatedHours: 0.3,
+    hourlyRate: 45,
     questions: [
       {
         id: "pulizia_metratura",
@@ -660,6 +692,8 @@ export const TRADES_DATABASE = [
     unit: "mq",
     urgencyMultiplier: 1.6,
     complexity: "alta",
+    estimatedHours: 4.0,
+    hourlyRate: 65,
     questions: [
       {
         id: "tetto_tipo",
@@ -697,6 +731,8 @@ export const TRADES_DATABASE = [
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "bassa",
+    estimatedHours: 0.5,
+    hourlyRate: 45,
     questions: [
       {
         id: "giardino_tipo_lavoro",
@@ -724,6 +760,8 @@ export const TRADES_DATABASE = [
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "media",
+    estimatedHours: 2.0,
+    hourlyRate: 55,
     questions: [
       {
         id: "esterno_tipo",
