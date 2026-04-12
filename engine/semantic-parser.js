@@ -151,3 +151,63 @@ export default {
   formatImpactText,
   SEMANTIC_KEYWORDS
 };
+
+// ===== EXTENDED KEYWORDS v18.0 (50+ nuovi tag) =====
+export const EXTENDED_KEYWORDS = {
+  // Costi e fatturazione
+  "fornitura esclusa": { multiplier: 0.70, category: "costi", severity: "high", label: "Fornitura esclusa" },
+  "fornitura inclusa": { multiplier: 1.20, category: "costi", severity: "low", label: "Fornitura inclusa" },
+  "solo manodopera": { multiplier: 1.10, category: "costi", severity: "medium", label: "Solo manodopera" },
+  "chiavi in mano": { multiplier: 1.35, category: "costi", severity: "low", label: "Chiavi in mano" },
+  "smaltimento macerie": { multiplier: 1.25, category: "costi", severity: "medium", label: "Smaltimento macerie" },
+  "trasporto materiali": { multiplier: 1.15, category: "costi", severity: "medium", label: "Trasporto materiali" },
+  
+  // Accesso e logistica
+  "ascensore": { multiplier: 1.20, category: "accesso", severity: "medium", label: "Noleggio ascensore" },
+  "parcheggio": { multiplier: 1.10, category: "accesso", severity: "low", label: "Costo parcheggio" },
+  "accesso limitato": { multiplier: 1.30, category: "accesso", severity: "high", label: "Accesso molto limitato" },
+  
+  // Specifiche tecniche
+  "punti luce": { multiplier: 1.15, category: "specifiche", severity: "medium", label: "Punti luce aggiuntivi" },
+  "prese aggiuntive": { multiplier: 1.12, category: "specifiche", severity: "low", label: "Prese aggiuntive" },
+  "interruttori": { multiplier: 1.08, category: "specifiche", severity: "low", label: "Interruttori speciali" },
+  "cablaggio": { multiplier: 1.20, category: "specifiche", severity: "high", label: "Nuovo cablaggio" },
+  "tubature": { multiplier: 1.15, category: "specifiche", severity: "medium", label: "Nuove tubature" },
+  "valvole": { multiplier: 1.10, category: "specifiche", severity: "medium", label: "Valvole di sicurezza" },
+  "contatori": { multiplier: 1.25, category: "specifiche", severity: "high", label: "Nuovo contatore" },
+  
+  // Pericoli e contaminazioni
+  "amianto": { multiplier: 2.00, category: "pericolo", severity: "critical", label: "Rimozione amianto" },
+  "radon": { multiplier: 1.50, category: "pericolo", severity: "high", label: "Bonifica radon" },
+  "asbesto": { multiplier: 2.00, category: "pericolo", severity: "critical", label: "Rimozione asbesto" },
+  "muffa nera": { multiplier: 1.60, category: "pericolo", severity: "high", label: "Muffa nera (tossica)" },
+  "legionella": { multiplier: 1.70, category: "pericolo", severity: "critical", label: "Bonifica legionella" },
+  
+  // Conformità normativa
+  "cee": { multiplier: 1.20, category: "normativa", severity: "high", label: "Conformità CEE" },
+  "marcatura ce": { multiplier: 1.15, category: "normativa", severity: "medium", label: "Marcatura CE" },
+  "norma uni": { multiplier: 1.10, category: "normativa", severity: "medium", label: "Conformità UNI" },
+  "iso": { multiplier: 1.12, category: "normativa", severity: "medium", label: "Certificazione ISO" },
+  "durc": { multiplier: 1.08, category: "normativa", severity: "low", label: "Verifica DURC" },
+  
+  // Tempistiche
+  "entro domani": { multiplier: 1.40, category: "urgenza", severity: "high", label: "Consegna entro domani" },
+  "entro 48 ore": { multiplier: 1.25, category: "urgenza", severity: "medium", label: "Consegna entro 48 ore" },
+  "entro una settimana": { multiplier: 1.10, category: "urgenza", severity: "low", label: "Consegna entro una settimana" },
+  "manutenzione programmata": { multiplier: 0.85, category: "urgenza", severity: "low", label: "Manutenzione programmata" },
+  
+  // Qualità materiali
+  "premium": { multiplier: 1.25, category: "materiali", severity: "low", label: "Materiali premium" },
+  "lusso": { multiplier: 1.40, category: "materiali", severity: "low", label: "Materiali di lusso" },
+  "eco": { multiplier: 1.15, category: "materiali", severity: "low", label: "Materiali ecologici" },
+  "riciclato": { multiplier: 0.95, category: "materiali", severity: "low", label: "Materiali riciclati" },
+  "biodegradabile": { multiplier: 1.20, category: "materiali", severity: "low", label: "Biodegradabile" },
+  
+  // Condizioni di lavoro
+  "lavoro sporco": { multiplier: 1.15, category: "condizioni", severity: "medium", label: "Lavoro molto sporco" },
+  "lavoro pulito": { multiplier: 0.95, category: "condizioni", severity: "low", label: "Lavoro pulito" },
+  "protezione ambiente": { multiplier: 1.20, category: "condizioni", severity: "medium", label: "Protezione ambientale" },
+  "rumore limitato": { multiplier: 1.10, category: "condizioni", severity: "low", label: "Vincolo rumore" },
+  "orari limitati": { multiplier: 1.15, category: "condizioni", severity: "medium", label: "Orari di lavoro limitati" },
+  "vicinato sensibile": { multiplier: 1.20, category: "condizioni", severity: "medium", label: "Vicinato sensibile" }
+};
