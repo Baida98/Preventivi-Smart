@@ -778,3 +778,322 @@
 /* ===== STEP 5 — PROGRESS BAR 5 STEP ===== */
 #ps5 { display: flex; }
 #pl4 { display: flex; }
+
+
+/* ===== WIZARD DINAMICO v9.0 ===== */
+
+.trades-grid {
+  display: grid;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.category-section {
+  animation: fadeIn 0.5s ease-out;
+}
+
+.category-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.trades-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+}
+
+.trade-card {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 2px solid transparent;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.trade-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+  border-color: currentColor;
+}
+
+.trade-card.selected {
+  border-color: currentColor;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(99, 102, 241, 0.05));
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.trade-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  display: inline-block;
+}
+
+.trade-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+
+.trade-desc {
+  font-size: 0.85rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
+  line-height: 1.4;
+}
+
+.trade-price {
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.price-label {
+  font-size: 0.75rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+}
+
+.price-value {
+  font-size: 1.5rem;
+  color: #059669;
+}
+
+.price-unit {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.trade-complexity {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* ===== DOMANDE CONDIZIONALI ===== */
+
+.questions-container {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.questions-header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.questions-header h3 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #1f2937;
+}
+
+.questions-subtitle {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+.questions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.question-card {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+  animation: slideInUp 0.4s ease-out;
+}
+
+.question-card:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.12);
+}
+
+.question-progress {
+  height: 3px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  transition: width 0.4s ease;
+}
+
+.question-content {
+  padding: 1.5rem;
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.question-number {
+  display: inline-block;
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.question-label {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin: 0;
+}
+
+.question-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.option-label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.option-label:hover {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.02);
+}
+
+.option-label.selected {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.option-input {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #3b82f6;
+}
+
+.option-text {
+  flex: 1;
+  font-weight: 500;
+  color: #374151;
+}
+
+.option-multiplier {
+  font-size: 0.8rem;
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+/* ===== DOMANDE CONDIZIONALI DINAMICHE ===== */
+
+.conditional-questions-section {
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 2px dashed #e5e7eb;
+}
+
+.conditional-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+  color: #1f2937;
+  font-size: 1.05rem;
+}
+
+/* ===== PRICE PREVIEW ===== */
+
+.price-preview-card {
+  background: linear-gradient(135deg, #dbeafe, #e0e7ff);
+  border-left: 4px solid #3b82f6;
+  padding: 1.5rem;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1.5rem 0;
+}
+
+.preview-label {
+  font-size: 0.9rem;
+  color: #1e40af;
+  font-weight: 600;
+}
+
+.preview-price {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e40af;
+}
+
+.preview-note {
+  font-size: 0.8rem;
+  color: #3b82f6;
+  font-style: italic;
+}
+
+/* ===== ANIMAZIONI AGGIUNTIVE ===== */
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .trades-row {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+
+  .questions-container {
+    padding: 0 1rem;
+  }
+}

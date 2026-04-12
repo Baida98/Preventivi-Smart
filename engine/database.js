@@ -1,859 +1,763 @@
 /**
- * Database Professionale Preventivi-Smart v6.0
- * Dati aggiornati 2025/2026 basati su Prezzari Regionali e Indici DEI
- * 14 mestieri con domande tecniche avanzate e simboli FontAwesome
+ * Preventivi-Smart Pro v9.0 — Database Mestieri & Scenari
+ * 25+ Scenari di intervento specifici con domande mirate e engagement massimo
  */
 
-// ===== COEFFICIENTI REGIONALI AGGIORNATI 2025/2026 =====
+// ===== COEFFICIENTI REGIONALI =====
 export const REGIONAL_COEFFICIENTS = {
-  "Lombardia": 1.28,
-  "Trentino-Alto Adige": 1.25,
-  "Valle d'Aosta": 1.20,
-  "Lazio": 1.18,
-  "Veneto": 1.15,
-  "Emilia-Romagna": 1.12,
-  "Piemonte": 1.10,
-  "Liguria": 1.10,
-  "Toscana": 1.08,
-  "Friuli-Venezia Giulia": 1.05,
-  "Marche": 1.00,
-  "Umbria": 0.98,
-  "Abruzzo": 0.95,
-  "Campania": 0.92,
-  "Sardegna": 0.90,
-  "Puglia": 0.88,
-  "Sicilia": 0.85,
-  "Basilicata": 0.82,
-  "Calabria": 0.80,
+  "Lombardia": 1.25, "Piemonte": 1.08, "Veneto": 1.12, "Emilia-Romagna": 1.10,
+  "Liguria": 1.05, "Friuli-Venezia Giulia": 1.03, "Trentino-Alto Adige": 1.15,
+  "Valle d'Aosta": 1.10, "Lazio": 1.15, "Toscana": 1.05, "Marche": 1.00,
+  "Umbria": 0.97, "Abruzzo": 0.95, "Campania": 0.95, "Puglia": 0.88,
+  "Sicilia": 0.85, "Sardegna": 0.92, "Calabria": 0.80, "Basilicata": 0.82,
   "Molise": 0.78
 };
 
-// ===== MOLTIPLICATORI QUALITÀ MATERIALI =====
+// ===== COEFFICIENTI QUALITÀ =====
 export const QUALITY_MULTIPLIERS = {
-  "economica": 0.85,
-  "standard": 1.00,
-  "premium": 1.35,
-  "lusso": 1.75
+  economica: 0.75,
+  standard: 1.00,
+  premium: 1.35,
+  lusso: 1.75
 };
 
-// ===== MESTIERI CON DOMANDE TECNICHE AVANZATE =====
-export const TRADES = [
+// ===== DATABASE 25+ SCENARI INTERVENTO =====
+export const TRADES_DATABASE = [
+  // ===== IDRAULICA (5 scenari) =====
   {
-    id: "imbiancatura",
-    name: "Imbiancatura",
-    description: "Tinteggiatura interni ed esterni con trattamenti specifici",
-    icon: "fa-paint-roller",
-    color: "#f59e0b",
-    colorBg: "rgba(245,158,11,0.12)",
-    unit: "mq",
-    basePrice: 10.50,
-    category: "finiture",
-    questions: [
-      {
-        id: "surface_prep",
-        label: "Preparazione della Superficie",
-        type: "select",
-        options: [
-          { value: "nessuna", label: "Superficie già pronta (solo pulizia)", multiplier: 1.0 },
-          { value: "stuccatura", label: "Stuccatura fori e crepe minori", multiplier: 1.20 },
-          { value: "rasatura", label: "Rasatura completa (intonaco civile)", multiplier: 1.60 },
-          { value: "rimozione", label: "Rimozione vecchia carta da parati", multiplier: 1.40 }
-        ]
-      },
-      {
-        id: "paint_tech",
-        label: "Tipo di Pittura e Tecnica",
-        type: "select",
-        options: [
-          { value: "idropittura", label: "Idropittura traspirante (standard)", multiplier: 1.0 },
-          { value: "lavabile", label: "Smalto all'acqua / Lavabile", multiplier: 1.25 },
-          { value: "silicati", label: "Pittura ai silicati (esterno)", multiplier: 1.50 },
-          { value: "decorativo", label: "Effetti decorativi (velatura/spatolato)", multiplier: 2.10 }
-        ]
-      },
-      {
-        id: "muffa",
-        label: "Trattamento Antimuffa",
-        type: "select",
-        options: [
-          { value: "no", label: "Non necessario", multiplier: 1.0 },
-          { value: "si", label: "Trattamento igienizzante preventivo", multiplier: 1.30 }
-        ]
-      },
-      {
-        id: "altezza",
-        label: "Altezza Soffitto / Accesso",
-        type: "select",
-        options: [
-          { value: "standard", label: "Fino a 3 m (scala normale)", multiplier: 1.0 },
-          { value: "alta", label: "3–5 m (ponteggio leggero)", multiplier: 1.35 },
-          { value: "molto_alta", label: "Oltre 5 m (ponteggio fisso)", multiplier: 1.70 }
-        ]
-      },
-      {
-        id: "mani",
-        label: "Numero di Mani",
-        type: "select",
-        options: [
-          { value: "una", label: "Una mano (ritocco)", multiplier: 0.70 },
-          { value: "due", label: "Due mani (standard)", multiplier: 1.0 },
-          { value: "tre", label: "Tre mani (massima copertura)", multiplier: 1.30 }
-        ]
-      }
-    ]
-  },
-  {
-    id: "elettricista",
-    name: "Impianto Elettrico",
-    description: "Realizzazione e messa a norma impianti civili e domotici",
-    icon: "fa-bolt",
-    color: "#eab308",
-    colorBg: "rgba(234,179,8,0.12)",
-    unit: "punti",
-    basePrice: 65.00,
+    id: "idraulica_perdita",
+    name: "Tubo che Perde",
     category: "impianti",
-    questions: [
-      {
-        id: "impianto_tipo",
-        label: "Tipo di Impianto",
-        type: "select",
-        options: [
-          { value: "nuovo", label: "Nuovo impianto sottotraccia", multiplier: 1.0 },
-          { value: "rifacimento", label: "Rifacimento su tubazioni esistenti", multiplier: 0.85 },
-          { value: "esterno", label: "Impianto esterno a vista (canalina)", multiplier: 0.90 },
-          { value: "domotica", label: "Impianto Domotico (Smart Home)", multiplier: 1.80 }
-        ]
-      },
-      {
-        id: "quadro",
-        label: "Tipo di Quadro Elettrico",
-        type: "select",
-        options: [
-          { value: "standard", label: "Quadro standard (fino a 12 moduli)", multiplier: 1.0 },
-          { value: "avanzato", label: "Quadro sezionato (protezioni avanzate)", multiplier: 1.40 },
-          { value: "trifase", label: "Quadro trifase industriale", multiplier: 1.80 }
-        ]
-      },
-      {
-        id: "certificazione",
-        label: "Certificazione e Collaudo",
-        type: "select",
-        options: [
-          { value: "dichiarazione", label: "Dichiarazione di Conformità (Di.Co.)", multiplier: 1.10 },
-          { value: "collaudo", label: "Collaudo + Relazione tecnica completa", multiplier: 1.20 }
-        ]
-      },
-      {
-        id: "fotovoltaico",
-        label: "Predisposizione Fotovoltaico / EV",
-        type: "select",
-        options: [
-          { value: "no", label: "Non richiesta", multiplier: 1.0 },
-          { value: "ev", label: "Predisposizione colonnina EV", multiplier: 1.25 },
-          { value: "fotovoltaico", label: "Predisposizione impianto fotovoltaico", multiplier: 1.40 }
-        ]
-      }
-    ]
-  },
-  {
-    id: "idraulico",
-    name: "Impianto Idraulico",
-    description: "Distribuzione idrica, scarichi sanitari e riscaldamento",
-    icon: "fa-faucet",
+    icon: "fa-droplet",
     color: "#0ea5e9",
-    colorBg: "rgba(14,165,233,0.12)",
-    unit: "punti",
-    basePrice: 195.00,
-    category: "impianti",
+    colorBg: "rgba(14,165,233,0.1)",
+    description: "Perdita d'acqua da tubo o raccordo",
+    basePrice: 150,
+    unit: "intervento",
+    urgencyMultiplier: 1.5,
+    complexity: "media",
     questions: [
       {
-        id: "tubazioni",
-        label: "Materiale Tubazioni",
+        id: "perdita_location",
+        label: "Dove si trova la perdita?",
         type: "select",
         options: [
-          { value: "multistrato", label: "Multistrato (standard moderno)", multiplier: 1.0 },
-          { value: "rame", label: "Rame saldato (alta qualità)", multiplier: 1.35 },
-          { value: "ppr", label: "Polipropilene a saldare (economico)", multiplier: 0.95 }
+          { value: "sotto_lavandino", label: "Sotto il lavandino (facile accesso)", multiplier: 0.9 },
+          { value: "muro", label: "Nel muro (difficile accesso)", multiplier: 1.3 },
+          { value: "bagno", label: "In bagno (accesso medio)", multiplier: 1.0 },
+          { value: "cantina", label: "In cantina/seminterrato", multiplier: 0.85 }
         ]
       },
       {
-        id: "scarichi",
-        label: "Sistema di Scarico",
+        id: "perdita_quantita",
+        label: "Quanto perde?",
         type: "select",
         options: [
-          { value: "standard", label: "PVC/PP standard", multiplier: 1.0 },
-          { value: "insonorizzato", label: "Scarichi insonorizzati (Geberit Silent)", multiplier: 1.45 }
+          { value: "goccia", label: "Goccia ogni 10 secondi", multiplier: 0.7 },
+          { value: "moderata", label: "Getto moderato", multiplier: 1.0 },
+          { value: "abbondante", label: "Getto abbondante", multiplier: 1.4 },
+          { value: "allagamento", label: "Allagamento in corso!", multiplier: 2.0 }
         ]
       },
       {
-        id: "collettore",
-        label: "Schema di Distribuzione",
+        id: "perdita_tipo_tubo",
+        label: "Tipo di tubo?",
         type: "select",
         options: [
-          { value: "serie", label: "In serie (tradizionale)", multiplier: 1.0 },
-          { value: "collettore", label: "A collettore (singola intercettazione)", multiplier: 1.25 }
+          { value: "rame", label: "Rame", multiplier: 1.2 },
+          { value: "plastica", label: "Plastica (PVC/PE)", multiplier: 0.9 },
+          { value: "acciaio", label: "Acciaio zincato", multiplier: 1.1 },
+          { value: "non_so", label: "Non so", multiplier: 1.0 }
         ]
       },
       {
-        id: "riscaldamento",
-        label: "Tipo di Riscaldamento",
+        id: "perdita_urgenza",
+        label: "Quanto è urgente?",
         type: "select",
         options: [
-          { value: "nessuno", label: "Solo impianto idrico (no riscaldamento)", multiplier: 1.0 },
-          { value: "radiatori", label: "Radiatori tradizionali", multiplier: 1.50 },
-          { value: "pannelli", label: "Pannelli radianti a pavimento", multiplier: 2.20 },
-          { value: "pompa", label: "Pompa di calore (impianto completo)", multiplier: 2.80 }
-        ]
-      },
-      {
-        id: "caldaia",
-        label: "Tipo di Caldaia / Generatore",
-        type: "select",
-        options: [
-          { value: "nessuna", label: "Non inclusa nel preventivo", multiplier: 1.0 },
-          { value: "condensazione", label: "Caldaia a condensazione (A+)", multiplier: 1.30 },
-          { value: "pompa_calore", label: "Pompa di calore aria-acqua", multiplier: 1.60 }
+          { value: "non_urgente", label: "Può aspettare qualche giorno", multiplier: 0.7 },
+          { value: "entro_settimana", label: "Entro questa settimana", multiplier: 1.0 },
+          { value: "domani", label: "Domani se possibile", multiplier: 1.3 },
+          { value: "oggi", label: "Oggi stesso (emergenza)", multiplier: 2.0 }
         ]
       }
     ]
   },
+
   {
-    id: "piastrellista",
-    name: "Posa Pavimenti",
-    description: "Installazione professionale ceramica, gres e marmo",
-    icon: "fa-th-large",
+    id: "idraulica_scarico",
+    name: "Scarico Intasato",
+    category: "impianti",
+    icon: "fa-toilet",
     color: "#8b5cf6",
-    colorBg: "rgba(139,92,246,0.12)",
-    unit: "mq",
-    basePrice: 32.00,
-    category: "finiture",
+    colorBg: "rgba(139,92,246,0.1)",
+    description: "Lavandino, doccia o WC intasato",
+    basePrice: 120,
+    unit: "intervento",
+    urgencyMultiplier: 1.3,
+    complexity: "bassa",
     questions: [
       {
-        id: "formato",
-        label: "Formato Piastrelle / Materiale",
+        id: "scarico_dove",
+        label: "Quale scarico è intasato?",
         type: "select",
         options: [
-          { value: "standard", label: "Ceramica standard (30×30, 60×60)", multiplier: 1.0 },
-          { value: "piccolo", label: "Mosaico o formato piccolo (<20cm)", multiplier: 1.50 },
-          { value: "grande", label: "Grandi lastre (120×120 o più)", multiplier: 1.80 },
-          { value: "listoni", label: "Listoni effetto legno (posa sfalsata)", multiplier: 1.20 },
-          { value: "marmo", label: "Marmo / Pietra naturale", multiplier: 2.20 }
+          { value: "lavandino", label: "Lavandino cucina", multiplier: 0.9 },
+          { value: "doccia", label: "Doccia/vasca", multiplier: 1.1 },
+          { value: "wc", label: "WC", multiplier: 1.3 },
+          { value: "colonna", label: "Colonna principale", multiplier: 1.8 }
         ]
       },
       {
-        id: "posa_tipo",
-        label: "Schema di Posa",
+        id: "scarico_sintomi",
+        label: "Quali sono i sintomi?",
         type: "select",
         options: [
-          { value: "dritta", label: "Posa dritta a giunto unito", multiplier: 1.0 },
-          { value: "diagonale", label: "Posa in diagonale (45°)", multiplier: 1.25 },
-          { value: "spina", label: "A spina di pesce (Herringbone)", multiplier: 1.45 },
-          { value: "versailles", label: "Versailles / Opus incertum", multiplier: 1.80 }
+          { value: "lento", label: "Scarica lentamente", multiplier: 0.8 },
+          { value: "bloccato", label: "Completamente bloccato", multiplier: 1.2 },
+          { value: "odore", label: "Odore cattivo", multiplier: 1.0 },
+          { value: "rigurgito", label: "Rigurgito di acqua sporca", multiplier: 1.5 }
         ]
       },
       {
-        id: "massetto",
-        label: "Stato del Sottofondo",
+        id: "scarico_frequenza",
+        label: "Da quanto tempo?",
         type: "select",
         options: [
-          { value: "pronto", label: "Massetto esistente planare", multiplier: 1.0 },
-          { value: "autolivellante", label: "Necessario autolivellante", multiplier: 1.30 },
-          { value: "sovrapposizione", label: "Incollaggio su vecchio pavimento", multiplier: 1.15 },
-          { value: "massetto_nuovo", label: "Nuovo massetto da realizzare", multiplier: 1.60 }
-        ]
-      },
-      {
-        id: "fughe",
-        label: "Tipo di Fughe / Stuccatura",
-        type: "select",
-        options: [
-          { value: "standard", label: "Fughe standard colorate", multiplier: 1.0 },
-          { value: "epossidica", label: "Stuccatura epossidica (resistente)", multiplier: 1.25 },
-          { value: "continuo", label: "Pavimento continuo (senza fughe)", multiplier: 1.50 }
+          { value: "oggi", label: "Oggi", multiplier: 1.0 },
+          { value: "giorni", label: "Ultimi 2-3 giorni", multiplier: 0.95 },
+          { value: "settimane", label: "Settimane", multiplier: 1.2 },
+          { value: "ricorrente", label: "Ricorrente da mesi", multiplier: 1.4 }
         ]
       }
     ]
   },
+
   {
-    id: "muratore",
-    name: "Opere Murarie",
-    description: "Costruzione pareti, intonaci, massetti e demolizioni",
-    icon: "fa-hard-hat",
-    color: "#78716c",
-    colorBg: "rgba(120,113,108,0.12)",
-    unit: "mq",
-    basePrice: 55.00,
-    category: "strutture",
-    questions: [
-      {
-        id: "parete_tipo",
-        label: "Tipologia Intervento",
-        type: "select",
-        options: [
-          { value: "foratini", label: "Parete in laterizio forato 8–10 cm", multiplier: 1.0 },
-          { value: "gasbeton", label: "Blocchi cemento cellulare (Ytong)", multiplier: 0.90 },
-          { value: "portante", label: "Muratura portante in mattoni pieni", multiplier: 1.80 },
-          { value: "demolizione", label: "Demolizione parete non portante", multiplier: 0.70 },
-          { value: "apertura", label: "Apertura vano porta / finestra", multiplier: 2.50 }
-        ]
-      },
-      {
-        id: "intonaco",
-        label: "Finitura Intonaco",
-        type: "select",
-        options: [
-          { value: "grezzo", label: "Solo rinzaffo grezzo", multiplier: 0.80 },
-          { value: "civile", label: "Intonaco civile finito", multiplier: 1.0 },
-          { value: "premiscelato", label: "Premiscelato a macchina", multiplier: 0.95 },
-          { value: "deumidificante", label: "Intonaco deumidificante (risanante)", multiplier: 1.60 }
-        ]
-      },
-      {
-        id: "macerie",
-        label: "Smaltimento Macerie",
-        type: "select",
-        options: [
-          { value: "incluso", label: "Carico, trasporto e smaltimento incluso", multiplier: 1.25 },
-          { value: "escluso", label: "Solo accatastamento in cantiere", multiplier: 1.0 }
-        ]
-      },
-      {
-        id: "ponteggio",
-        label: "Necessità Ponteggio",
-        type: "select",
-        options: [
-          { value: "no", label: "Nessun ponteggio necessario", multiplier: 1.0 },
-          { value: "trabattello", label: "Trabattello mobile", multiplier: 1.15 },
-          { value: "fisso", label: "Ponteggio fisso (facciata)", multiplier: 1.45 }
-        ]
-      }
-    ]
-  },
-  {
-    id: "falegname",
-    name: "Falegnameria",
-    description: "Porte, finestre, arredi su misura e restauro legno",
-    icon: "fa-hammer",
-    color: "#92400e",
-    colorBg: "rgba(146,64,14,0.12)",
-    unit: "pz",
-    basePrice: 450.00,
-    category: "finiture",
-    questions: [
-      {
-        id: "tipo_lavoro",
-        label: "Tipo di Intervento",
-        type: "select",
-        options: [
-          { value: "porta_interna", label: "Porta interna con telaio e maniglia", multiplier: 1.0 },
-          { value: "porta_blindata", label: "Porta blindata / Sicurezza", multiplier: 2.80 },
-          { value: "finestra", label: "Finestra in legno con doppio vetro", multiplier: 2.20 },
-          { value: "armadio", label: "Armadio su misura (al metro lineare)", multiplier: 1.80 },
-          { value: "cucina", label: "Cucina su misura (mobile lineare)", multiplier: 2.50 },
-          { value: "restauro", label: "Restauro e verniciatura infissi", multiplier: 0.60 }
-        ]
-      },
-      {
-        id: "essenza",
-        label: "Tipo di Legno / Materiale",
-        type: "select",
-        options: [
-          { value: "mdf", label: "MDF / Truciolato laccato", multiplier: 1.0 },
-          { value: "abete", label: "Abete / Pino (legno tenero)", multiplier: 1.20 },
-          { value: "rovere", label: "Rovere / Faggio (legno duro)", multiplier: 1.60 },
-          { value: "noce", label: "Noce / Ciliegio (pregiato)", multiplier: 2.20 },
-          { value: "teak", label: "Teak / Iroko (esterno/nautica)", multiplier: 2.80 }
-        ]
-      },
-      {
-        id: "finitura",
-        label: "Finitura Superficiale",
-        type: "select",
-        options: [
-          { value: "laccato", label: "Laccato opaco/lucido", multiplier: 1.0 },
-          { value: "verniciato", label: "Verniciato a poro aperto", multiplier: 1.15 },
-          { value: "cerato", label: "Oliato / Cerato naturale", multiplier: 1.30 },
-          { value: "grezzo", label: "Grezzo (solo piallatura)", multiplier: 0.75 }
-        ]
-      },
-      {
-        id: "montaggio",
-        label: "Smontaggio / Montaggio",
-        type: "select",
-        options: [
-          { value: "solo_montaggio", label: "Solo montaggio (nuovo)", multiplier: 1.0 },
-          { value: "sostituzione", label: "Smontaggio vecchio + montaggio nuovo", multiplier: 1.30 },
-          { value: "adattamento", label: "Adattamento vano esistente", multiplier: 1.50 }
-        ]
-      }
-    ]
-  },
-  {
-    id: "parchettista",
-    name: "Posa Parquet",
-    description: "Parquet in legno massello, prefinito e laminato",
-    icon: "fa-border-all",
-    color: "#b45309",
-    colorBg: "rgba(180,83,9,0.12)",
-    unit: "mq",
-    basePrice: 45.00,
-    category: "finiture",
-    questions: [
-      {
-        id: "tipo_parquet",
-        label: "Tipo di Parquet",
-        type: "select",
-        options: [
-          { value: "laminato", label: "Laminato (AC4/AC5)", multiplier: 0.70 },
-          { value: "prefinito", label: "Prefinito multistrato (6–15 mm)", multiplier: 1.0 },
-          { value: "massello", label: "Massello in legno duro (20 mm+)", multiplier: 1.60 },
-          { value: "bamboo", label: "Bambù / Sughero ecologico", multiplier: 1.20 }
-        ]
-      },
-      {
-        id: "posa_parquet",
-        label: "Metodo di Posa",
-        type: "select",
-        options: [
-          { value: "flottante", label: "Flottante (click system)", multiplier: 1.0 },
-          { value: "incollato", label: "Incollato a tutta superficie", multiplier: 1.35 },
-          { value: "inchiodato", label: "Inchiodato su listelli", multiplier: 1.50 }
-        ]
-      },
-      {
-        id: "schema_parquet",
-        label: "Schema Decorativo",
-        type: "select",
-        options: [
-          { value: "dritto", label: "Posa dritta parallela", multiplier: 1.0 },
-          { value: "diagonale", label: "Posa diagonale (45°)", multiplier: 1.20 },
-          { value: "spina", label: "Spina di pesce / Chevron", multiplier: 1.45 },
-          { value: "punto_ungheria", label: "Punto d'Ungheria (classico)", multiplier: 1.60 }
-        ]
-      },
-      {
-        id: "levigatura",
-        label: "Levigatura e Trattamento",
-        type: "select",
-        options: [
-          { value: "no", label: "Non necessaria (prefinito/laminato)", multiplier: 1.0 },
-          { value: "levigatura", label: "Levigatura + verniciatura", multiplier: 1.40 },
-          { value: "levigatura_olio", label: "Levigatura + olio naturale", multiplier: 1.50 }
-        ]
-      }
-    ]
-  },
-  {
-    id: "cartongessista",
-    name: "Cartongesso",
-    description: "Controsoffitti, pareti divisorie e isolamento acustico",
-    icon: "fa-layer-group",
-    color: "#64748b",
-    colorBg: "rgba(100,116,139,0.12)",
-    unit: "mq",
-    basePrice: 38.00,
-    category: "finiture",
-    questions: [
-      {
-        id: "tipo_lavoro_cg",
-        label: "Tipo di Lavoro",
-        type: "select",
-        options: [
-          { value: "parete", label: "Parete divisoria semplice", multiplier: 1.0 },
-          { value: "controsoffitto", label: "Controsoffitto piano", multiplier: 1.20 },
-          { value: "controsoffitto_sagomato", label: "Controsoffitto sagomato / ribassato", multiplier: 1.80 },
-          { value: "rivestimento", label: "Rivestimento parete esistente", multiplier: 0.85 },
-          { value: "nicchie", label: "Nicchie / Velette decorative", multiplier: 2.20 }
-        ]
-      },
-      {
-        id: "lastra_tipo",
-        label: "Tipo di Lastra",
-        type: "select",
-        options: [
-          { value: "standard", label: "Standard (ambienti secchi)", multiplier: 1.0 },
-          { value: "idrofuga", label: "Idrofuga Verde (bagni/cucine)", multiplier: 1.15 },
-          { value: "antifuoco", label: "Antifuoco Rosa (REI 60/120)", multiplier: 1.35 },
-          { value: "acustica", label: "Acustica ad alta densità", multiplier: 1.50 }
-        ]
-      },
-      {
-        id: "isolamento",
-        label: "Isolamento Interno",
-        type: "select",
-        options: [
-          { value: "nessuno", label: "Nessun isolamento", multiplier: 1.0 },
-          { value: "lana_roccia", label: "Lana di roccia (acustico/termico)", multiplier: 1.25 },
-          { value: "polistirene", label: "Polistirene espanso (termico)", multiplier: 1.20 },
-          { value: "fibra_legno", label: "Fibra di legno (ecologico)", multiplier: 1.40 }
-        ]
-      },
-      {
-        id: "finitura_cg",
-        label: "Finitura Superficiale",
-        type: "select",
-        options: [
-          { value: "stuccatura", label: "Stuccatura e carteggiatura (pronto pittura)", multiplier: 1.0 },
-          { value: "rasatura", label: "Rasatura a zero (finitura liscia)", multiplier: 1.20 }
-        ]
-      }
-    ]
-  },
-  {
-    id: "climatizzazione",
-    name: "Climatizzazione",
-    description: "Condizionatori, ventilazione e impianti VMC",
-    icon: "fa-snowflake",
-    color: "#06b6d4",
-    colorBg: "rgba(6,182,212,0.12)",
-    unit: "pz",
-    basePrice: 850.00,
+    id: "idraulica_caldaia",
+    name: "Caldaia Rotta",
     category: "impianti",
+    icon: "fa-fire",
+    color: "#ef4444",
+    colorBg: "rgba(239,68,68,0.1)",
+    description: "Caldaia che non scalda o perde",
+    basePrice: 250,
+    unit: "intervento",
+    urgencyMultiplier: 2.0,
+    complexity: "alta",
     questions: [
       {
-        id: "tipo_impianto_clim",
-        label: "Tipo di Impianto",
+        id: "caldaia_problema",
+        label: "Qual è il problema?",
         type: "select",
         options: [
-          { value: "monosplit", label: "Monosplit (1 unità interna)", multiplier: 1.0 },
-          { value: "dualsplit", label: "Dual Split (2 unità interne)", multiplier: 1.80 },
-          { value: "multisplit", label: "Multi Split (3–5 unità)", multiplier: 2.80 },
-          { value: "canalizzato", label: "Canalizzato nascosto (alta gamma)", multiplier: 3.50 },
-          { value: "vmc", label: "VMC - Ventilazione Meccanica Controllata", multiplier: 4.20 }
+          { value: "no_caldo", label: "Non scalda l'acqua", multiplier: 1.0 },
+          { value: "perde", label: "Perde acqua", multiplier: 1.3 },
+          { value: "rumore", label: "Fa strani rumori", multiplier: 1.1 },
+          { value: "accensione", label: "Non si accende", multiplier: 1.4 }
         ]
       },
       {
-        id: "potenza",
-        label: "Potenza Frigorifica",
+        id: "caldaia_eta",
+        label: "Quanti anni ha la caldaia?",
         type: "select",
         options: [
-          { value: "9000", label: "9.000 BTU (fino a 25 mq)", multiplier: 1.0 },
-          { value: "12000", label: "12.000 BTU (fino a 35 mq)", multiplier: 1.20 },
-          { value: "18000", label: "18.000 BTU (fino a 50 mq)", multiplier: 1.45 },
-          { value: "24000", label: "24.000 BTU (fino a 70 mq)", multiplier: 1.70 }
+          { value: "nuovo", label: "Meno di 3 anni", multiplier: 0.9 },
+          { value: "medio", label: "3-10 anni", multiplier: 1.0 },
+          { value: "vecchio", label: "10-20 anni", multiplier: 1.2 },
+          { value: "molto_vecchio", label: "Più di 20 anni", multiplier: 1.5 }
         ]
       },
       {
-        id: "classe_energetica",
-        label: "Classe Energetica",
+        id: "caldaia_urgenza",
+        label: "È inverno?",
         type: "select",
         options: [
-          { value: "a_plus", label: "A+ (efficiente)", multiplier: 1.0 },
-          { value: "a_plus_plus", label: "A++ (alta efficienza)", multiplier: 1.25 },
-          { value: "a_plus_plus_plus", label: "A+++ (massima efficienza)", multiplier: 1.55 }
-        ]
-      },
-      {
-        id: "posa_clim",
-        label: "Tipo di Installazione",
-        type: "select",
-        options: [
-          { value: "standard", label: "Standard (unità esterna a parete)", multiplier: 1.0 },
-          { value: "canalizzazione", label: "Con canalizzazione interna", multiplier: 1.30 },
-          { value: "tetto", label: "Unità esterna su tetto/terrazzo", multiplier: 1.50 }
+          { value: "estate", label: "No, è estate/primavera", multiplier: 0.8 },
+          { value: "autunno", label: "Autunno/inizio inverno", multiplier: 1.2 },
+          { value: "inverno", label: "Sì, pieno inverno", multiplier: 2.0 }
         ]
       }
     ]
   },
+
   {
-    id: "fabbro",
-    name: "Fabbro / Serramentista",
-    description: "Cancelli, ringhiere, serramenti in ferro e alluminio",
-    icon: "fa-key",
-    color: "#475569",
-    colorBg: "rgba(71,85,105,0.12)",
+    id: "idraulica_rubinetto",
+    name: "Rubinetto che Perde",
+    category: "impianti",
+    icon: "fa-faucet",
+    color: "#06b6d4",
+    colorBg: "rgba(6,182,212,0.1)",
+    description: "Rubinetto che gocciola o non chiude",
+    basePrice: 80,
+    unit: "intervento",
+    urgencyMultiplier: 1.0,
+    complexity: "bassa",
+    questions: [
+      {
+        id: "rubinetto_tipo",
+        label: "Tipo di rubinetto?",
+        type: "select",
+        options: [
+          { value: "monocomando", label: "Monocomando (una leva)", multiplier: 0.9 },
+          { value: "bicomando", label: "Bicomando (due manopole)", multiplier: 1.0 },
+          { value: "termostatico", label: "Termostatico", multiplier: 1.2 },
+          { value: "moderno", label: "Moderno/design", multiplier: 1.3 }
+        ]
+      },
+      {
+        id: "rubinetto_perdita",
+        label: "Come perde?",
+        type: "select",
+        options: [
+          { value: "goccia", label: "Goccia dal beccuccio", multiplier: 0.8 },
+          { value: "sotto", label: "Perde da sotto", multiplier: 1.1 },
+          { value: "non_chiude", label: "Non chiude completamente", multiplier: 0.9 },
+          { value: "sprizza", label: "Sprizza acqua", multiplier: 1.2 }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "idraulica_bagno",
+    name: "Rifacimento Bagno",
+    category: "finiture",
+    icon: "fa-bath",
+    color: "#3b82f6",
+    colorBg: "rgba(59,130,246,0.1)",
+    description: "Ristrutturazione completa bagno",
+    basePrice: 3500,
     unit: "mq",
-    basePrice: 280.00,
+    urgencyMultiplier: 1.0,
+    complexity: "molto_alta",
+    questions: [
+      {
+        id: "bagno_metratura",
+        label: "Metratura bagno?",
+        type: "select",
+        options: [
+          { value: "piccolo", label: "Piccolo (2-3 mq)", multiplier: 0.9 },
+          { value: "medio", label: "Medio (3-5 mq)", multiplier: 1.0 },
+          { value: "grande", label: "Grande (5-8 mq)", multiplier: 1.1 },
+          { value: "suite", label: "Suite bagno (8+ mq)", multiplier: 1.3 }
+        ]
+      },
+      {
+        id: "bagno_lavori",
+        label: "Cosa include il rifacimento?",
+        type: "select",
+        options: [
+          { value: "piastrelle", label: "Solo piastrelle", multiplier: 0.7 },
+          { value: "impianti", label: "Impianti + piastrelle", multiplier: 1.2 },
+          { value: "completo", label: "Completo (muri, impianti, arredo)", multiplier: 1.5 },
+          { value: "lusso", label: "Lusso con jacuzzi/sauna", multiplier: 2.0 }
+        ]
+      }
+    ]
+  },
+
+  // ===== ELETTRICITÀ (5 scenari) =====
+  {
+    id: "elettricita_corto",
+    name: "Corto Circuito",
+    category: "impianti",
+    icon: "fa-bolt",
+    color: "#fbbf24",
+    colorBg: "rgba(251,191,36,0.1)",
+    description: "Mancanza di corrente, interruttore scatta",
+    basePrice: 100,
+    unit: "intervento",
+    urgencyMultiplier: 1.8,
+    complexity: "media",
+    questions: [
+      {
+        id: "corto_sintomi",
+        label: "Cosa è successo?",
+        type: "select",
+        options: [
+          { value: "scatta", label: "L'interruttore scatta", multiplier: 1.0 },
+          { value: "manca_corrente", label: "Manca corrente in una stanza", multiplier: 1.1 },
+          { value: "tutto_buio", label: "Tutta la casa al buio", multiplier: 1.4 },
+          { value: "odore_bruciato", label: "Odore di bruciato", multiplier: 2.0 }
+        ]
+      },
+      {
+        id: "corto_apparecchio",
+        label: "Quale apparecchio era acceso?",
+        type: "select",
+        options: [
+          { value: "nessuno", label: "Nessuno in particolare", multiplier: 1.0 },
+          { value: "lavatrice", label: "Lavatrice", multiplier: 1.1 },
+          { value: "forno", label: "Forno/fornelli", multiplier: 1.2 },
+          { value: "riscaldamento", label: "Riscaldamento/climatizzazione", multiplier: 1.1 }
+        ]
+      },
+      {
+        id: "corto_riprova",
+        label: "Hai riacceso l'interruttore?",
+        type: "select",
+        options: [
+          { value: "no", label: "No, ho paura", multiplier: 1.3 },
+          { value: "si_scatta", label: "Sì, ma scatta subito", multiplier: 1.2 },
+          { value: "si_funziona", label: "Sì, e funziona", multiplier: 0.8 }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "elettricita_presa",
+    name: "Presa/Interruttore Rotto",
+    category: "impianti",
+    icon: "fa-plug",
+    color: "#f97316",
+    colorBg: "rgba(249,115,22,0.1)",
+    description: "Presa o interruttore non funziona",
+    basePrice: 60,
+    unit: "intervento",
+    urgencyMultiplier: 1.1,
+    complexity: "bassa",
+    questions: [
+      {
+        id: "presa_tipo",
+        label: "È una presa o un interruttore?",
+        type: "select",
+        options: [
+          { value: "presa", label: "Presa", multiplier: 1.0 },
+          { value: "interruttore", label: "Interruttore", multiplier: 0.9 },
+          { value: "entrambi", label: "Modulo combinato", multiplier: 1.1 }
+        ]
+      },
+      {
+        id: "presa_problema",
+        label: "Qual è il problema?",
+        type: "select",
+        options: [
+          { value: "non_funziona", label: "Non funziona", multiplier: 1.0 },
+          { value: "scossa", label: "Dà scossa", multiplier: 1.5 },
+          { value: "bruciata", label: "Bruciata/annerita", multiplier: 1.3 },
+          { value: "allentata", label: "Allentata/traballante", multiplier: 0.9 }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "elettricita_lampada",
+    name: "Lampadina/Plafoniera",
+    category: "finiture",
+    icon: "fa-lightbulb",
+    color: "#fcd34d",
+    colorBg: "rgba(252,211,77,0.1)",
+    description: "Lampadina non accende, plafoniera rotta",
+    basePrice: 50,
+    unit: "intervento",
+    urgencyMultiplier: 1.0,
+    complexity: "bassa",
+    questions: [
+      {
+        id: "lampada_tipo",
+        label: "Tipo di illuminazione?",
+        type: "select",
+        options: [
+          { value: "lampadina", label: "Lampadina singola", multiplier: 0.8 },
+          { value: "plafoniera", label: "Plafoniera", multiplier: 1.1 },
+          { value: "applique", label: "Applique", multiplier: 1.0 },
+          { value: "faretti", label: "Faretti/downlight", multiplier: 1.2 }
+        ]
+      },
+      {
+        id: "lampada_problema",
+        label: "Qual è il problema?",
+        type: "select",
+        options: [
+          { value: "non_accende", label: "Non accende", multiplier: 1.0 },
+          { value: "sfarfalla", label: "Sfarfalla/lampeggia", multiplier: 1.1 },
+          { value: "rotta", label: "Rotta/danneggiata", multiplier: 1.2 }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "elettricita_impianto",
+    name: "Rifacimento Impianto Elettrico",
+    category: "impianti",
+    icon: "fa-wires",
+    color: "#ec4899",
+    colorBg: "rgba(236,72,153,0.1)",
+    description: "Rifacimento completo impianto elettrico",
+    basePrice: 2500,
+    unit: "mq",
+    urgencyMultiplier: 1.0,
+    complexity: "molto_alta",
+    questions: [
+      {
+        id: "impianto_metratura",
+        label: "Metratura da rifacimento?",
+        type: "select",
+        options: [
+          { value: "piccolo", label: "Piccolo (50-80 mq)", multiplier: 0.9 },
+          { value: "medio", label: "Medio (80-150 mq)", multiplier: 1.0 },
+          { value: "grande", label: "Grande (150-250 mq)", multiplier: 1.1 },
+          { value: "molto_grande", label: "Molto grande (250+ mq)", multiplier: 1.2 }
+        ]
+      },
+      {
+        id: "impianto_tipo_edificio",
+        label: "Tipo di edificio?",
+        type: "select",
+        options: [
+          { value: "appartamento", label: "Appartamento", multiplier: 1.0 },
+          { value: "casa", label: "Casa indipendente", multiplier: 1.1 },
+          { value: "villa", label: "Villa", multiplier: 1.2 },
+          { value: "commerciale", label: "Locale commerciale", multiplier: 1.4 }
+        ]
+      }
+    ]
+  },
+
+  // ===== MURATURA (4 scenari) =====
+  {
+    id: "muratura_crepa",
+    name: "Crepa nel Muro",
     category: "strutture",
+    icon: "fa-burst",
+    color: "#a16207",
+    colorBg: "rgba(161,98,7,0.1)",
+    description: "Crepa, spaccatura o lesione nel muro",
+    basePrice: 150,
+    unit: "metro",
+    urgencyMultiplier: 1.2,
+    complexity: "media",
     questions: [
       {
-        id: "tipo_lavoro_fabbro",
-        label: "Tipo di Manufatto",
+        id: "crepa_dimensione",
+        label: "Dimensione della crepa?",
         type: "select",
         options: [
-          { value: "ringhiera", label: "Ringhiera / Parapetto scala", multiplier: 1.0 },
-          { value: "cancello_pedonale", label: "Cancello pedonale battente", multiplier: 1.20 },
-          { value: "cancello_auto", label: "Cancello carraio scorrevole", multiplier: 2.20 },
-          { value: "inferriata", label: "Inferriata di sicurezza", multiplier: 1.40 },
-          { value: "pensilina", label: "Pensilina / Tettoia in ferro", multiplier: 1.80 },
-          { value: "scala", label: "Scala in ferro su misura", multiplier: 2.50 }
+          { value: "sottile", label: "Sottile (< 2mm)", multiplier: 0.8 },
+          { value: "media", label: "Media (2-5mm)", multiplier: 1.0 },
+          { value: "larga", label: "Larga (5-10mm)", multiplier: 1.3 },
+          { value: "molto_larga", label: "Molto larga (> 10mm)", multiplier: 1.6 }
         ]
       },
       {
-        id: "materiale_fabbro",
-        label: "Materiale",
+        id: "crepa_umidita",
+        label: "Il muro è umido?",
         type: "select",
         options: [
-          { value: "ferro", label: "Ferro verniciato (standard)", multiplier: 1.0 },
-          { value: "acciaio_inox", label: "Acciaio inox (resistente)", multiplier: 1.60 },
-          { value: "alluminio", label: "Alluminio (leggero/moderno)", multiplier: 1.40 },
-          { value: "corten", label: "Acciaio Corten (design)", multiplier: 1.80 }
-        ]
-      },
-      {
-        id: "automazione",
-        label: "Automazione / Motorizzazione",
-        type: "select",
-        options: [
-          { value: "no", label: "Manuale (nessuna automazione)", multiplier: 1.0 },
-          { value: "motore", label: "Motore elettrico + telecomando", multiplier: 1.50 },
-          { value: "smart", label: "Motore smart (app + videocitofono)", multiplier: 1.90 }
-        ]
-      },
-      {
-        id: "finitura_fabbro",
-        label: "Finitura Superficiale",
-        type: "select",
-        options: [
-          { value: "verniciato", label: "Verniciato a polvere (RAL)", multiplier: 1.0 },
-          { value: "zincato", label: "Zincato a caldo + verniciatura", multiplier: 1.25 },
-          { value: "satinato", label: "Satinato / Spazzolato (inox)", multiplier: 1.15 }
+          { value: "no", label: "No, asciutto", multiplier: 0.9 },
+          { value: "leggermente", label: "Leggermente", multiplier: 1.2 },
+          { value: "molto", label: "Molto umido", multiplier: 1.5 },
+          { value: "muffa", label: "C'è muffa", multiplier: 1.7 }
         ]
       }
     ]
   },
+
   {
-    id: "giardiniere",
-    name: "Giardinaggio",
-    description: "Progettazione giardini, prati, siepi e irrigazione",
-    icon: "fa-seedling",
-    color: "#16a34a",
-    colorBg: "rgba(22,163,74,0.12)",
+    id: "muratura_umidita",
+    name: "Umidità e Muffa",
+    category: "strutture",
+    icon: "fa-water",
+    color: "#0891b2",
+    colorBg: "rgba(8,145,178,0.1)",
+    description: "Muri umidi, muffa, macchie d'acqua",
+    basePrice: 200,
     unit: "mq",
-    basePrice: 22.00,
-    category: "esterni",
+    urgencyMultiplier: 1.4,
+    complexity: "alta",
     questions: [
       {
-        id: "tipo_giardino",
-        label: "Tipo di Intervento",
+        id: "umidita_tipo",
+        label: "Tipo di umidità?",
         type: "select",
         options: [
-          { value: "manutenzione", label: "Manutenzione ordinaria (taglio/pulizia)", multiplier: 1.0 },
-          { value: "nuovo_prato", label: "Nuovo prato (semina o rotoli)", multiplier: 1.40 },
-          { value: "progettazione", label: "Progettazione e realizzazione completa", multiplier: 2.80 },
-          { value: "siepe", label: "Piantagione siepe / alberature", multiplier: 1.60 }
+          { value: "risalita", label: "Risalita dal terreno", multiplier: 1.3 },
+          { value: "infiltrazione", label: "Infiltrazione da esterno", multiplier: 1.4 },
+          { value: "condensa", label: "Condensa (interno)", multiplier: 0.9 }
         ]
       },
       {
-        id: "irrigazione",
-        label: "Impianto di Irrigazione",
+        id: "umidita_estensione",
+        label: "Quanto è estesa?",
         type: "select",
         options: [
-          { value: "no", label: "Non richiesto", multiplier: 1.0 },
-          { value: "goccia", label: "Irrigazione a goccia (aiuole)", multiplier: 1.30 },
-          { value: "interrato", label: "Impianto interrato automatico", multiplier: 1.80 },
-          { value: "smart", label: "Irrigazione smart (sensori meteo)", multiplier: 2.20 }
-        ]
-      },
-      {
-        id: "terreno",
-        label: "Condizioni del Terreno",
-        type: "select",
-        options: [
-          { value: "buono", label: "Terreno già lavorato", multiplier: 1.0 },
-          { value: "duro", label: "Terreno compatto (fresatura)", multiplier: 1.30 },
-          { value: "bonifica", label: "Bonifica e riporto terra", multiplier: 1.70 }
-        ]
-      },
-      {
-        id: "illuminazione_giardino",
-        label: "Illuminazione Esterna",
-        type: "select",
-        options: [
-          { value: "no", label: "Non richiesta", multiplier: 1.0 },
-          { value: "segnapasso", label: "Segnapasso / Faretti a LED", multiplier: 1.25 },
-          { value: "completa", label: "Illuminazione scenografica completa", multiplier: 1.60 }
+          { value: "piccola", label: "Piccola zona (< 1 mq)", multiplier: 0.8 },
+          { value: "media", label: "Media (1-5 mq)", multiplier: 1.0 },
+          { value: "grande", label: "Grande (5-20 mq)", multiplier: 1.3 },
+          { value: "molto_grande", label: "Molto estesa (> 20 mq)", multiplier: 1.6 }
         ]
       }
     ]
   },
+
   {
-    id: "tetto",
-    name: "Coperture e Tetti",
-    description: "Rifacimento tetti, impermeabilizzazioni e coibentazioni",
+    id: "muratura_intonaco",
+    name: "Intonaco Scrostato",
+    category: "finiture",
+    icon: "fa-paint-roller",
+    color: "#d97706",
+    colorBg: "rgba(217,119,6,0.1)",
+    description: "Intonaco che si scroста, cade a pezzi",
+    basePrice: 180,
+    unit: "mq",
+    urgencyMultiplier: 1.1,
+    complexity: "media",
+    questions: [
+      {
+        id: "intonaco_estensione",
+        label: "Quanto intonaco manca?",
+        type: "select",
+        options: [
+          { value: "piccoli_pezzi", label: "Piccoli pezzi", multiplier: 0.8 },
+          { value: "zone", label: "Alcune zone", multiplier: 1.0 },
+          { value: "parete", label: "Intera parete", multiplier: 1.2 },
+          { value: "piu_pareti", label: "Più pareti", multiplier: 1.4 }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "muratura_pittura",
+    name: "Imbiancatura/Pittura",
+    category: "finiture",
+    icon: "fa-paint-roller",
+    color: "#f43f5e",
+    colorBg: "rgba(244,63,94,0.1)",
+    description: "Pittura pareti, soffitti, porte",
+    basePrice: 15,
+    unit: "mq",
+    urgencyMultiplier: 1.0,
+    complexity: "bassa",
+    questions: [
+      {
+        id: "pittura_tipo",
+        label: "Tipo di pittura?",
+        type: "select",
+        options: [
+          { value: "semplice", label: "Semplice tinta unita", multiplier: 0.9 },
+          { value: "effetto", label: "Con effetto/texture", multiplier: 1.2 },
+          { value: "antimuffa", label: "Antimuffa", multiplier: 1.3 }
+        ]
+      },
+      {
+        id: "pittura_metratura",
+        label: "Metratura da dipingere?",
+        type: "select",
+        options: [
+          { value: "piccola", label: "Piccola (< 50 mq)", multiplier: 1.1 },
+          { value: "media", label: "Media (50-150 mq)", multiplier: 1.0 },
+          { value: "grande", label: "Grande (150-300 mq)", multiplier: 0.95 }
+        ]
+      }
+    ]
+  },
+
+  // ===== PAVIMENTI (3 scenari) =====
+  {
+    id: "pavimenti_posa",
+    name: "Posa Pavimenti",
+    category: "finiture",
+    icon: "fa-th-large",
+    color: "#6366f1",
+    colorBg: "rgba(99,102,241,0.1)",
+    description: "Posa piastrelle, gres, parquet",
+    basePrice: 35,
+    unit: "mq",
+    urgencyMultiplier: 1.0,
+    complexity: "media",
+    questions: [
+      {
+        id: "pavimento_tipo",
+        label: "Tipo di pavimento?",
+        type: "select",
+        options: [
+          { value: "ceramica", label: "Ceramica/Gres", multiplier: 1.0 },
+          { value: "parquet", label: "Parquet", multiplier: 1.3 },
+          { value: "laminato", label: "Laminato", multiplier: 0.9 },
+          { value: "marmo", label: "Marmo/Pietra", multiplier: 1.4 }
+        ]
+      },
+      {
+        id: "pavimento_demolizione",
+        label: "Serve demolire il vecchio?",
+        type: "select",
+        options: [
+          { value: "no", label: "No, superficie nuova", multiplier: 0.8 },
+          { value: "parziale", label: "Parziale", multiplier: 1.1 },
+          { value: "totale", label: "Totale", multiplier: 1.3 }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "pavimenti_riparazione",
+    name: "Riparazione Pavimento",
+    category: "finiture",
+    icon: "fa-hammer",
+    color: "#8b5cf6",
+    colorBg: "rgba(139,92,246,0.1)",
+    description: "Piastrella rotta, crepa, scrostamento",
+    basePrice: 100,
+    unit: "intervento",
+    urgencyMultiplier: 1.1,
+    complexity: "bassa",
+    questions: [
+      {
+        id: "riparazione_danno",
+        label: "Tipo di danno?",
+        type: "select",
+        options: [
+          { value: "piastrella", label: "Una piastrella rotta", multiplier: 1.0 },
+          { value: "piu_piastrelle", label: "Più piastrelle", multiplier: 1.2 },
+          { value: "crepa", label: "Crepa nel pavimento", multiplier: 1.3 }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "pavimenti_pulizia",
+    name: "Pulizia Post-Cantiere",
+    category: "servizi",
+    icon: "fa-broom",
+    color: "#14b8a6",
+    colorBg: "rgba(20,184,166,0.1)",
+    description: "Pulizia e smaltimento materiali",
+    basePrice: 8.5,
+    unit: "mq",
+    urgencyMultiplier: 1.0,
+    complexity: "bassa",
+    questions: [
+      {
+        id: "pulizia_metratura",
+        label: "Metratura da pulire?",
+        type: "select",
+        options: [
+          { value: "piccola", label: "Piccola (< 50 mq)", multiplier: 1.2 },
+          { value: "media", label: "Media (50-150 mq)", multiplier: 1.0 },
+          { value: "grande", label: "Grande (150-300 mq)", multiplier: 0.9 }
+        ]
+      }
+    ]
+  },
+
+  // ===== ESTERNI (3 scenari) =====
+  {
+    id: "esterni_tetto",
+    name: "Riparazione Tetto",
+    category: "esterni",
     icon: "fa-home",
     color: "#dc2626",
-    colorBg: "rgba(220,38,38,0.12)",
+    colorBg: "rgba(220,38,38,0.1)",
+    description: "Perdita dal tetto, tegole rotte",
+    basePrice: 120,
     unit: "mq",
-    basePrice: 85.00,
-    category: "strutture",
+    urgencyMultiplier: 1.6,
+    complexity: "alta",
     questions: [
       {
-        id: "tipo_tetto",
-        label: "Tipo di Intervento",
+        id: "tetto_tipo",
+        label: "Tipo di copertura?",
         type: "select",
         options: [
-          { value: "manutenzione", label: "Manutenzione e sigillatura", multiplier: 0.60 },
-          { value: "impermeabilizzazione", label: "Impermeabilizzazione terrazzo/lastrico", multiplier: 1.0 },
-          { value: "rifacimento_parziale", label: "Rifacimento parziale (sostituzione coppi)", multiplier: 1.20 },
-          { value: "rifacimento_totale", label: "Rifacimento totale con struttura", multiplier: 2.20 }
+          { value: "tegole", label: "Tegole in laterizio", multiplier: 1.0 },
+          { value: "coppi", label: "Coppi", multiplier: 1.1 },
+          { value: "ardesia", label: "Ardesia", multiplier: 1.3 },
+          { value: "lamiera", label: "Lamiera", multiplier: 0.9 }
         ]
       },
       {
-        id: "materiale_copertura",
-        label: "Materiale di Copertura",
+        id: "tetto_problema",
+        label: "Qual è il problema?",
         type: "select",
         options: [
-          { value: "coppi", label: "Coppi in cotto (tradizionale)", multiplier: 1.0 },
-          { value: "tegole", label: "Tegole in cemento/fibrocemento", multiplier: 0.85 },
-          { value: "lamiera", label: "Lamiera grecata / Pannello sandwich", multiplier: 0.90 },
-          { value: "ardesia", label: "Ardesia naturale (pregiata)", multiplier: 1.80 },
-          { value: "verde", label: "Tetto verde (giardino pensile)", multiplier: 2.50 }
-        ]
-      },
-      {
-        id: "coibentazione",
-        label: "Coibentazione Termica",
-        type: "select",
-        options: [
-          { value: "no", label: "Non inclusa", multiplier: 1.0 },
-          { value: "lana_roccia", label: "Lana di roccia (cappotto interno)", multiplier: 1.35 },
-          { value: "poliuretano", label: "Schiuma poliuretanica (spray)", multiplier: 1.50 },
-          { value: "pannelli_rigidi", label: "Pannelli rigidi PIR/EPS", multiplier: 1.40 }
-        ]
-      },
-      {
-        id: "grondaie",
-        label: "Grondaie e Pluviali",
-        type: "select",
-        options: [
-          { value: "no", label: "Non incluse", multiplier: 1.0 },
-          { value: "pvc", label: "Grondaie in PVC", multiplier: 1.15 },
-          { value: "rame", label: "Grondaie in rame (pregiato)", multiplier: 1.40 },
-          { value: "acciaio", label: "Grondaie in acciaio zincato", multiplier: 1.25 }
+          { value: "perdita", label: "Perdita d'acqua", multiplier: 1.3 },
+          { value: "tegole_rotte", label: "Tegole rotte", multiplier: 1.0 },
+          { value: "muschio", label: "Muschio/alghe", multiplier: 0.8 }
         ]
       }
     ]
   },
+
   {
-    id: "pavimentazioni_esterne",
-    name: "Pavimentazioni Esterne",
-    description: "Vialetti, terrazzi, piscine e aree esterne",
-    icon: "fa-road",
-    color: "#0891b2",
-    colorBg: "rgba(8,145,178,0.12)",
-    unit: "mq",
-    basePrice: 55.00,
+    id: "esterni_giardino",
+    name: "Giardinaggio",
     category: "esterni",
+    icon: "fa-seedling",
+    color: "#22c55e",
+    colorBg: "rgba(34,197,94,0.1)",
+    description: "Manutenzione giardino, potatura, semina",
+    basePrice: 22,
+    unit: "mq",
+    urgencyMultiplier: 1.0,
+    complexity: "bassa",
     questions: [
       {
-        id: "tipo_pav_est",
-        label: "Tipo di Pavimentazione",
+        id: "giardino_tipo_lavoro",
+        label: "Tipo di lavoro?",
         type: "select",
         options: [
-          { value: "autobloccanti", label: "Autobloccanti in calcestruzzo", multiplier: 1.0 },
-          { value: "porfido", label: "Porfido (cubetti o lastre)", multiplier: 1.60 },
-          { value: "gres_esterno", label: "Gres porcellanato antiscivolo", multiplier: 1.40 },
-          { value: "legno_composito", label: "Legno composito (deck WPC)", multiplier: 1.30 },
-          { value: "ghiaia", label: "Ghiaia / Stabilizzato (vialetti)", multiplier: 0.60 }
-        ]
-      },
-      {
-        id: "sottofondo_est",
-        label: "Preparazione Sottofondo",
-        type: "select",
-        options: [
-          { value: "esistente", label: "Sottofondo esistente (solo pulizia)", multiplier: 1.0 },
-          { value: "massetto", label: "Nuovo massetto in cls", multiplier: 1.35 },
-          { value: "scavo", label: "Scavo + sottofondo + massetto", multiplier: 1.80 }
-        ]
-      },
-      {
-        id: "pendenza",
-        label: "Pendenze e Drenaggio",
-        type: "select",
-        options: [
-          { value: "standard", label: "Pendenza standard (1–2%)", multiplier: 1.0 },
-          { value: "canalette", label: "Canalette di raccolta acque", multiplier: 1.20 },
-          { value: "drenante", label: "Pavimentazione drenante (no scarichi)", multiplier: 1.40 }
-        ]
-      },
-      {
-        id: "bordure",
-        label: "Bordure e Finiture",
-        type: "select",
-        options: [
-          { value: "no", label: "Nessuna bordura", multiplier: 1.0 },
-          { value: "cls", label: "Cordolo in calcestruzzo", multiplier: 1.10 },
-          { value: "granito", label: "Cordolo in granito / Porfido", multiplier: 1.25 }
+          { value: "manutenzione", label: "Manutenzione ordinaria", multiplier: 0.9 },
+          { value: "potatura", label: "Potatura alberi/siepi", multiplier: 1.1 },
+          { value: "semina", label: "Semina/rinvaso", multiplier: 1.0 },
+          { value: "progettazione", label: "Progettazione nuovo giardino", multiplier: 1.5 }
         ]
       }
     ]
   },
+
   {
-    id: "pulizie",
-    name: "Pulizie Post-Cantiere",
-    description: "Pulizie professionali fine lavori e sanificazioni",
-    icon: "fa-broom",
-    color: "#7c3aed",
-    colorBg: "rgba(124,58,237,0.12)",
+    id: "esterni_pavimentazione",
+    name: "Pavimentazione Esterna",
+    category: "esterni",
+    icon: "fa-road",
+    color: "#64748b",
+    colorBg: "rgba(100,116,139,0.1)",
+    description: "Posa piastrelle, massetto, asfalto",
+    basePrice: 55,
     unit: "mq",
-    basePrice: 8.50,
-    category: "servizi",
+    urgencyMultiplier: 1.0,
+    complexity: "media",
     questions: [
       {
-        id: "tipo_pulizia",
-        label: "Tipo di Pulizia",
+        id: "esterno_tipo",
+        label: "Tipo di pavimentazione?",
         type: "select",
         options: [
-          { value: "post_cantiere", label: "Post-cantiere (rimozione polvere/detriti)", multiplier: 1.0 },
-          { value: "fine_lavori", label: "Fine lavori (lucidatura/detailing)", multiplier: 1.40 },
-          { value: "sanificazione", label: "Sanificazione certificata (COVID/muffa)", multiplier: 1.80 },
-          { value: "straordinaria", label: "Pulizia straordinaria (abbandono)", multiplier: 2.20 }
-        ]
-      },
-      {
-        id: "superfici_speciali",
-        label: "Superfici Speciali",
-        type: "select",
-        options: [
-          { value: "no", label: "Solo pavimenti e pareti standard", multiplier: 1.0 },
-          { value: "vetrate", label: "Vetrate e serramenti (lavaggio)", multiplier: 1.20 },
-          { value: "marmo", label: "Marmo / Pietra (cristallizzazione)", multiplier: 1.50 },
-          { value: "legno", label: "Parquet / Legno (trattamento)", multiplier: 1.35 }
-        ]
-      },
-      {
-        id: "smaltimento_rifiuti",
-        label: "Smaltimento Rifiuti",
-        type: "select",
-        options: [
-          { value: "no", label: "Non incluso", multiplier: 1.0 },
-          { value: "sacco", label: "Raccolta differenziata in sacchi", multiplier: 1.15 },
-          { value: "cassone", label: "Cassone scarrabile (grandi volumi)", multiplier: 1.40 }
+          { value: "piastrelle", label: "Piastrelle", multiplier: 1.0 },
+          { value: "massetto", label: "Massetto in cemento", multiplier: 0.8 },
+          { value: "asfalto", label: "Asfalto", multiplier: 0.9 },
+          { value: "pietra", label: "Pietra naturale", multiplier: 1.3 }
         ]
       }
     ]
   }
 ];
 
-// ===== FUNZIONI DI SUPPORTO =====
-
+// ===== FUNZIONI HELPER =====
 export function getAllTrades() {
-  return TRADES;
+  return TRADES_DATABASE;
 }
 
 export function getTradeById(id) {
-  return TRADES.find(t => t.id === id);
+  return TRADES_DATABASE.find(t => t.id === id);
 }
 
-export function calculateFinalPrice(tradeId, quantity, region, quality, answers) {
-  const trade = getTradeById(tradeId);
-  if (!trade) return 0;
-  
-  const basePriceTotal = trade.basePrice * quantity;
-  const regionalCoeff = REGIONAL_COEFFICIENTS[region] || 1.0;
-  const qualityCoeff = QUALITY_MULTIPLIERS[quality] || 1.0;
-  const answerMultiplier = calculateAnswerMultiplier(tradeId, answers);
-
-  return Math.round(basePriceTotal * regionalCoeff * qualityCoeff * answerMultiplier * 100) / 100;
+export function getTradesByCategory(category) {
+  return TRADES_DATABASE.filter(t => t.category === category);
 }
 
 export function calculateAnswerMultiplier(tradeId, answers) {
-  const trade = getTradeById(tradeId);
-  if (!trade) return 1.0;
-
   let multiplier = 1.0;
+  const trade = getTradeById(tradeId);
+  if (!trade) return multiplier;
+
   trade.questions.forEach(question => {
     const answer = answers[question.id];
     if (answer) {
@@ -864,23 +768,26 @@ export function calculateAnswerMultiplier(tradeId, answers) {
     }
   });
 
-  return multiplier;
+  return Math.max(0.5, Math.min(multiplier, 2.5));
+}
+
+export function calculateFinalPrice(tradeId, quantity, region, quality, answers) {
+  const trade = getTradeById(tradeId);
+  if (!trade) return 0;
+
+  const basePrice = trade.basePrice;
+  const regionalCoeff = REGIONAL_COEFFICIENTS[region] || 1.0;
+  const qualityCoeff = QUALITY_MULTIPLIERS[quality] || 1.0;
+  const answerMult = calculateAnswerMultiplier(tradeId, answers);
+  const urgencyMult = trade.urgencyMultiplier || 1.0;
+
+  const finalPrice = basePrice * quantity * regionalCoeff * qualityCoeff * answerMult * urgencyMult;
+  return Math.round(finalPrice);
 }
 
 export function calculateCostBreakdown(tradeId, totalPrice) {
-  const breakdownRatios = {
-    "finiture": { manodopera: 0.45, materiali: 0.55 },
-    "impianti": { manodopera: 0.40, materiali: 0.60 },
-    "strutture": { manodopera: 0.55, materiali: 0.45 },
-    "esterni": { manodopera: 0.50, materiali: 0.50 },
-    "servizi": { manodopera: 0.75, materiali: 0.25 }
-  };
-
-  const trade = getTradeById(tradeId);
-  const ratio = breakdownRatios[trade.category] || { manodopera: 0.50, materiali: 0.50 };
-
   return {
-    manodopera: Math.round(totalPrice * ratio.manodopera * 100) / 100,
-    materiali: Math.round(totalPrice * ratio.materiali * 100) / 100
+    manodopera: Math.round(totalPrice * 0.55),
+    materiali: Math.round(totalPrice * 0.40)
   };
 }
