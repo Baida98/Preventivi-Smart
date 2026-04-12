@@ -1,59 +1,102 @@
 import { auth, db } from "./firebase.js";
-import { calcolaPreventivo } from "./engine/core.js";
-import { predictPrice } from "./engine/ai.js";
-import { stats } from "./engine/analytics.js";
-import { exportPDF } from "./engine/pdf.js";
-import { protect } from "./engine/security.js";
+import { calcolaBase } from "./core.js";
+import { aiPredict, aiTrain } from "./ai.js";
 
 import {
   GoogleAuthProvider,
   signInWithPopup,
-  signInWithEmailAndPassword,
-  onAuthStateChanged
+  onAuthStateChanged,
+  signOut
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-let history = [];
+import {
+  collection,
+  addDoc
+} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-protect();
+let lastQuote = null;
 
-// LOGIN
+/* ---------------- LOGIN ---------------- */
+
 document.getElementById("google").onclick = async () => {
   const provider = new GoogleAuthProvider();
   await signInWithPopup(auth, provider);
 };
 
-// CALCOLO
-document.getElementById("calcola").onclick = () => {
+document.getElementById("logout").onclick = () => signOut(auth);
+
+/* ---------------- CALCOLO ---------------- */
+
+document.getElementById("calcola").onclick = async () => {
 
   const data = {
-    tipo: tipo.value,
-    mq: Number(mq.value),
-    qualita: qualita.value,
-    citta: citta.value
+    tipo: document.getElementById("tipo").value,
+    mq: Number(document.getElementById("mq").value),
+    qualita: document.getElementById("qualita").value,
+    citta: document.getElementById("citta").value
   };
 
-  const r = calcolaPreventivo(data);
+  // 1. base engine
+  const base = calcolaBase(data);
+
+  // 2. AI prediction
+  const ai = await aiPredict(data.tipo, data.citta);
+
+  // 3. merge intelligente
+  let final = base.mid;
+
+  if (ai.price && ai.confidence > 40) {
+    final = (base.mid + ai.price) / 2;
+  }
+
+  lastQuote = {
+    ...data,
+    min: base.min,
+    mid: final,
+    max: base.max,
+    aiConfidence: ai.confidence
+  };
 
   document.getElementById("output").innerText =
-    `€${r.min.toFixed(0)} - ${r.mid.toFixed(0)} - ${r.max.toFixed(0)}`;
-
-  const ai = predictPrice(history, data.tipo);
-  console.log("AI confidence:", ai);
+    `€ ${final.toFixed(0)} (AI ${ai.confidence}%)`;
 };
 
-// PDF
-document.getElementById("pdf").onclick = () => {
-  exportPDF({
-    tipo: tipo.value,
-    mq: mq.value,
-    mid: 1000
+/* ---------------- SALVATAGGIO + TRAINING AI ---------------- */
+
+document.getElementById("save").onclick = async () => {
+
+  const user = auth.currentUser;
+  if (!user || !lastQuote) return;
+
+  // salva preventivo
+  await addDoc(collection(db, "quotes"), {
+    ...lastQuote,
+    uid: user.uid,
+    createdAt: Date.now()
   });
+
+  // 🔥 TRAIN AI (QUI succede “l’apprendimento”)
+  await aiTrain(
+    lastQuote.tipo,
+    lastQuote.citta,
+    lastQuote.mid
+  );
+
+  alert("Salvato + AI aggiornata");
 };
 
-// AUTH
-onAuthStateChanged(auth, user => {
+/* ---------------- AUTH STATE ---------------- */
+
+onAuthStateChanged(auth, (user) => {
+
+  const authDiv = document.getElementById("authDiv");
+  const appDiv = document.getElementById("appDiv");
+
   if (user) {
     authDiv.style.display = "none";
-    app.style.display = "block";
+    appDiv.style.display = "block";
+  } else {
+    authDiv.style.display = "block";
+    appDiv.style.display = "none";
   }
 });
