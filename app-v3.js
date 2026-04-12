@@ -29,6 +29,7 @@ let currentPath = []; // [macroId, subId, tradeId]
 let userHistory = [];
 let wizardMode = 'professional';
 let userProfile = null;
+let currentTrade = null;
 
 window._psQuote = null;
 const setQuote = (v) => { window._psQuote = v; };
@@ -158,19 +159,56 @@ function nextStep() {
 
 function prevStep() {
   if (currentStep === 1) {
-    if (currentPath.length === 2) { // Siamo agli scenari di una sottocategoria
-      renderSubCategories(currentPath[0]);
-      currentPath.pop();
-      return;
-    } else if (currentPath.length === 1) { // Siamo alle sottocategorie o scenari diretti
-      renderCategories();
-      currentPath = [];
-      return;
-    }
+    goBackSelection();
+    return;
   }
+
+  if (currentStep === 2) {
+    removeSelectedTradeFromPath();
+    currentTrade = null;
+    currentStep = 1;
+    goToStep(1);
+    renderSelectionFromPath();
+    return;
+  }
+
   if (currentStep === 4 && wizardMode === 'quick') currentStep = 2;
   else currentStep--;
   goToStep(currentStep);
+}
+
+function removeSelectedTradeFromPath() {
+  const lastId = currentPath[currentPath.length - 1];
+  if (lastId && getTradeById(lastId)) currentPath.pop();
+}
+
+function renderSelectionFromPath() {
+  if (currentPath.length === 0) {
+    renderCategories();
+    return;
+  }
+
+  if (currentPath.length === 1) {
+    const macroId = currentPath[0];
+    const subCategories = getSubCategories(macroId);
+    if (subCategories.length > 0) renderSubCategories(macroId);
+    else renderFinalTrades(macroId);
+    return;
+  }
+
+  renderFinalTrades(currentPath[1]);
+}
+
+function goBackSelection() {
+  removeSelectedTradeFromPath();
+
+  if (currentPath.length === 0) {
+    renderCategories();
+    return;
+  }
+
+  currentPath = currentPath.slice(0, -1);
+  renderSelectionFromPath();
 }
 
 function updateProgress(step) {
@@ -195,6 +233,7 @@ function renderCategories() {
   if (!grid) return;
   grid.dataset.view = "main";
   const cats = getAllCategories();
+  currentPath = [];
   grid.innerHTML = cats.map(c => `
     <div class="trade-card animate-slide-up" onclick="selectCategory('${c.id}')">
       <div class="trade-icon" style="background: ${c.color}15; color: ${c.color}">
@@ -275,14 +314,15 @@ function renderFinalTrades(parentId) {
 window.selectTrade = (id) => {
   const trade = getTradeById(id);
   if (!trade) return;
-  
+
+  removeSelectedTradeFromPath();
   currentPath.push(id);
   const tradeObj = getTradeById(id);
   const unitLabel = document.getElementById("unitLabel");
   if (unitLabel) unitLabel.textContent = tradeObj.unit;
   
   // Mostra feedback visivo dell'unità
-  const unitIconMap = { 'mq': 'fa-vector-square', 'intervento': 'fa-wrench', 'ora': 'fa-clock', 'ml': 'fa-ruler' };
+  const unitIconMap = { 'mq': 'fa-vector-square', 'intervento': 'fa-wrench', 'ora': 'fa-clock', 'ml': 'fa-ruler', 'punto': 'fa-circle-dot', 'unità': 'fa-cubes' };
   const unitIcon = unitIconMap[tradeObj.unit] || 'fa-tag';
   document.getElementById("feedback-quantity").innerHTML = `<i class="fa-solid ${unitIcon} text-gray-400"></i>`;
 
@@ -390,6 +430,8 @@ function downloadPDF() {
   if (window._buildPDF) window._buildPDF(window._psQuote);
   else showToast("Generatore PDF non pronto", "error");
 }
+
+window.goBackSelection = goBackSelection;
 
 function showToast(message, type = "info") {
   const container = document.getElementById("toastContainer");
