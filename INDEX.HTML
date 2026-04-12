@@ -3,58 +3,49 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Preventivi AI</title>
+<title>Preventivi Smart AI</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div class="container">
-
-<h1>Smart Preventivi AI</h1>
+<h1>Preventivi Smart AI</h1>
 
 <!-- LOGIN -->
-<div id="login">
-  <h3>Accesso</h3>
+<div class="box">
   <input id="email" placeholder="Email">
   <input id="password" type="password" placeholder="Password">
   <button onclick="login()">Login</button>
 </div>
 
-<!-- APP -->
-<div id="app" class="hidden">
-
-  <h2>Seleziona lavoro</h2>
-
-  <select id="work" onchange="loadWizard()">
+<!-- CALCOLO -->
+<div class="box">
+  <select id="tipo">
     <option value="imbianchitura">Imbiancatura</option>
     <option value="piastrelle">Piastrelle</option>
-    <option value="elettrico">Elettrico</option>
-    <option value="bagno">Bagno</option>
-    <option value="idraulica">Idraulica</option>
-    <option value="cartongesso">Cartongesso</option>
-    <option value="pulizie">Pulizie</option>
-    <option value="giardino">Giardino</option>
+    <option value="elettrico">Impianto elettrico</option>
   </select>
 
-  <div id="wizard"></div>
+  <input id="quantita" type="number" placeholder="Quantità">
 
-  <button onclick="calcola()">Calcola preventivo</button>
+  <select id="zona">
+    <option value="Nord">Nord</option>
+    <option value="Centro">Centro</option>
+    <option value="Sud">Sud</option>
+  </select>
 
-  <div id="result"></div>
+  <select id="qualita">
+    <option value="bassa">Bassa</option>
+    <option value="media">Media</option>
+    <option value="alta">Alta</option>
+  </select>
 
-  <hr>
+  <button id="calcola">Calcola</button>
 
-  <button onclick="loadHistory()">Storico</button>
-  <div id="history"></div>
-
+  <div id="risultato"></div>
 </div>
 
-</div>
-
-<script src="firebase.js"></script>
-<script src="data.js"></script>
-<script src="app.js"></script>
+<script type="module" src="app.js"></script>
 
 </body>
 </html>
