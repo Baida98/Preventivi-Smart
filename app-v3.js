@@ -161,18 +161,21 @@ function renderMacroCategories() {
     if (!tradesGrid) return;
     const cats = database.getAllCategories ? database.getAllCategories() : Object.entries(database.categories).map(([id, c]) => ({id, ...c}));
     
+    const iconMapping = {
+        'idraulico': 'idraulica',
+        'elettricista': 'elettrico',
+        'muratore_pittore': 'muratore',
+        'serramenti': 'serramenti',
+        'servizi': 'giardiniere'
+    };
+
     tradesGrid.innerHTML = cats.map(cat => {
-        let iconName = cat.id;
-        if (cat.id === 'muratore_pittore') iconName = 'muratore';
-        if (cat.id === 'servizi') iconName = 'giardiniere';
-        if (cat.id === 'idraulico') iconName = 'idraulica';
-        if (cat.id === 'elettricista') iconName = 'elettrico';
-        if (cat.id === 'serramenti') iconName = 'serramenti';
-        
+        const iconName = iconMapping[cat.id] || cat.id;
         const iconPath = `assets/icon_${iconName}.png`;
         return `
         <div class="trade-card" onclick="selectMacro('${cat.id}')">
-            <img src="${iconPath}" alt="${cat.name}" style="width: 48px; height: 48px; margin-bottom: 12px; object-fit: contain;" onerror="this.outerHTML='<i class=\'${cat.icon}\'></i>'">
+            <img src="${iconPath}" alt="${cat.name}" style="width: 48px; height: 48px; margin-bottom: 12px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <i class="${cat.icon}" style="display:none;"></i>
             <h4>${cat.name || cat.label}</h4>
         </div>
     `}).join('');
@@ -190,21 +193,12 @@ function renderSubCategories(macroId) {
     if (!tradesGrid) return;
     const subs = database.getSubCategories ? database.getSubCategories(macroId) : Object.entries(database.categories[macroId].subs).map(([id, s]) => ({id, ...s}));
     
-    tradesGrid.innerHTML = subs.map(sub => {
-        // Tentiamo di mappare alcune sottocategorie comuni ad asset esistenti
-        let iconName = sub.id;
-        if (sub.id.includes('mur_')) iconName = 'muratore';
-        if (sub.id.includes('idr_')) iconName = 'idraulica';
-        if (sub.id.includes('ele_')) iconName = 'elettrico';
-        if (sub.id.includes('ser_')) iconName = 'serramenti';
-        
-        const iconPath = `assets/icon_${iconName}.png`;
-        return `
+    tradesGrid.innerHTML = subs.map(sub => `
         <div class="trade-card" onclick="selectSub('${sub.id}')">
-            <img src="${iconPath}" alt="${sub.name}" style="width: 48px; height: 48px; margin-bottom: 12px; object-fit: contain;" onerror="this.outerHTML='<i class=\'${sub.icon}\'></i>'">
+            <i class="${sub.icon}"></i>
             <h4>${sub.name || sub.label}</h4>
         </div>
-    `}).join('');
+    `).join('');
     
     const backBtn = document.querySelector('.wizard-nav button[onclick="goBackSelection()"]');
     if (backBtn) backBtn.classList.remove('hidden');
@@ -219,20 +213,12 @@ function renderTrades(macroId, subId) {
     if (!tradesGrid) return;
     const trades = database.getTradesByCategory ? database.getTradesByCategory(subId) : Object.entries(database.categories[macroId].subs[subId].trades).map(([id, t]) => ({id, ...t}));
     
-    tradesGrid.innerHTML = trades.map(trade => {
-        let iconName = trade.id;
-        if (trade.id.includes('mur_')) iconName = 'muratore';
-        if (trade.id.includes('idr_')) iconName = 'idraulica';
-        if (trade.id.includes('ele_')) iconName = 'elettrico';
-        if (trade.id.includes('ser_')) iconName = 'serramenti';
-        
-        const iconPath = `assets/icon_${iconName}.png`;
-        return `
+    tradesGrid.innerHTML = trades.map(trade => `
         <div class="trade-card" onclick="selectTrade('${trade.id}')">
-            <img src="${iconPath}" alt="${trade.name}" style="width: 48px; height: 48px; margin-bottom: 12px; object-fit: contain;" onerror="this.outerHTML='<i class=\'${trade.icon}\'></i>'">
+            <i class="${trade.icon}"></i>
             <h4>${trade.name || trade.label}</h4>
         </div>
-    `}).join('');
+    `).join('');
 }
 
 function selectTrade(id) {
