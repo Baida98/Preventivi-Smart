@@ -30,15 +30,16 @@ export function renderQuoteBreakdownChart(canvasId, quote) {
           quote.breakdown.materiali
         ],
         backgroundColor: [
-          'rgba(59, 130, 246, 0.8)',
-          'rgba(245, 158, 11, 0.8)'
+          'rgba(0, 114, 255, 0.85)',
+          'rgba(255, 0, 128, 0.85)'
         ],
         borderColor: [
-          'rgba(59, 130, 246, 1)',
-          'rgba(245, 158, 11, 1)'
+          'rgba(255, 255, 255, 1)',
+          'rgba(255, 255, 255, 1)'
         ],
-        borderWidth: 3,
-        borderRadius: 8
+        borderWidth: 4,
+        borderRadius: 12,
+        hoverOffset: 15
       }]
     },
     options: {
@@ -94,18 +95,18 @@ export function renderPriceComparisonChart(canvasId, quote) {
         label: 'Prezzo (€)',
         data: [quote.minPrice, quote.midPrice, quote.maxPrice],
         backgroundColor: [
-          'rgba(107, 114, 128, 0.7)',
-          'rgba(245, 158, 11, 0.8)',
-          'rgba(239, 68, 68, 0.7)'
+          'rgba(148, 163, 184, 0.6)',
+          'rgba(0, 114, 255, 0.85)',
+          'rgba(255, 0, 128, 0.7)'
         ],
         borderColor: [
-          'rgba(107, 114, 128, 1)',
-          'rgba(245, 158, 11, 1)',
-          'rgba(239, 68, 68, 1)'
+          'rgba(148, 163, 184, 1)',
+          'rgba(0, 114, 255, 1)',
+          'rgba(255, 0, 128, 1)'
         ],
         borderWidth: 2,
-        borderRadius: 8,
-        barThickness: 40
+        borderRadius: 12,
+        barThickness: 32
       }]
     },
     options: {
@@ -135,14 +136,14 @@ export function renderPriceComparisonChart(canvasId, quote) {
         x: {
           beginAtZero: true,
           grid: {
-            color: 'rgba(229, 231, 235, 0.5)',
+            color: 'rgba(0, 0, 0, 0.03)',
             drawBorder: false
           },
           ticks: {
-            color: '#6B7280',
-            font: { size: 11 },
+            color: '#94a3b8',
+            font: { size: 10, weight: '600' },
             callback: function(value) {
-              return '€ ' + value.toFixed(0);
+              return '€' + value.toLocaleString();
             }
           }
         },
@@ -152,10 +153,14 @@ export function renderPriceComparisonChart(canvasId, quote) {
             drawBorder: false
           },
           ticks: {
-            color: '#111827',
-            font: { size: 12, weight: 'bold' }
+            color: '#1e293b',
+            font: { size: 11, weight: '800' }
           }
         }
+      },
+      animation: {
+        duration: 2000,
+        easing: 'easeOutQuart'
       }
     }
   });
