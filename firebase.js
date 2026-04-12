@@ -1,17 +1,10 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-  getAuth,
-  GoogleAuthProvider
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import {
-  getFirestore
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-app.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyBJ8jCMTDRvvKHQ3ezwlhOcyQK3tTpDQfo",
   authDomain: "preventivi-smart.firebaseapp.com",
-  databaseURL: "https://preventivi-smart-default-rtdb.firebaseio.com",
   projectId: "preventivi-smart",
   storageBucket: "preventivi-smart.firebasestorage.app",
   messagingSenderId: "292306670153",
@@ -21,5 +14,4 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const auth = getAuth(app);
-export const provider = new GoogleAuthProvider();
 export const db = getFirestore(app);
