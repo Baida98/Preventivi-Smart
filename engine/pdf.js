@@ -310,7 +310,8 @@ function createPDF(jsPDF, quote, analysis) {
   if (analysis) {
     if (y > 240) { doc.addPage(); y = 20; }
     const score = analysis.reliabilityScore;
-    const scoreColor = score >= 8 ? green : score >= 5 ? amber : red;
+    // reliabilityScore è su scala 0-100
+    const scoreColor = score >= 80 ? green : score >= 50 ? amber : red;
 
     doc.setFillColor(...bgGray);
     doc.roundedRect(15, y, 180, 20, 3, 3, "F");
@@ -318,15 +319,15 @@ function createPDF(jsPDF, quote, analysis) {
     doc.setFontSize(8);
     doc.setFont(undefined, "normal");
     doc.text("SCORE AFFIDABILITÀ PREVENTIVO", 20, y + 7);
-    doc.setFillColor(...scoreColor);
-    const barW = Math.round((score / 10) * 120);
+    doc.setFillColor(226, 232, 240);
     doc.roundedRect(20, y + 10, 120, 5, 2, 2, "F");
     doc.setFillColor(...scoreColor);
+    const barW = Math.round((score / 100) * 120);
     doc.roundedRect(20, y + 10, barW, 5, 2, 2, "F");
     doc.setTextColor(...navy);
     doc.setFont(undefined, "bold");
     doc.setFontSize(12);
-    doc.text(`${score}/10`, 155, y + 15);
+    doc.text(`${score}/100`, 155, y + 15);
     y += 28;
   }
 

@@ -16,15 +16,15 @@ export function initSecurityShield() {
 }
 
 function startAntiDebugSystem() {
-  // Rilevamento debugger leggero (solo log, nessun blocco)
+  // Anti-debug passivo: solo timing check senza debugger statement
+  // (rimosso il debugger statement che causava pause in DevTools)
   setInterval(() => {
     const before = performance.now();
-    debugger;
     const after = performance.now();
-    if (after - before > 200) {
-      console.warn("%c⚠️ Debugger detected", "color: #f59e0b;");
+    if (after - before > 100) {
+      console.warn("%c⚠️ Performance anomaly detected", "color: #f59e0b;");
     }
-  }, 5000);
+  }, 10000);
 }
 
 export function enableAntiCopyProtection() {

@@ -433,6 +433,40 @@ export function getTradesByCategory(category) {
   return TRADES_DATABASE.filter(t => t.category === category);
 }
 
+/**
+ * Calcola il prezzo finale applicando coefficienti regionali, qualità e risposte utente.
+ * @param {string} tradeId - ID del mestiere
+ * @param {number} quantity - Quantità (mq, intervento, ecc.)
+ * @param {string} region - Regione italiana
+ * @param {string} quality - Livello qualità (economica|standard|premium|lusso)
+ * @param {Object} answers - Risposte alle domande dinamiche {questionId: value}
+ * @returns {number} Prezzo finale stimato
+ */
+export function calculateFinalPrice(tradeId, quantity, region, quality, answers = {}) {
+  const trade = getTradeById(tradeId);
+  if (!trade) return 0;
+
+  const regionalCoeff = REGIONAL_COEFFICIENTS[region] || 1.0;
+  const qualityCoeff = QUALITY_MULTIPLIERS[quality] || 1.0;
+
+  // Calcola moltiplicatore dalle risposte alle domande
+  let answerMultiplier = 1.0;
+  if (trade.questions && trade.questions.length > 0) {
+    trade.questions.forEach(q => {
+      const answer = answers[q.id];
+      if (answer) {
+        const option = q.options.find(o => o.value === answer);
+        if (option && option.multiplier) {
+          answerMultiplier *= option.multiplier;
+        }
+      }
+    });
+  }
+
+  const baseTotal = trade.basePrice * (quantity || 1);
+  return Math.round(baseTotal * regionalCoeff * qualityCoeff * answerMultiplier);
+}
+
 export default {
   TRADES_DATABASE,
   REGIONAL_COEFFICIENTS,
@@ -440,5 +474,6 @@ export default {
   CATEGORY_COLORS,
   getAllTrades,
   getTradeById,
-  getTradesByCategory
+  getTradesByCategory,
+  calculateFinalPrice
 };
