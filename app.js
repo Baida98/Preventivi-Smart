@@ -1,4 +1,4 @@
-import { auth } from "./firebase.js";
+import { auth, db } from "./firebase.js";
 import { calcolaBase } from "./engine/core.js";
 import { aiPredict, aiTrain } from "./engine/ai.js";
 
@@ -14,7 +14,7 @@ import {
   addDoc
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-let lastQuote = null;
+let currentQuote = null;
 
 /* ---------------- LOGIN ---------------- */
 
@@ -29,89 +29,91 @@ document.getElementById("google").onclick = async () => {
 
 document.getElementById("logout").onclick = () => signOut(auth);
 
-/* ---------------- CALCOLO ---------------- */
+/* ---------------- PIPELINE UNICA ---------------- */
 
 document.getElementById("calcola").onclick = async () => {
 
-  const data = {
-    tipo: document.getElementById("tipo").value,
-    mq: Number(document.getElementById("mq").value),
-    qualita: document.getElementById("qualita").value,
-    citta: document.getElementById("citta").value
+  const input = {
+    tipo: tipo.value,
+    mq: Number(mq.value),
+    qualita: qualita.value,
+    citta: citta.value
   };
 
-  const base = calcolaBase(data);
+  // 1. CORE (base matematica)
+  const base = calcolaBase(input);
 
+  // 2. AI (solo suggerimento)
   let ai = { price: null, confidence: 0 };
 
   try {
-    ai = await aiPredict(data.tipo, data.citta);
+    ai = await aiPredict(input.tipo, input.citta);
   } catch {}
 
-  let final = base.mid;
+  // 3. MERGE UNICO (UN SOLO PUNTO DECISIONE)
+  let finalPrice = base.mid;
 
   if (ai.price && ai.confidence > 40) {
-    final = (base.mid + ai.price) / 2;
+    finalPrice = (base.mid + ai.price) / 2;
   }
 
-  final = isNaN(final) ? base.mid : final;
+  finalPrice = isNaN(finalPrice) ? base.mid : finalPrice;
 
-  lastQuote = {
-    ...data,
+  // 4. OGGETTO UNICO (VERITÀ UNICA)
+  currentQuote = {
+    ...input,
     min: base.min,
-    mid: final,
+    mid: finalPrice,
     max: base.max,
     aiConfidence: ai.confidence
   };
 
-  document.getElementById("output").innerText =
-    `€ ${final.toFixed(0)} (AI ${ai.confidence}%)`;
+  // 5. UI
+  output.innerText =
+    `€ ${finalPrice.toFixed(0)} (AI ${ai.confidence}%)`;
 };
 
-/* ---------------- SAVE + TRAIN AI ---------------- */
+/* ---------------- SAVE + TRAIN ---------------- */
 
 document.getElementById("save").onclick = async () => {
 
-  const user = auth.currentUser;
-
-  if (!user) {
+  if (!auth.currentUser) {
     alert("Login richiesto");
     return;
   }
 
-  if (!lastQuote) {
-    alert("Nessun preventivo calcolato");
+  if (!currentQuote) {
+    alert("Calcola prima un preventivo");
     return;
   }
 
   try {
+
+    // SALVATAGGIO UNICO
     await addDoc(collection(db, "quotes"), {
-      ...lastQuote,
-      uid: user.uid,
+      ...currentQuote,
+      uid: auth.currentUser.uid,
       createdAt: Date.now()
     });
 
+    // AI TRAIN SOLO DOPO SALVATAGGIO
     await aiTrain(
-      lastQuote.tipo,
-      lastQuote.citta,
-      lastQuote.mid
+      currentQuote.tipo,
+      currentQuote.citta,
+      currentQuote.mid
     );
 
     alert("Salvato + AI aggiornata");
 
   } catch (e) {
+    console.log(e);
     alert("Errore salvataggio");
   }
 };
 
-/* ---------------- AUTH STATE ---------------- */
+/* ---------------- AUTH ---------------- */
 
 onAuthStateChanged(auth, (user) => {
-
-  const authDiv = document.getElementById("authDiv");
-  const appDiv = document.getElementById("appDiv");
-
-  if (!authDiv || !appDiv) return;
 
   if (user) {
     authDiv.style.display = "none";
