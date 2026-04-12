@@ -1,4 +1,4 @@
-export function protect() {
+export function initSecurity() {
 
   document.addEventListener("contextmenu", e => e.preventDefault());
 
