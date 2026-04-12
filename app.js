@@ -1,6 +1,6 @@
-import { auth, db } from "./firebase.js";
-import { calcolaBase } from "./core.js";
-import { aiPredict, aiTrain } from "./ai.js";
+import { auth } from "./firebase.js";
+import { calcolaBase } from "./engine/core.js";
+import { aiPredict, aiTrain } from "./engine/ai.js";
 
 import {
   GoogleAuthProvider,
@@ -19,8 +19,12 @@ let lastQuote = null;
 /* ---------------- LOGIN ---------------- */
 
 document.getElementById("google").onclick = async () => {
-  const provider = new GoogleAuthProvider();
-  await signInWithPopup(auth, provider);
+  try {
+    const provider = new GoogleAuthProvider();
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    alert("Login error: " + e.code);
+  }
 };
 
 document.getElementById("logout").onclick = () => signOut(auth);
@@ -36,18 +40,21 @@ document.getElementById("calcola").onclick = async () => {
     citta: document.getElementById("citta").value
   };
 
-  // 1. base engine
   const base = calcolaBase(data);
 
-  // 2. AI prediction
-  const ai = await aiPredict(data.tipo, data.citta);
+  let ai = { price: null, confidence: 0 };
 
-  // 3. merge intelligente
+  try {
+    ai = await aiPredict(data.tipo, data.citta);
+  } catch {}
+
   let final = base.mid;
 
   if (ai.price && ai.confidence > 40) {
     final = (base.mid + ai.price) / 2;
   }
+
+  final = isNaN(final) ? base.mid : final;
 
   lastQuote = {
     ...data,
@@ -61,28 +68,40 @@ document.getElementById("calcola").onclick = async () => {
     `€ ${final.toFixed(0)} (AI ${ai.confidence}%)`;
 };
 
-/* ---------------- SALVATAGGIO + TRAINING AI ---------------- */
+/* ---------------- SAVE + TRAIN AI ---------------- */
 
 document.getElementById("save").onclick = async () => {
 
   const user = auth.currentUser;
-  if (!user || !lastQuote) return;
 
-  // salva preventivo
-  await addDoc(collection(db, "quotes"), {
-    ...lastQuote,
-    uid: user.uid,
-    createdAt: Date.now()
-  });
+  if (!user) {
+    alert("Login richiesto");
+    return;
+  }
 
-  // 🔥 TRAIN AI (QUI succede “l’apprendimento”)
-  await aiTrain(
-    lastQuote.tipo,
-    lastQuote.citta,
-    lastQuote.mid
-  );
+  if (!lastQuote) {
+    alert("Nessun preventivo calcolato");
+    return;
+  }
 
-  alert("Salvato + AI aggiornata");
+  try {
+    await addDoc(collection(db, "quotes"), {
+      ...lastQuote,
+      uid: user.uid,
+      createdAt: Date.now()
+    });
+
+    await aiTrain(
+      lastQuote.tipo,
+      lastQuote.citta,
+      lastQuote.mid
+    );
+
+    alert("Salvato + AI aggiornata");
+
+  } catch (e) {
+    alert("Errore salvataggio");
+  }
 };
 
 /* ---------------- AUTH STATE ---------------- */
@@ -91,6 +110,8 @@ onAuthStateChanged(auth, (user) => {
 
   const authDiv = document.getElementById("authDiv");
   const appDiv = document.getElementById("appDiv");
+
+  if (!authDiv || !appDiv) return;
 
   if (user) {
     authDiv.style.display = "none";
