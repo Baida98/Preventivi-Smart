@@ -1,10 +1,10 @@
 /**
- * Preventivi-Smart Pro v20.0 — Database Istituzionale e Dinamico
+ * Preventivi-Smart Pro v21.0 — Database Istituzionale Massivo
  *
  * Metodologia:
  * - Prezzi ancorati ai Prezzari Regionali 2025 (LOM252, Lazio 2023/24, Campania 2024/25)
  * - Coefficienti regionali ricalibrati su indici ISTAT Costo Costruzione 2025
- * - Domande specifiche per scenario per eliminare stime generiche
+ * - Struttura gerarchica profonda per eliminare schermate vuote
  */
 
 export const REGIONAL_COEFFICIENTS = {
@@ -29,6 +29,27 @@ export const MACRO_CATEGORIES = [
 ];
 
 export const SUB_CATEGORIES = [
+  // IDRAULICO
+  { id: "idr_impianti", parent: "idraulico", name: "Impianti e Tubazioni", icon: "fa-pipes", color: "#3b82f6" },
+  { id: "idr_sanitari", parent: "idraulico", name: "Sanitari e Rubinetteria", icon: "fa-sink", color: "#60a5fa" },
+  { id: "idr_calore", parent: "idraulico", name: "Riscaldamento e Caldaie", icon: "fa-fire", color: "#2563eb" },
+  
+  // ELETTRICISTA
+  { id: "ele_impianti", parent: "elettricista", name: "Impianto Completo", icon: "fa-plug-circle-bolt", color: "#f59e0b" },
+  { id: "ele_punti", parent: "elettricista", name: "Punti Luce e Prese", icon: "fa-lightbulb", color: "#fbbf24" },
+  { id: "ele_sicurezza", parent: "elettricista", name: "Sicurezza e Domotica", icon: "fa-shield-halved", color: "#d97706" },
+
+  // PITTORE
+  { id: "pit_interni", parent: "pittore", name: "Tinteggiatura Interni", icon: "fa-house-chimney-window", color: "#10b981" },
+  { id: "pit_esterni", parent: "pittore", name: "Facciate ed Esterni", icon: "fa-tree-city", color: "#059669" },
+  { id: "pit_decorazioni", parent: "pittore", name: "Decorazioni e Smalti", icon: "fa-palette", color: "#34d399" },
+
+  // MURATORE
+  { id: "mur_strutture", parent: "muratore", name: "Muri e Divisori", icon: "fa-wall", color: "#8b5cf6" },
+  { id: "mur_intonaci", parent: "muratore", name: "Intonaci e Massetti", icon: "fa-trowel", color: "#a78bfa" },
+  { id: "mur_demolizioni", parent: "muratore", name: "Demolizioni", icon: "fa-hammer", color: "#7c3aed" },
+
+  // SERVIZI
   { id: "giardinaggio", parent: "servizi", name: "Giardinaggio", icon: "fa-leaf", color: "#22c55e" },
   { id: "pulizie", parent: "servizi", name: "Pulizie", icon: "fa-broom", color: "#38bdf8" },
   { id: "traslochi", parent: "servizi", name: "Traslochi / Sgomberi", icon: "fa-truck-ramp-box", color: "#f43f5e" },
@@ -36,105 +57,154 @@ export const SUB_CATEGORIES = [
 ];
 
 export const TRADES_DATABASE = [
-  // IDRAULICO
+  // IDRAULICO -> Impianti
   { 
-    id: "idraulica_perdita", parent: "idraulico", name: "Riparazione Perdita", icon: "fa-faucet-drip", 
-    basePrice: 160, unit: "intervento", 
-    description: "Ricerca e ripristino perdita d'acqua.",
-    specificQuestion: "Qual è l'accessibilità del tubo?",
+    id: "idr_rifacimento_bagno", parent: "idr_impianti", name: "Rifacimento Impianto Bagno", icon: "fa-bath", 
+    basePrice: 1200, unit: "intervento", 
+    description: "Rifacimento completo tubazioni carico/scarico per un bagno.",
+    specificQuestion: "Numero di punti acqua previsti?",
     options: [
-      { label: "A vista / Esterno", multiplier: 1.0, icon: "fa-eye" },
-      { label: "Sotto traccia (muro)", multiplier: 1.4, icon: "fa-wall" },
-      { label: "Interrato / Pavimento", multiplier: 1.8, icon: "fa-arrow-down" }
+      { label: "Fino a 4 punti", multiplier: 1.0, icon: "fa-4" },
+      { label: "Da 5 a 7 punti", multiplier: 1.4, icon: "fa-7" },
+      { label: "Oltre 7 punti", multiplier: 1.8, icon: "fa-plus" }
     ]
   },
   { 
-    id: "idraulica_punto_acqua", parent: "idraulico", name: "Nuovo Punto Acqua", icon: "fa-faucet", 
-    basePrice: 180, unit: "punto", 
-    description: "Realizzazione nuovo carico/scarico.",
-    specificQuestion: "Distanza dallo scarico principale?",
+    id: "idr_perdita", parent: "idr_impianti", name: "Riparazione Perdita", icon: "fa-faucet-drip", 
+    basePrice: 160, unit: "intervento", 
+    description: "Ricerca e ripristino perdita d'acqua.",
+    specificQuestion: "Posizione del tubo?",
     options: [
-      { label: "Entro 2 metri", multiplier: 1.0, icon: "fa-ruler-horizontal" },
-      { label: "Oltre 2 metri", multiplier: 1.3, icon: "fa-arrows-left-right" },
-      { label: "Piano diverso", multiplier: 1.6, icon: "fa-stairs" }
+      { label: "A vista", multiplier: 1.0, icon: "fa-eye" },
+      { label: "Sotto traccia", multiplier: 1.5, icon: "fa-wall" }
     ]
   },
 
-  // ELETTRICISTA
+  // ELETTRICISTA -> Impianti
   { 
-    id: "elettrico_punto_luce", parent: "elettricista", name: "Punto Luce / Presa", icon: "fa-lightbulb", 
+    id: "ele_rifacimento_totale", parent: "ele_impianti", name: "Rifacimento Impianto Totale", icon: "fa-bolt", 
+    basePrice: 4500, unit: "intervento", 
+    description: "Rifacimento completo impianto elettrico certificato.",
+    specificQuestion: "Dimensione dell'immobile?",
+    options: [
+      { label: "Monolocale / Bilocale", multiplier: 1.0, icon: "fa-house" },
+      { label: "Trilocale / Quadrilocale", multiplier: 1.6, icon: "fa-house-chimney" },
+      { label: "Villa / Oltre 150mq", multiplier: 2.5, icon: "fa-hotel" }
+    ]
+  },
+  { 
+    id: "ele_punto_luce", parent: "ele_punti", name: "Punto Luce / Presa", icon: "fa-lightbulb", 
     basePrice: 65, unit: "punto", 
     description: "Installazione nuovo punto elettrico.",
     specificQuestion: "Tipo di installazione?",
     options: [
-      { label: "Esterna (canalina)", multiplier: 1.0, icon: "fa-grip-lines" },
-      { label: "Sotto traccia (muro)", multiplier: 1.3, icon: "fa-hammer" },
-      { label: "Cartongesso", multiplier: 1.1, icon: "fa-layer-group" }
+      { label: "Esterna", multiplier: 1.0, icon: "fa-grip-lines" },
+      { label: "Sotto traccia", multiplier: 1.3, icon: "fa-hammer" }
     ]
   },
 
-  // PITTORE
+  // PITTORE -> Interni
   { 
-    id: "finiture_imbiancatura", parent: "pittore", name: "Imbiancatura Interna", icon: "fa-paint-roller", 
+    id: "pit_imbiancatura_std", parent: "pit_interni", name: "Tinteggiatura Lavabile", icon: "fa-paint-roller", 
     basePrice: 12, unit: "mq", 
-    description: "Tinteggiatura professionale pareti.",
-    specificQuestion: "Stato attuale delle pareti?",
+    description: "Due mani di pittura lavabile bianca o colorata.",
+    specificQuestion: "Stato delle pareti?",
     options: [
-      { label: "Ottimo (solo colore)", multiplier: 1.0, icon: "fa-check-double" },
-      { label: "Crepe / Fori da stuccare", multiplier: 1.3, icon: "fa-band-aid" },
-      { label: "Muffa / Umidità", multiplier: 1.6, icon: "fa-droplet-slash" }
+      { label: "Buono", multiplier: 1.0, icon: "fa-check" },
+      { label: "Da stuccare / Crepe", multiplier: 1.3, icon: "fa-band-aid" },
+      { label: "Muffa presente", multiplier: 1.6, icon: "fa-droplet-slash" }
+    ]
+  },
+  { 
+    id: "pit_rasatura", parent: "pit_interni", name: "Rasatura a Gesso", icon: "fa-trowel", 
+    basePrice: 18, unit: "mq", 
+    description: "Livellamento pareti con gesso o stucco.",
+    specificQuestion: "Numero di passate?",
+    options: [
+      { label: "Singola mano", multiplier: 1.0, icon: "fa-1" },
+      { label: "Doppia mano (finitura specchio)", multiplier: 1.5, icon: "fa-2" }
     ]
   },
 
-  // PIASTRELLISTA
+  // MURATORE -> Strutture
   { 
-    id: "piastrelle_gres", parent: "piastrellista", name: "Posa Gres Porcellanato", icon: "fa-table-cells-large", 
+    id: "mur_parete_mattoni", parent: "mur_strutture", name: "Parete in Mattoni/Gasbeton", icon: "fa-wall", 
+    basePrice: 45, unit: "mq", 
+    description: "Costruzione nuova parete divisoria.",
+    specificQuestion: "Spessore della parete?",
+    options: [
+      { label: "8-10 cm (Divisoria)", multiplier: 1.0, icon: "fa-ruler-horizontal" },
+      { label: "12-15 cm (Robusta)", multiplier: 1.3, icon: "fa-ruler-combined" }
+    ]
+  },
+  { 
+    id: "mur_demolizione_parete", parent: "mur_demolizioni", name: "Demolizione Parete", icon: "fa-hammer", 
+    basePrice: 25, unit: "mq", 
+    description: "Abbattimento parete non portante e smaltimento.",
+    specificQuestion: "Incluso smaltimento macerie?",
+    options: [
+      { label: "Sì, completo", multiplier: 1.0, icon: "fa-truck-pickup" },
+      { label: "No, solo abbattimento", multiplier: 0.7, icon: "fa-xmark" }
+    ]
+  },
+
+  // PIASTRELLISTA (Senza sottocategorie per ora, diretto a macro)
+  { 
+    id: "pia_posa_pavimento", parent: "piastrellista", name: "Posa Pavimento Gres", icon: "fa-table-cells-large", 
     basePrice: 35, unit: "mq", 
-    description: "Posa pavimenti o rivestimenti.",
-    specificQuestion: "Formato delle piastrelle?",
+    description: "Posa professionale piastrelle in gres.",
+    specificQuestion: "Formato piastrella?",
     options: [
       { label: "Standard (30x30 / 60x60)", multiplier: 1.0, icon: "fa-square" },
-      { label: "Mosaico / Piccoli formati", multiplier: 1.5, icon: "fa-border-none" },
-      { label: "Grandi lastre (> 100cm)", multiplier: 1.8, icon: "fa-maximize" }
+      { label: "Grandi lastre", multiplier: 1.8, icon: "fa-maximize" }
     ]
   },
 
   // CARTONGESSO
   { 
-    id: "cartongesso_parete", parent: "cartongesso", name: "Parete Divisoria", icon: "fa-grip-lines-vertical", 
-    basePrice: 40, unit: "mq", 
-    description: "Realizzazione parete a secco.",
-    specificQuestion: "Isolamento termo-acustico?",
+    id: "car_controsoffitto", parent: "cartongesso", name: "Controsoffitto Piano", icon: "fa-layer-group", 
+    basePrice: 38, unit: "mq", 
+    description: "Realizzazione controsoffitto in cartongesso.",
+    specificQuestion: "Isolamento incluso?",
     options: [
-      { label: "Nessuno", multiplier: 1.0, icon: "fa-xmark" },
-      { label: "Lana di roccia / Vetro", multiplier: 1.3, icon: "fa-shield-halved" },
-      { label: "Doppia lastra rinforzata", multiplier: 1.5, icon: "fa-layer-group" }
+      { label: "Senza isolamento", multiplier: 1.0, icon: "fa-xmark" },
+      { label: "Con lana di roccia", multiplier: 1.4, icon: "fa-shield-halved" }
     ]
   },
 
   // SERRAMENTI
   { 
-    id: "serramenti_pvc", parent: "serramenti", name: "Infisso PVC", icon: "fa-window-restore", 
-    basePrice: 450, unit: "mq", 
-    description: "Fornitura e posa infisso PVC.",
-    specificQuestion: "Tipologia di vetro?",
+    id: "ser_pvc_std", parent: "serramenti", name: "Infisso PVC Standard", icon: "fa-window-maximize", 
+    basePrice: 480, unit: "mq", 
+    description: "Fornitura e posa infisso PVC alta efficienza.",
+    specificQuestion: "Tipo di vetro?",
     options: [
-      { label: "Doppio vetro standard", multiplier: 1.0, icon: "fa-window-maximize" },
-      { label: "Triplo vetro termico", multiplier: 1.2, icon: "fa-temperature-low" },
-      { label: "Antisfondamento / Acustico", multiplier: 1.4, icon: "fa-shield-virus" }
+      { label: "Doppio vetro", multiplier: 1.0, icon: "fa-window-restore" },
+      { label: "Triplo vetro", multiplier: 1.25, icon: "fa-temperature-low" }
     ]
   },
 
   // CLIMATIZZAZIONE
   { 
-    id: "clima_mono", parent: "climatizzazione", name: "Climatizzatore Mono Split", icon: "fa-snowflake", 
-    basePrice: 450, unit: "unità", 
-    description: "Installazione climatizzatore.",
-    specificQuestion: "Lunghezza linea frigorifera?",
+    id: "cli_installazione_split", parent: "climatizzazione", name: "Installazione Split", icon: "fa-fan", 
+    basePrice: 350, unit: "unità", 
+    description: "Montaggio unità interna ed esterna.",
+    specificQuestion: "Distanza tra le unità?",
     options: [
       { label: "Entro 3 metri", multiplier: 1.0, icon: "fa-ruler" },
-      { label: "Da 3 a 7 metri", multiplier: 1.3, icon: "fa-arrows-left-right" },
-      { label: "Oltre 7 metri", multiplier: 1.6, icon: "fa-route" }
+      { label: "Oltre 3 metri", multiplier: 1.4, icon: "fa-arrows-left-right" }
+    ]
+  },
+
+  // SERVIZI -> Giardinaggio
+  { 
+    id: "gia_taglio_erba", parent: "giardinaggio", name: "Taglio Erba / Manutenzione", icon: "fa-scissors", 
+    basePrice: 0.8, unit: "mq", 
+    description: "Taglio prato e rifinitura bordi.",
+    specificQuestion: "Stato del prato?",
+    options: [
+      { label: "Curato", multiplier: 1.0, icon: "fa-face-smile" },
+      { label: "Incolto / Erba alta", multiplier: 1.8, icon: "fa-mountain" }
     ]
   }
 ];

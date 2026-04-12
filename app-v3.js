@@ -288,15 +288,24 @@ function renderCategories() {
     </div>
   `).join("");
   
-  document.querySelector("#step1 .step-title").textContent = "Cosa dobbiamo analizzare?";
-  document.querySelector("#step1 .step-subtitle").textContent = "Seleziona la categoria principale";
+  const title = document.querySelector("#step1 .step-title");
+  const subtitle = document.querySelector("#step1 .step-subtitle");
+  if (title) title.textContent = "Cosa dobbiamo analizzare?";
+  if (subtitle) subtitle.textContent = "Seleziona la categoria principale";
 }
 
 window.selectCategory = (id) => {
   currentPath = [id];
   const subs = getSubCategories(id);
-  if (subs.length > 0) renderSubCategories(id);
-  else renderFinalTrades(id);
+  const trades = getTradesByCategory(id);
+  
+  if (subs.length > 0) {
+    renderSubCategories(id);
+  } else if (trades.length > 0) {
+    renderFinalTrades(id);
+  } else {
+    showToast("Categoria in fase di aggiornamento", "info");
+  }
 };
 
 function renderSubCategories(parentId) {
@@ -306,7 +315,7 @@ function renderSubCategories(parentId) {
   
   grid.innerHTML = subs.map(s => `
     <div class="trade-card animate-scale-in" onclick="selectSubCategory('${s.id}')">
-      <div class="trade-icon" style="background: ${s.color}15; color: ${s.color}">
+      <div class="trade-icon" style="background: ${s.color || '#3b82f6'}15; color: ${s.color || '#3b82f6'}">
         <i class="fa-solid ${s.icon}"></i>
       </div>
       <h3 class="trade-name">${s.name}</h3>
@@ -314,13 +323,20 @@ function renderSubCategories(parentId) {
     </div>
   `).join("");
   
-  document.querySelector("#step1 .step-title").textContent = parent.name;
-  document.querySelector("#step1 .step-subtitle").textContent = "Filtra per tipo di servizio";
+  const title = document.querySelector("#step1 .step-title");
+  const subtitle = document.querySelector("#step1 .step-subtitle");
+  if (title) title.textContent = parent ? parent.name : "Sottocategorie";
+  if (subtitle) subtitle.textContent = "Filtra per tipo di servizio";
 }
 
 window.selectSubCategory = (id) => {
   currentPath = [currentPath[0], id];
-  renderFinalTrades(id);
+  const trades = getTradesByCategory(id);
+  if (trades.length > 0) {
+    renderFinalTrades(id);
+  } else {
+    showToast("Nessun servizio trovato in questa sottocategoria", "info");
+  }
 };
 
 function renderFinalTrades(parentId) {
@@ -341,8 +357,10 @@ function renderFinalTrades(parentId) {
     </div>
   `).join("");
   
-  document.querySelector("#step1 .step-title").textContent = "Dettaglio Lavoro";
-  document.querySelector("#step1 .step-subtitle").textContent = "Qual è l'intervento specifico?";
+  const title = document.querySelector("#step1 .step-title");
+  const subtitle = document.querySelector("#step1 .step-subtitle");
+  if (title) title.textContent = "Dettaglio Lavoro";
+  if (subtitle) subtitle.textContent = "Qual è l'intervento specifico?";
 }
 
 window.selectTrade = (id) => {
