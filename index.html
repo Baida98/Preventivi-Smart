@@ -30,15 +30,40 @@
         <div class="container nav-flex">
             <div class="logo">
                 <i class="fa-solid fa-shield-halved"></i>
-                <span>PREVENTIVI-SMART <small>PRO</small></span>
+                <span>PREVENTIVI-SMART <span class="logo-tagline">La tua protezione economica</span></span>
             </div>
             <div class="user-nav" id="userNav">
-                <button class="btn btn-google-login" id="googleLoginBtn" aria-label="Accedi con Google" title="Accedi con Google">
-                    <i class="fa-brands fa-google"></i>
-                </button>
+                <button class="btn btn-login-trigger" id="loginTriggerBtn">Accedi</button>
             </div>
         </div>
     </header>
+
+    <!-- LOGIN MODAL -->
+    <div id="loginModal" class="modal hidden">
+        <div class="modal-content animate-scale-in">
+            <button class="modal-close" id="closeLoginBtn">&times;</button>
+            <div class="login-box">
+                <h3>Bentornato</h3>
+                <p>Accedi per salvare le tue analisi</p>
+                
+                <button class="btn btn-google-login btn-full" id="googleLoginBtn">
+                    <i class="fa-brands fa-google"></i> Accedi con Google
+                </button>
+                
+                <div class="login-divider"><span>oppure</span></div>
+                
+                <form id="emailLoginForm" onsubmit="return false;">
+                    <div class="form-group">
+                        <input type="email" id="loginEmail" class="form-input" placeholder="Email" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="loginPassword" class="form-input" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full" id="emailLoginBtn">Accedi con Email</button>
+                </form>
+            </div>
+        </div>
+    </div>
 
     <!-- HERO SECTION -->
     <section class="hero" id="hero-section">

@@ -755,3 +755,130 @@ body.ethereal-theme {
         padding: 24px;
     }
 }
+
+/* ============================================================
+   LOGIN MODAL & HEADER UPDATES
+   ============================================================ */
+
+.logo-tagline {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--gray-400);
+    margin-left: 10px;
+    border-left: 1px solid var(--gray-200);
+    padding-left: 10px;
+}
+
+.btn-login-trigger {
+    background: var(--gray-800);
+    color: white;
+    padding: 8px 20px;
+    border-radius: var(--radius-full);
+    font-weight: 700;
+    font-size: 0.85rem;
+    border: none;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.btn-login-trigger:hover {
+    background: black;
+    transform: translateY(-1px);
+}
+
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: white;
+    padding: 40px;
+    border-radius: 32px;
+    width: 100%;
+    max-width: 400px;
+    position: relative;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.2);
+}
+
+.modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--gray-400);
+    cursor: pointer;
+}
+
+.login-box {
+    text-align: center;
+}
+
+.login-box h3 {
+    font-size: 1.5rem;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.login-box p {
+    color: var(--gray-500);
+    margin-bottom: 32px;
+}
+
+.login-divider {
+    margin: 24px 0;
+    position: relative;
+    text-align: center;
+}
+
+.login-divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 1px;
+    background: var(--gray-100);
+}
+
+.login-divider span {
+    background: white;
+    padding: 0 12px;
+    position: relative;
+    color: var(--gray-400);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.form-group {
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.form-input {
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 12px;
+    border: 1px solid var(--gray-200);
+    font-family: inherit;
+    font-size: 0.95rem;
+    transition: all 0.3s;
+}
+
+.form-input:focus {
+    border-color: var(--sapphire);
+    outline: none;
+    box-shadow: 0 0 0 4px var(--sapphire-light);
+}

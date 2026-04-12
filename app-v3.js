@@ -54,10 +54,37 @@ function checkAuth() {
 }
 
 function handleGoogleLogin() {
-  userProfile = { name: "Utente Demo", email: "demo@gmail.com", picture: "fa-user-circle" };
-  localStorage.setItem("ps_user", JSON.stringify(userProfile));
-  updateUserUI();
-  showToast("Accesso effettuato con Google", "success");
+  // Simulo l'apertura della finestra di login Google
+  showToast("Connessione a Google in corso...", "info");
+  setTimeout(() => {
+    userProfile = { name: "Utente Google", email: "google@gmail.com", picture: "fa-user-circle" };
+    localStorage.setItem("ps_user", JSON.stringify(userProfile));
+    updateUserUI();
+    closeLoginModal();
+    showToast("Accesso effettuato con Google", "success");
+  }, 1000);
+}
+
+function handleEmailLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value;
+  const pass = document.getElementById("loginPassword").value;
+  
+  if (email && pass) {
+    userProfile = { name: email.split('@')[0], email: email, picture: "fa-user-circle" };
+    localStorage.setItem("ps_user", JSON.stringify(userProfile));
+    updateUserUI();
+    closeLoginModal();
+    showToast("Accesso effettuato con successo", "success");
+  }
+}
+
+function openLoginModal() {
+  document.getElementById("loginModal")?.classList.remove("hidden");
+}
+
+function closeLoginModal() {
+  document.getElementById("loginModal")?.classList.add("hidden");
 }
 
 function updateUserUI() {
@@ -67,9 +94,13 @@ function updateUserUI() {
       <div class="user-profile-badge animate-scale-in">
         <i class="fa-solid fa-circle-user"></i>
         <span>${userProfile.name}</span>
-        <button class="btn-logout" onclick="localStorage.removeItem('ps_user'); location.reload();"><i class="fa-solid fa-right-from-bracket"></i></button>
+        <button class="btn-logout" id="logoutBtn"><i class="fa-solid fa-right-from-bracket"></i></button>
       </div>
     `;
+    document.getElementById("logoutBtn")?.addEventListener("click", () => {
+      localStorage.removeItem('ps_user');
+      location.reload();
+    });
   }
 }
 
@@ -77,7 +108,19 @@ function updateUserUI() {
 function setupEventListeners() {
   document.getElementById("startAnalysisBtn")?.addEventListener("click", () => startWizard("professional"));
   document.getElementById("startQuickBtn")?.addEventListener("click", () => startWizard("quick"));
+  
+  // Login Listeners
+  document.getElementById("loginTriggerBtn")?.addEventListener("click", openLoginModal);
+  document.getElementById("closeLoginBtn")?.addEventListener("click", closeLoginModal);
   document.getElementById("googleLoginBtn")?.addEventListener("click", handleGoogleLogin);
+  document.getElementById("emailLoginForm")?.addEventListener("submit", handleEmailLogin);
+  
+  // Chiudi modale cliccando fuori
+  window.addEventListener("click", (e) => {
+    const modal = document.getElementById("loginModal");
+    if (e.target === modal) closeLoginModal();
+  });
+
   document.getElementById("prevStepBtn")?.addEventListener("click", prevStep);
   document.getElementById("nextStepBtn")?.addEventListener("click", nextStep);
   document.getElementById("prevStep3Btn")?.addEventListener("click", prevStep);
