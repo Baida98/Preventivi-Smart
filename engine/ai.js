@@ -46,16 +46,16 @@ export async function aiTrain(tipo, citta, prezzo) {
 
     const d = snap.data();
 
-    const newCount = d.count + 1;
-    const newTotal = d.total + prezzo;
+    const count = d.count + 1;
+    const total = d.total + prezzo;
 
     await updateDoc(ref, {
-      count: newCount,
-      total: newTotal,
-      avg: newTotal / newCount
+      count,
+      total,
+      avg: total / count
     });
 
   } catch (e) {
-    console.log("AI error:", e);
+    console.log("AI error", e);
   }
 }
