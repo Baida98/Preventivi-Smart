@@ -1,6 +1,6 @@
 /**
- * Preventivi-Smart Pro v12.0 — Core Application (Psychological Shield)
- * Integrazione delle 5 leve psicologiche nel flusso applicativo.
+ * Preventivi-Smart Pro v13.0 — Core Application (Logic & UX Refactoring)
+ * Gestione flussi differenziati: Analisi Professionale vs Stima Rapida.
  */
 
 import { initSecurityShield } from "./engine/security-shield.js";
@@ -9,7 +9,7 @@ import { getAllTrades, getTradeById, REGIONAL_COEFFICIENTS } from "./engine/data
 import { analyzeQuote, computeStats, analyzeTrend } from "./engine/ai-analyzer.js";
 import { renderDashboard } from "./engine/dashboard-ui.js";
 
-// ===== INIT SICUREZZA (NON BLOCCANTE) =====
+// ===== INIT SICUREZZA =====
 try {
   initSecurityShield();
   initUIProtection();
@@ -21,8 +21,9 @@ try {
 let currentStep = 1;
 let currentTrade = null;
 let userHistory = [];
+let wizardMode = 'professional'; // 'professional' (con prezzo) o 'quick' (senza prezzo)
 
-// currentQuote esposto direttamente su window per accesso da PDF e console
+// currentQuote esposto per PDF
 window._psQuote = null;
 const getQuote = () => window._psQuote;
 const setQuote = (v) => { window._psQuote = v; };
@@ -36,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ===== EVENT LISTENERS =====
 function setupEventListeners() {
-  // Hero Buttons
+  // Hero Buttons - Flussi differenziati
   document.getElementById("startAnalysisBtn")?.addEventListener("click", () => startWizard("professional"));
   document.getElementById("startQuickBtn")?.addEventListener("click", () => startWizard("quick"));
 
@@ -49,38 +50,50 @@ function setupEventListeners() {
   // PDF Download
   document.getElementById("btnDownloadPDF")?.addEventListener("click", downloadPDF);
 
-  // Dashboard: nuova analisi
+  // Dashboard
   document.getElementById("dashNewAnalysisBtn")?.addEventListener("click", () => {
     document.getElementById("dashboard")?.classList.add("hidden");
     startWizard("professional");
   });
-
-  // Category Filters
-  document.querySelectorAll(".filter-btn").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-      e.target.classList.add("active");
-      renderTrades(e.target.dataset.cat);
-    });
-  });
 }
 
-// ===== WIZARD FLOW (LEVA 4: GUIDA) =====
+// ===== WIZARD FLOW =====
 function startWizard(mode) {
+  wizardMode = mode;
   const hero = document.getElementById("hero-section");
   const appRoot = document.getElementById("app-root");
+  
   if (hero) hero.style.display = "none";
   if (appRoot) {
     appRoot.style.display = "block";
     appRoot.classList.remove("hidden");
   }
+
+  // Personalizza Step 3 Label in base al modo
+  const step3Label = document.getElementById("step3Label");
+  if (step3Label) {
+    step3Label.textContent = (mode === 'professional') ? "Prezzo" : "Analisi";
+  }
+
   currentStep = 1;
-  // Assicura che solo step1 sia visibile
+  goToStep(1);
+}
+
+function goToStep(step) {
+  // Nascondi tutti i contenuti degli step
   for (let i = 1; i <= 4; i++) {
     const s = document.getElementById(`step${i}`);
-    if (s) s.classList.toggle("hidden", i !== 1);
+    if (s) s.classList.add("hidden");
   }
-  updateProgress(1);
+  
+  // Mostra lo step corrente
+  const currentStepEl = document.getElementById(`step${step}`);
+  if (currentStepEl) {
+    currentStepEl.classList.remove("hidden");
+    currentStepEl.classList.add("animate-scale-in");
+  }
+
+  updateProgress(step);
 }
 
 function nextStep() {
@@ -95,19 +108,27 @@ function nextStep() {
       showToast("Inserisci una quantità valida", "info");
       return;
     }
+    
+    // LOGICA DIFFERENZIATA: Se siamo in 'quick', saltiamo lo step 3 (prezzo) e andiamo direttamente all'analisi
+    if (wizardMode === 'quick') {
+      currentStep = 4;
+      runAnalysis(); // Avvia l'analisi direttamente
+      return;
+    }
   }
 
-  document.getElementById(`step${currentStep}`).classList.add("hidden");
   currentStep++;
-  document.getElementById(`step${currentStep}`).classList.remove("hidden");
-  updateProgress(currentStep);
+  goToStep(currentStep);
 }
 
 function prevStep() {
-  document.getElementById(`step${currentStep}`).classList.add("hidden");
-  currentStep--;
-  document.getElementById(`step${currentStep}`).classList.remove("hidden");
-  updateProgress(currentStep);
+  // Se siamo allo step 4 e veniamo da 'quick', torniamo allo step 2
+  if (currentStep === 4 && wizardMode === 'quick') {
+    currentStep = 2;
+  } else {
+    currentStep--;
+  }
+  goToStep(currentStep);
 }
 
 function updateProgress(step) {
@@ -119,25 +140,25 @@ function updateProgress(step) {
       else if (i === step) node.classList.add("active");
     }
   }
-  // Aggiorna la barra di progresso visiva tramite CSS variable
+  
   const progressBar = document.getElementById("progress-bar");
   if (progressBar) {
-    progressBar.style.setProperty("--progress", `${((step - 1) / 3) * 100}%`);
+    const totalSteps = 4;
+    const progress = ((step - 1) / (totalSteps - 1)) * 100;
+    progressBar.style.setProperty("--progress", `${progress}%`);
   }
 }
 
-// ===== RENDER TRADES (LEVA 1: SICUREZZA) =====
+// ===== RENDER TRADES =====
 function renderTrades(category = "all") {
   const grid = document.getElementById("tradesGrid");
   if (!grid) return;
 
   const trades = getAllTrades();
-  const filtered = category === "all" ? trades : trades.filter(t => t.category === category);
-
-  grid.innerHTML = filtered.map(t => `
+  grid.innerHTML = trades.map(t => `
     <div class="trade-card ${currentTrade?.id === t.id ? 'selected' : ''}" onclick="selectTrade('${t.id}')">
-      <div class="trade-icon" style="background: ${t.color}20; color: ${t.color}">
-        <i class="fas ${t.icon}"></i>
+      <div class="trade-icon" style="background: ${t.color}15; color: ${t.color}">
+        <i class="fa-solid ${t.icon}"></i>
       </div>
       <h3 class="trade-name">${t.name}</h3>
       <p class="trade-desc">${t.description}</p>
@@ -147,7 +168,7 @@ function renderTrades(category = "all") {
 
 window.selectTrade = (id) => {
   currentTrade = getTradeById(id);
-  renderTrades(document.querySelector(".filter-btn.active")?.dataset.cat || "all");
+  renderTrades();
   const unitLabel = document.getElementById("unitLabel");
   if (unitLabel) unitLabel.textContent = currentTrade.unit;
   renderDynamicQuestions(currentTrade);
@@ -163,7 +184,7 @@ function renderDynamicQuestions(trade) {
     return;
   }
   container.innerHTML = trade.questions.map(q => `
-    <div class="form-group" data-question-id="${q.id}">
+    <div class="form-group animate-slide-up" style="animation-delay: 0.1s">
       <label class="form-label">${q.label}</label>
       <select class="form-select" name="${q.id}" id="q_${q.id}">
         <option value="">-- Seleziona --</option>
@@ -177,22 +198,27 @@ function renderDynamicQuestions(trade) {
 function renderRegions() {
   const select = document.getElementById("regionSelect");
   if (!select) return;
-
-  select.innerHTML = Object.keys(REGIONAL_COEFFICIENTS).map(r => `
-    <option value="${r}">${r}</option>
-  `).join("");
+  select.innerHTML = Object.keys(REGIONAL_COEFFICIENTS).map(r => `<option value="${r}">${r}</option>`).join("");
 }
 
 // ===== RUN ANALYSIS (LEVA 1, 2, 5) =====
 async function runAnalysis() {
-  const receivedPrice = parseFloat(document.getElementById("receivedPriceInput").value);
-  if (!receivedPrice || receivedPrice <= 0) {
-    showToast("Inserisci l'importo del preventivo", "info");
-    return;
+  let receivedPrice = 0;
+  
+  if (wizardMode === 'professional') {
+    receivedPrice = parseFloat(document.getElementById("receivedPriceInput").value);
+    if (!receivedPrice || receivedPrice <= 0) {
+      showToast("Inserisci l'importo del preventivo", "info");
+      return;
+    }
   }
 
-  // Mostra loading (Leva 3: AI Percepibile)
-  nextStep();
+  // Assicura che siamo allo step 4
+  if (currentStep !== 4) {
+    currentStep = 4;
+    goToStep(4);
+  }
+
   const loading = document.getElementById("analysisLoading");
   const results = document.getElementById("analysisResults");
   const nav = document.getElementById("resultsNav");
@@ -201,10 +227,9 @@ async function runAnalysis() {
   results.classList.add("hidden");
   nav.classList.add("hidden");
 
-  // Simula calcolo AI (Leva 3)
-  await new Promise(r => setTimeout(r, 2000));
+  // Simula calcolo AI (Effetto "Scansione")
+  await new Promise(r => setTimeout(r, 2500));
 
-  // Calcolo dati mercato (Simulato per brevità)
   const qty = parseFloat(document.getElementById("quantityInput").value);
   const region = document.getElementById("regionSelect").value;
   const coeff = REGIONAL_COEFFICIENTS[region] || 1.0;
@@ -213,235 +238,112 @@ async function runAnalysis() {
   const marketMin = marketMid * 0.85;
   const marketMax = marketMid * 1.25;
 
+  // Se siamo in 'quick', usiamo il marketMid come receivedPrice per mostrare i dati senza verdetto negativo
+  const finalReceivedPrice = (wizardMode === 'quick') ? marketMid : receivedPrice;
+
   const analysis = analyzeQuote({
-    receivedPrice,
-    marketMin,
-    marketMid,
-    marketMax,
+    receivedPrice: finalReceivedPrice,
+    marketMin, marketMid, marketMax,
     tradeId: currentTrade.id,
-    region
+    region,
+    mode: wizardMode // Passiamo il modo all'analyzer
   }, { marketMin, marketMid, marketMax });
 
-  // Render Risultati (Leva 5: Feedback utile)
   renderAnalysisResults(analysis);
 
   loading.classList.add("hidden");
   results.classList.remove("hidden");
   nav.classList.remove("hidden");
 
-  // Salva nello storico (Leva 3)
   const historyItem = {
     id: Date.now().toString(),
     tradeId: currentTrade.id,
     tradeName: currentTrade.name,
     region,
-    receivedPrice,
+    receivedPrice: finalReceivedPrice,
     marketMid,
     analysis,
+    mode: wizardMode,
     createdAt: new Date().toISOString()
   };
-  setQuote(historyItem); // Rende disponibile per il PDF
+  setQuote(historyItem);
   saveToHistory(historyItem);
 }
 
 function renderAnalysisResults(analysis) {
   const container = document.getElementById("analysisResults");
   const v = analysis.verdict;
+  const isQuick = wizardMode === 'quick';
 
   container.innerHTML = `
-    <div class="result-header">
-      <div class="verdict-badge" style="background: ${v.color}20; color: ${v.color}; border: 1px solid ${v.color}">
-        ${v.label}
-      </div>
-      <h2 class="result-score">Affidabilità AI: ${analysis.trustLevel}%</h2>
-      <p class="psychology-text">${v.psychology}</p>
+    <div class="result-header animate-scale-in">
+      ${!isQuick ? `
+        <div class="verdict-badge" style="background: ${v.color}20; color: ${v.color}; border: 1px solid ${v.color}">
+          ${v.label}
+        </div>
+      ` : `
+        <div class="verdict-badge" style="background: var(--sapphire-light); color: var(--sapphire); border: 1px solid var(--sapphire)">
+          STIMA DI MERCATO
+        </div>
+      `}
+      <h2 class="result-score">Precisione AI: ${analysis.trustLevel}%</h2>
+      <p class="psychology-text">${isQuick ? "Ecco il valore stimato basato sui dati correnti per la tua regione." : v.psychology}</p>
     </div>
 
     <div class="benchmark-grid">
       <div class="benchmark-item">
-        <span class="b-label">Differenza vs Mercato</span>
-        <span class="b-value ${analysis.diffPercent > 10 ? 'text-danger' : 'text-success'}">
-          ${analysis.diffPercent > 0 ? '+' : ''}${analysis.diffPercent}%
+        <span class="b-label">${isQuick ? 'Valore Stimato' : 'Differenza vs Mercato'}</span>
+        <span class="b-value ${!isQuick && analysis.diffPercent > 10 ? 'text-danger' : 'text-success'}">
+          ${isQuick ? '€' + Math.round(analysis.benchmark.cityAvg).toLocaleString() : (analysis.diffPercent > 0 ? '+' : '') + analysis.diffPercent + '%'}
         </span>
       </div>
       <div class="benchmark-item">
-        <span class="b-label">Media Città (${analysis.benchmark.region})</span>
-        <span class="b-value">€${analysis.benchmark.cityAvg.toLocaleString("it-IT", { maximumFractionDigits: 0 })}</span>
+        <span class="b-label">Range Prezzi (${analysis.benchmark.region})</span>
+        <span class="b-value" style="font-size: 1rem;">
+          €${Math.round(analysis.benchmark.marketMin).toLocaleString()} - €${Math.round(analysis.benchmark.marketMax).toLocaleString()}
+        </span>
       </div>
     </div>
 
     <div class="advice-section">
-      <h3><i class="fas fa-lightbulb text-primary"></i> Consigli d'Azione</h3>
+      <h3><i class="fa-solid fa-lightbulb text-primary"></i> ${isQuick ? 'Note per il Preventivo' : 'Consigli d\'Azione'}</h3>
       <ul class="advice-list">
-        ${analysis.advice.map(a => `<li><i class="fas fa-check"></i> ${a}</li>`).join("")}
+        ${analysis.advice.map(a => `<li><i class="fa-solid fa-circle-check"></i> ${a}</li>`).join("")}
       </ul>
-    </div>
-
-    <div class="trust-footer">
-      <p><i class="fas fa-database"></i> Analisi basata su ${analysis.benchmark.totalDataPoints.toLocaleString()} dati reali di mercato.</p>
     </div>
   `;
 }
 
-// ===== HISTORY & DASHBOARD (LEVA 3) =====
 function saveToHistory(item) {
   userHistory.unshift(item);
   localStorage.setItem("quote_history", JSON.stringify(userHistory));
-  // Aggiorna dashboard se visibile
-  renderDashboardSafe(userHistory);
-}
-
-// Render dashboard sicuro: crea i nodi mancanti se non esistono
-function renderDashboardSafe(history) {
-  const dashStats = document.getElementById("dashStats");
-  if (dashStats && !document.getElementById("statTotal")) {
-    dashStats.innerHTML = `
-      <div class="stat-card">
-        <span class="stat-label">Analisi Totali</span>
-        <span class="stat-value" id="statTotal">0</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">Risparmio Stimato</span>
-        <span class="stat-value" id="statSavings">€0</span>
-      </div>
-      <div class="stat-card">
-        <span class="stat-label">Score Medio</span>
-        <span class="stat-value" id="statScore">0%</span>
-      </div>
-    `;
+  // Render dashboard solo se esiste
+  if (document.getElementById("dashboard")) {
+    renderDashboard(userHistory);
   }
-  // Aggiungi canvas trendChart se mancante
-  const historyList = document.getElementById("historyList");
-  if (historyList && !document.getElementById("trendChart")) {
-    const chartWrapper = document.createElement("div");
-    chartWrapper.style.cssText = "padding: 16px; margin-bottom: 16px;";
-    chartWrapper.innerHTML = `<canvas id="trendChart" height="120"></canvas>`;
-    historyList.parentNode.insertBefore(chartWrapper, historyList);
-  }
-  renderDashboard(history);
 }
 
-function showToast(msg, type) {
-  const toast = document.createElement("div");
-  toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<i class="fas fa-info-circle"></i> ${msg}`;
-  document.getElementById("toastContainer").appendChild(toast);
-  setTimeout(() => toast.remove(), 3000);
-}
-
-// ===== PDF DOWNLOAD =====
 function downloadPDF() {
-  const currentQuote = getQuote();
-  if (!currentQuote) {
-    showToast("Nessun preventivo da scaricare", "info");
-    return;
+  const quote = getQuote();
+  if (!quote) return;
+  
+  if (window._buildPDF) {
+    window._buildPDF(quote);
+  } else {
+    showToast("Generatore PDF non pronto", "error");
   }
-  // Lazy-load jsPDF e genera il report
-  if (window.jspdf) {
-    _buildPDF(window.jspdf.jsPDF, currentQuote);
-    return;
-  }
-  const script = document.createElement("script");
-  script.src = "https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js";
-  script.onload = () => _buildPDF(window.jspdf.jsPDF, getQuote());
-  script.onerror = () => showToast("Errore caricamento libreria PDF", "error");
-  document.head.appendChild(script);
 }
 
-function _buildPDF(jsPDF, q) {
-  if (!q) { showToast("Dati preventivo non disponibili", "error"); return; }
-  const doc = new jsPDF({ unit: "mm", format: "a4" });
-  const navy = [15, 23, 42];
-  const white = [255, 255, 255];
-  const amber = [217, 119, 6];
-  const gray = [100, 116, 139];
-  const fmt = (v) => new Intl.NumberFormat("it-IT", { style: "currency", currency: "EUR" }).format(v);
-  const dateStr = new Date().toLocaleDateString("it-IT", { day: "2-digit", month: "long", year: "numeric" });
-  const refId = "PS-" + Date.now().toString().slice(-8);
-  const a = q.analysis;
-
-  // Header
-  doc.setFillColor(...navy);
-  doc.rect(0, 0, 210, 45, "F");
-  doc.setFillColor(...amber);
-  doc.rect(0, 43, 210, 3, "F");
-  doc.setTextColor(...white);
-  doc.setFontSize(20);
-  doc.setFont(undefined, "bold");
-  doc.text("PREVENTIVI-SMART PRO", 15, 18);
-  doc.setFontSize(9);
-  doc.setFont(undefined, "normal");
-  doc.setTextColor(148, 163, 184);
-  doc.text("Analisi Professionale del Preventivo · Prezzari 2025/2026", 15, 27);
-  doc.setFontSize(8);
-  doc.setTextColor(...white);
-  doc.text(`Data: ${dateStr}`, 15, 38);
-  doc.text(`Rif: ${refId}`, 105, 38);
-
-  // Titolo lavoro
-  let y = 58;
-  doc.setTextColor(...navy);
-  doc.setFontSize(15);
-  doc.setFont(undefined, "bold");
-  doc.text(q.tradeName, 15, y);
-  doc.setFontSize(9);
-  doc.setFont(undefined, "normal");
-  doc.setTextColor(...gray);
-  doc.text(`Regione: ${q.region}  ·  Prezzo ricevuto: ${fmt(q.receivedPrice)}  ·  Media mercato: ${fmt(q.marketMid)}`, 15, y + 8);
-  y += 20;
-
-  // Verdetto
-  if (a && a.verdict) {
-    doc.setFontSize(12);
-    doc.setFont(undefined, "bold");
-    doc.setTextColor(...navy);
-    doc.text(`Verdetto: ${a.verdict.label.replace(/[^\x20-\x7E]/g, "")}`, 15, y);
-    y += 8;
-    doc.setFontSize(9);
-    doc.setFont(undefined, "normal");
-    doc.setTextColor(...gray);
-    doc.text(`Differenza vs mercato: ${a.diffPercent > 0 ? "+" : ""}${a.diffPercent}%  ·  Affidabilità AI: ${a.trustLevel}%`, 15, y);
-    y += 10;
-  }
-
-  // Consigli
-  if (a && a.advice && a.advice.length) {
-    doc.setFontSize(11);
-    doc.setFont(undefined, "bold");
-    doc.setTextColor(...navy);
-    doc.text("Consigli d'Azione:", 15, y);
-    y += 7;
-    a.advice.forEach((tip, i) => {
-      const lines = doc.splitTextToSize(`${i + 1}. ${tip.replace(/[^\x20-\x7E]/g, "")}`, 175);
-      doc.setFontSize(9);
-      doc.setFont(undefined, "normal");
-      doc.setTextColor(...navy);
-      doc.text(lines, 15, y);
-      y += lines.length * 5 + 2;
-    });
-  }
-
-  // Footer
-  doc.setFillColor(...navy);
-  doc.rect(0, 282, 210, 15, "F");
-  doc.setTextColor(...white);
-  doc.setFontSize(8);
-  doc.text("Preventivi-Smart Pro © 2026 · preventivi-smart.it", 15, 291);
-  doc.text(`Rif: ${refId}`, 195, 291, { align: "right" });
-
-  doc.save(`Analisi_${q.tradeName.replace(/\s+/g, "_")}_${refId}.pdf`);
+function showToast(message, type = "info") {
+  const container = document.getElementById("toastContainer");
+  if (!container) return;
+  
+  const toast = document.createElement("div");
+  toast.className = `toast toast-${type} animate-slide-right`;
+  toast.innerHTML = `<i class="fa-solid fa-info-circle"></i> ${message}`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    setTimeout(() => toast.remove(), 500);
+  }, 3000);
 }
-
-// ===== DETTAGLIO ANALISI (DASHBOARD) =====
-window.openAnalysisDetail = (id) => {
-  const item = userHistory.find(h => h.id === id);
-  if (!item) return;
-  showToast(`Preventivo: ${item.tradeName} — ${item.analysis?.verdict?.label || "Analizzato"}`, "info");
-};
-
-// Export functions for global access
-window.startWizard = startWizard;
-window.nextStep = nextStep;
-window.prevStep = prevStep;
-window.runAnalysis = runAnalysis;
-window.downloadPDF = downloadPDF;

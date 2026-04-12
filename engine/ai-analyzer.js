@@ -73,9 +73,11 @@ export function analyzeQuote(params) {
     marketMid,
     marketMax,
     tradeId,
-    region
+    region,
+    mode
   } = params;
 
+  const isQuick = mode === 'quick';
   const ratio = receivedPrice / marketMid;
   const diffPercent = ((ratio - 1) * 100).toFixed(1);
   const diffAmount = receivedPrice - marketMid;
@@ -89,7 +91,17 @@ export function analyzeQuote(params) {
   else if (ratio <= THRESHOLDS.OVER_MARKET) vKey = "SOPRA_MEDIA";
   else vKey = "FUORI_MERCATO";
 
-  const verdict = VERDICTS[vKey];
+  let verdict = VERDICTS[vKey];
+  
+  if (isQuick) {
+    verdict = {
+      ...VERDICTS.NELLA_MEDIA,
+      label: "📊 VALORE DI MERCATO STIMATO",
+      color: "#0ea5e9",
+      psychology: "Questa è la media di mercato basata sui dati attuali per la tua configurazione regionale.",
+      score: 100
+    };
+  }
 
   // Benchmark (Leva 2)
   const percentile = calculatePercentile(receivedPrice, marketMin, marketMax);
@@ -100,7 +112,7 @@ export function analyzeQuote(params) {
   const trustLevel = 92 + Math.floor(Math.random() * 7); // Percepibile come alta affidabilità
 
   // Feedback Azionabile (Leva 5)
-  const advice = generateAdvice(vKey, parseFloat(diffPercent), tradeId);
+  const advice = generateAdvice(vKey, parseFloat(diffPercent), tradeId, isQuick);
 
   return {
     verdict,
@@ -129,7 +141,15 @@ function calculatePercentile(price, min, max) {
   return Math.round(((price - min) / (max - min)) * 90) + 5;
 }
 
-function generateAdvice(verdictKey, diffPercent, tradeId) {
+function generateAdvice(verdictKey, diffPercent, tradeId, isQuick) {
+  if (isQuick) {
+    return [
+      "Usa questo valore come base per trattare con le imprese.",
+      "Ricorda che i prezzi possono variare del 15% in base all'urgenza.",
+      "Chiedi sempre almeno 3 preventivi per confrontare le offerte.",
+      "Verifica se l'IVA è inclusa nelle stime che riceverai."
+    ];
+  }
   const common = [
     "Richiedi sempre il DURC aggiornato dell'impresa.",
     "Non versare mai acconti superiori al 30% del totale.",
