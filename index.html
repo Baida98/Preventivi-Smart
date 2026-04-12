@@ -1,37 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset="UTF-8">
-  <title>Preventivi Smart</title>
-  <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<div id="loginBox">
-  <h2>Accesso</h2>
-  <button onclick="login()">Accedi con Google</button>
+<div id="auth">
+  <input id="email" placeholder="email">
+  <input id="password" type="password">
+
+  <button id="login">Login</button>
+  <button id="google">Google</button>
 </div>
 
 <div id="app" style="display:none;">
 
-  <div>
-    Utente: <span id="userEmail"></span>
-    <button onclick="logout()">Logout</button>
-  </div>
+  <h2>Dashboard Preventivi</h2>
 
-  <hr>
+  <select id="tipo">
+    <option>imbiancatura</option>
+    <option>piastrelle</option>
+    <option>bagno</option>
+  </select>
 
-  <h3>Nuovo preventivo</h3>
+  <input id="mq">
+  <select id="qualita">
+    <option>bassa</option>
+    <option>media</option>
+    <option>alta</option>
+  </select>
 
-  <input id="cliente" placeholder="Cliente">
-  <input id="servizio" placeholder="Servizio">
-  <input id="prezzo" type="number" placeholder="Prezzo">
+  <select id="citta">
+    <option>milano</option>
+    <option>roma</option>
+    <option>napoli</option>
+  </select>
 
-  <button onclick="creaPreventivo()">Salva</button>
+  <button id="calcola">Calcola</button>
+  <button id="pdf">Export PDF</button>
 
-  <h3>Lista</h3>
-  <div id="lista"></div>
+  <h3 id="output"></h3>
+
+  <canvas id="chart"></canvas>
 
 </div>
 
