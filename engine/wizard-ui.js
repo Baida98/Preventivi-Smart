@@ -39,20 +39,21 @@ export function renderStep2TradeSelection(containerId) {
 
     categoryTrades.forEach(trade => {
       html += `
-        <div class="trade-card" data-trade-id="${trade.id}" style="border-left: 4px solid ${trade.color}; background: ${trade.colorBg};">
-          <div class="trade-icon" style="color: ${trade.color};">
-            <i class="fas ${trade.icon}"></i>
+        <div class="trade-card" data-trade-id="${trade.id}" style="border-top: 4px solid ${trade.color};">
+          <div class="trade-icon" style="color: ${trade.color}; background: ${trade.color}15;">
+            <i class="fa-solid ${trade.icon}"></i>
           </div>
           <h4 class="trade-name">${trade.name}</h4>
           <p class="trade-desc">${trade.description}</p>
-          <div class="trade-price">
-            <span class="price-label">da</span>
-            <span class="price-value">€${trade.basePrice}</span>
-            <span class="price-unit">/${trade.unit}</span>
-          </div>
-          <div class="trade-complexity" style="background: ${trade.color}20;">
-            <i class="fas fa-signal"></i>
-            <span>${trade.complexity}</span>
+          <div class="trade-footer" style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--gray-100);">
+            <div class="trade-price">
+                <span style="font-size: 0.7rem; color: var(--gray-400); display: block; text-transform: uppercase;">da</span>
+                <span style="font-weight: 700; color: var(--gray-800);">€${trade.basePrice}</span>
+                <span style="font-size: 0.8rem; color: var(--gray-500);">/${trade.unit}</span>
+            </div>
+            <div class="trade-complexity" style="font-size: 0.75rem; color: ${trade.color}; font-weight: 600; background: ${trade.color}15; padding: 4px 8px; border-radius: 6px;">
+                <i class="fa-solid fa-chart-line"></i> ${trade.complexity}
+            </div>
           </div>
         </div>
       `;
@@ -354,12 +355,31 @@ function showToast(message, type = "success") {
   const container = document.getElementById("toastContainer");
   if (!container) return;
 
-  const icons = { success: "fa-check-circle", error: "fa-xmark-circle", info: "fa-info-circle" };
+  const icons = { success: "fa-circle-check", error: "fa-circle-xmark", info: "fa-circle-info" };
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
-  toast.innerHTML = `<i class="fas ${icons[type] || icons.success}"></i> ${message}`;
+  toast.style.cssText = `
+    background: var(--white);
+    border-left: 4px solid var(--${type === 'success' ? 'emerald' : type === 'error' ? 'ruby' : 'sapphire'});
+    box-shadow: var(--shadow-lg);
+    padding: 16px 24px;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-weight: 600;
+    color: var(--gray-800);
+    animation: slideInRight 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+  `;
+  toast.innerHTML = `<i class="fa-solid ${icons[type] || icons.success}" style="color: var(--${type === 'success' ? 'emerald' : type === 'error' ? 'ruby' : 'sapphire'}); font-size: 1.2rem;"></i> ${message}`;
   container.appendChild(toast);
-  setTimeout(() => toast.remove(), 3500);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(20px)';
+    toast.style.transition = 'all 0.4s';
+    setTimeout(() => toast.remove(), 400);
+  }, 3500);
 }
 
 export default {

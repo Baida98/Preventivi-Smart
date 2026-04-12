@@ -55,6 +55,60 @@
   --glow-sapphire: 0 0 20px rgba(14, 165, 233, 0.15);
   --glow-emerald: 0 0 20px rgba(16, 185, 129, 0.15);
   --glow-amber: 0 0 20px rgba(245, 158, 11, 0.15);
+  
+  /* Glassmorphism */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.4);
+  --glass-blur: blur(12px);
+}
+
+/* ===== ANIMAZIONI AVANZATE ===== */
+@keyframes float-subtle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+@keyframes pulse-soft {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.02); opacity: 0.9; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-float { animation: float-subtle 3s ease-in-out infinite; }
+.animate-pulse-soft { animation: pulse-soft 2s ease-in-out infinite; }
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.animate-scale-in { animation: scaleIn 0.4s cubic-bezier(0.23, 1, 0.32, 1) forwards; }
+
+/* FontAwesome detail boost */
+.fa-solid, .fas {
+    display: inline-block;
+    text-rendering: auto;
+    -webkit-font-smoothing: antialiased;
+}
+
+.card-icon i {
+    filter: drop-shadow(0 4px 8px rgba(0,0,0,0.1));
 }
 
 * {
@@ -179,15 +233,18 @@ html, body {
 }
 
 .action-card {
-  background: var(--white);
-  border: 2px solid var(--gray-200);
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
   border-radius: var(--radius-xl);
   padding: 32px 24px;
   text-align: center;
   cursor: pointer;
-  transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 400ms cubic-bezier(0.23, 1, 0.32, 1);
   position: relative;
   overflow: hidden;
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
 }
 
 .action-card::before {
@@ -213,8 +270,22 @@ html, body {
 }
 
 .premium-card {
-  border-color: var(--amber);
-  background: linear-gradient(135deg, var(--amber-light) 0%, var(--white) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: linear-gradient(135deg, rgba(255, 251, 235, 0.8) 0%, rgba(255, 255, 255, 0.9) 100%);
+}
+
+.premium-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent);
+  transform: skewX(-25deg);
+  transition: 0.75s;
+}
+
+.premium-card:hover::after {
+  left: 125%;
 }
 
 .premium-card:hover {
@@ -365,13 +436,33 @@ html, body {
 
 .trade-card {
   background: var(--white);
-  border: 2px solid var(--gray-200);
+  border: 1px solid var(--gray-100);
   border-radius: var(--radius-lg);
-  padding: 16px;
+  padding: 20px 16px;
   text-align: center;
   cursor: pointer;
-  transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 400ms cubic-bezier(0.23, 1, 0.32, 1);
   position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.trade-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  padding: 2px;
+  background: linear-gradient(135deg, var(--sapphire), var(--emerald));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.4s;
+}
+
+.trade-card:hover::before {
+  opacity: 1;
 }
 
 .trade-card::after {
@@ -399,10 +490,25 @@ html, body {
 }
 
 .trade-icon {
-  font-size: 2.2rem;
-  margin-bottom: 10px;
-  display: block;
-  transition: transform 250ms ease-out;
+  font-size: 2.4rem;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 60px;
+  width: 60px;
+  margin: 0 auto 12px;
+  background: var(--gray-50);
+  border-radius: 16px;
+  transition: all 400ms cubic-bezier(0.23, 1, 0.32, 1);
+  color: var(--gray-700);
+}
+
+.trade-card:hover .trade-icon {
+  transform: translateY(-5px) scale(1.1);
+  background: var(--white);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+  color: var(--sapphire);
 }
 
 .trade-card:hover .trade-icon {

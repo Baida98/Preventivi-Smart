@@ -41,10 +41,18 @@
     <!-- HERO SECTION: ETHEREAL & FLOATING -->
     <section class="hero" id="hero-section">
         <div class="hero-content">
-            <h1 class="hero-title">
-                Non farti <span class="highlight">fregare</span>.<br>
-                Verifica ogni preventivo.
-            </h1>
+            <div class="hero-badge animate-pulse-soft" style="display: inline-flex; align-items: center; gap: 8px; background: var(--sapphire-light); color: var(--sapphire); padding: 8px 16px; border-radius: 20px; font-size: 0.8rem; font-weight: 700; margin-bottom: 24px; border: 1px solid rgba(14, 165, 233, 0.2);">
+                <i class="fa-solid fa-shield-check"></i> 100% PROTEZIONE CONSUMATORE
+            </div>
+            <div class="hero-logo-container" style="display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 24px;">
+                <div class="hero-icon-box animate-float" style="width: 80px; height: 80px; background: linear-gradient(135deg, var(--sapphire), var(--emerald)); border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white; box-shadow: 0 10px 30px rgba(14, 165, 233, 0.3);">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                </div>
+                <h1 class="hero-title" style="margin-bottom: 0; text-align: left;">
+                    Preventivi<span class="highlight">-Smart</span><br>
+                    <small style="font-size: 1.5rem; display: block; margin-top: 4px; color: var(--gray-600); font-weight: 500;">Verifica ogni preventivo.</small>
+                </h1>
+            </div>
             <p class="hero-subtitle">
                 Usa la potenza dell'AI per analizzare i tuoi preventivi edili e impiantistici. 
                 Scopri se il prezzo è giusto o se stai pagando troppo in meno di 60 secondi.
@@ -52,14 +60,17 @@
             
             <div class="hero-stats">
                 <div class="stat-item">
+                    <i class="fa-solid fa-database" style="color: var(--sapphire); font-size: 1.2rem; margin-bottom: 8px;"></i>
                     <span class="stat-value">12.5k+</span>
                     <span class="stat-label">Dati Reali</span>
                 </div>
                 <div class="stat-item">
+                    <i class="fa-solid fa-brain" style="color: var(--emerald); font-size: 1.2rem; margin-bottom: 8px;"></i>
                     <span class="stat-value">98%</span>
                     <span class="stat-label">Affidabilità AI</span>
                 </div>
                 <div class="stat-item">
+                    <i class="fa-solid fa-hand-holding-dollar" style="color: var(--amber); font-size: 1.2rem; margin-bottom: 8px;"></i>
                     <span class="stat-value">€2.4M</span>
                     <span class="stat-label">Risparmiati</span>
                 </div>
@@ -68,18 +79,21 @@
             <div class="hero-actions-grid">
                 <!-- PREMIUM ACTION -->
                 <div class="action-card premium-card" onclick="startWizard('professional')">
-                    <span class="card-badge">CONSIGLIATO</span>
-                    <div class="card-icon">
+                    <div style="display: flex; justify-content: center; gap: 8px; margin-bottom: 24px;">
+                        <span class="card-badge" style="margin-bottom: 0;">CONSIGLIATO</span>
+                        <span style="background: var(--sapphire-light); color: var(--sapphire); padding: 6px 14px; border-radius: 20px; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid rgba(14, 165, 233, 0.1);">AI POWERED</span>
+                    </div>
+                    <div class="card-icon animate-float">
                         <i class="fa-solid fa-wand-magic-sparkles"></i>
                     </div>
                     <h3 class="card-title">Analisi Professionale</h3>
                     <p class="card-desc">Analizza un preventivo che hai già ricevuto con l'AI avanzata.</p>
                     <div class="card-features">
-                        <div class="feature"><i class="fa-solid fa-check"></i> Benchmark Orario</div>
-                        <div class="feature"><i class="fa-solid fa-check"></i> Consigli Negoziazione</div>
-                        <div class="feature"><i class="fa-solid fa-check"></i> Report PDF Pro</div>
+                        <div class="feature"><i class="fa-solid fa-circle-check"></i> Benchmark Orario</div>
+                        <div class="feature"><i class="fa-solid fa-circle-check"></i> Consigli Negoziazione</div>
+                        <div class="feature"><i class="fa-solid fa-circle-check"></i> Report PDF Pro</div>
                     </div>
-                    <button class="btn btn-primary btn-full">Inizia Analisi</button>
+                    <button class="btn btn-primary btn-full">Inizia Analisi <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; margin-left: 8px;"></i></button>
                 </div>
                 
                 <!-- FREE ACTION -->
@@ -90,11 +104,11 @@
                     <h3 class="card-title">Stima Rapida</h3>
                     <p class="card-desc">Calcola velocemente il costo di mercato per un nuovo lavoro.</p>
                     <div class="card-features">
-                        <div class="feature"><i class="fa-solid fa-check"></i> Prezzi Medi Regionali</div>
-                        <div class="feature"><i class="fa-solid fa-check"></i> 14 Mestieri Inclusi</div>
-                        <div class="feature"><i class="fa-solid fa-check"></i> Risultato Istantaneo</div>
+                        <div class="feature"><i class="fa-solid fa-circle-check"></i> Prezzi Medi Regionali</div>
+                        <div class="feature"><i class="fa-solid fa-circle-check"></i> 14 Mestieri Inclusi</div>
+                        <div class="feature"><i class="fa-solid fa-circle-check"></i> Risultato Istantaneo</div>
                     </div>
-                    <button class="btn btn-secondary btn-full">Calcola Ora</button>
+                    <button class="btn btn-secondary btn-full">Calcola Ora <i class="fa-solid fa-chevron-right" style="font-size: 0.8rem; margin-left: 8px;"></i></button>
                 </div>
             </div>
         </div>
@@ -157,8 +171,8 @@
                 </div>
 
                 <div class="wizard-nav" style="display: flex; gap: 12px; margin-top: 32px;">
-                    <button class="btn btn-secondary btn-full" id="prevStepBtn">Indietro</button>
-                    <button class="btn btn-primary btn-full" id="nextStepBtn">Continua</button>
+                    <button class="btn btn-secondary btn-full" id="prevStepBtn"><i class="fa-solid fa-arrow-left"></i> Indietro</button>
+                    <button class="btn btn-primary btn-full" id="nextStepBtn">Continua <i class="fa-solid fa-arrow-right"></i></button>
                 </div>
             </div>
 
@@ -173,8 +187,8 @@
                 </div>
 
                 <div class="wizard-nav" style="display: flex; gap: 12px; margin-top: 32px;">
-                    <button class="btn btn-secondary btn-full" id="prevStep3Btn">Indietro</button>
-                    <button class="btn btn-primary btn-full" id="runAnalysisBtn">Analizza Ora</button>
+                    <button class="btn btn-secondary btn-full" id="prevStep3Btn"><i class="fa-solid fa-arrow-left"></i> Indietro</button>
+                    <button class="btn btn-primary btn-full" id="runAnalysisBtn">Analizza Ora <i class="fa-solid fa-wand-sparkles"></i></button>
                 </div>
             </div>
 
@@ -190,8 +204,8 @@
                 </div>
                 
                 <div class="wizard-nav hidden" id="resultsNav" style="display: flex; gap: 12px; margin-top: 32px;">
-                    <button class="btn btn-secondary btn-full" onclick="location.reload()">Nuova Analisi</button>
-                    <button class="btn btn-primary btn-full" id="btnDownloadPDF">Scarica Report PDF</button>
+                    <button class="btn btn-secondary btn-full" onclick="location.reload()"><i class="fa-solid fa-rotate-left"></i> Nuova Analisi</button>
+                    <button class="btn btn-primary btn-full" id="btnDownloadPDF"><i class="fa-solid fa-file-pdf"></i> Scarica Report PDF</button>
                 </div>
             </div>
         </div>
@@ -201,8 +215,8 @@
     <section id="dashboard" class="dashboard-section hidden">
         <div class="container">
             <div class="dash-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
-                <h2 style="font-weight: 800;">Il tuo Storico</h2>
-                <button class="btn btn-primary btn-sm" id="dashNewAnalysisBtn">Nuova Analisi</button>
+                <h2 style="font-weight: 800;"><i class="fa-solid fa-clock-rotate-left"></i> Il tuo Storico</h2>
+                <button class="btn btn-primary btn-sm" id="dashNewAnalysisBtn"><i class="fa-solid fa-plus"></i> Nuova Analisi</button>
             </div>
             <div class="dash-stats-grid" id="dashStats">
                 <!-- Popolato via JS -->
