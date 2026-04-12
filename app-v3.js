@@ -1,6 +1,6 @@
 /**
- * Preventivi-Smart Pro v10.0 — Core Engine
- * Gestione Wizard, Login e Integrazione Analisi
+ * Preventivi-Smart Pro v10.1 — Core Engine
+ * Gestione Wizard, Login e Protezione Business Model
  */
 
 import database from './engine/database.js';
@@ -63,12 +63,20 @@ function updateUserUI() {
 }
 
 function setupEventListeners() {
-    // Hero Actions
-    document.getElementById('startAnalysisBtn')?.addEventListener('click', () => startWizard(false));
-    document.getElementById('startQuickBtn')?.addEventListener('click', () => startWizard(true));
+    // Hero Actions - Fix: Targeting the cards directly as they have the IDs
+    document.getElementById('startAnalysisBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        startWizard(false);
+    });
+    document.getElementById('startQuickBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        startWizard(true);
+    });
 
     // Wizard Navigation
-    document.getElementById('nextStepBtn')?.addEventListener('click', () => goToStep(3));
+    document.getElementById('nextStepBtn')?.addEventListener('click', () => {
+        if (validateStep2()) goToStep(3);
+    });
     document.getElementById('prevStepBtn')?.addEventListener('click', () => goToStep(1));
     document.getElementById('prevStep3Btn')?.addEventListener('click', () => goToStep(2));
     document.getElementById('runAnalysisBtn')?.addEventListener('click', runAnalysis);
@@ -84,9 +92,34 @@ function setupEventListeners() {
     receivedPriceInput?.addEventListener('input', () => updateFeedback('price', receivedPriceInput.value > 0));
 }
 
+function validateStep2() {
+    const region = regionSelect.value;
+    const qty = parseFloat(quantityInput.value);
+    if (!region) {
+        showToast("Seleziona la tua regione", "error");
+        return false;
+    }
+    if (isNaN(qty) || qty <= 0) {
+        showToast("Inserisci una quantità valida", "error");
+        return false;
+    }
+    return true;
+}
+
 // ===== WIZARD LOGIC =====
 function startWizard(quick) {
     isQuickMode = quick;
+    
+    // BUSINESS PROTECTION: Limit quick mode for non-logged users
+    if (isQuickMode && !currentUser) {
+        const quickCount = parseInt(localStorage.getItem('ps_quick_count') || '0');
+        if (quickCount >= 1) {
+            showToast("Hai esaurito le stime rapide gratuite. Accedi per continuare.", "info");
+            loginModal.classList.remove('hidden');
+            return;
+        }
+    }
+
     heroSection.classList.add('hidden');
     appRoot.style.display = 'block';
     appRoot.classList.remove('hidden');
@@ -225,6 +258,12 @@ async function runAnalysis() {
         return;
     }
 
+    // BUSINESS PROTECTION: Final check for quick mode
+    if (isQuickMode && !currentUser) {
+        const quickCount = parseInt(localStorage.getItem('ps_quick_count') || '0');
+        localStorage.setItem('ps_quick_count', (quickCount + 1).toString());
+    }
+
     goToStep(4);
     const loading = document.getElementById('analysisLoading');
     const results = document.getElementById('analysisResults');
@@ -299,6 +338,14 @@ function renderResults(data) {
                     `).join('')}
                 </ul>
             </div>
+            
+            ${isQuickMode && !currentUser ? `
+                <div class="upsell-box" style="margin-top: 32px; padding: 24px; background: #f0f9ff; border-radius: 16px; border: 1px solid #bae6fd;">
+                    <h4 style="color: #0369a1; margin-bottom: 8px;">Vuoi un'analisi dettagliata?</h4>
+                    <p style="font-size: 0.875rem; color: #0c4a6e; margin-bottom: 16px;">Accedi per confrontare il tuo preventivo reale con i prezzi di mercato e scaricare il report PDF.</p>
+                    <button class="btn btn-primary btn-sm" onclick="document.getElementById('loginModal').classList.remove('hidden')">Accedi Ora</button>
+                </div>
+            ` : ''}
         </div>
     `;
 
