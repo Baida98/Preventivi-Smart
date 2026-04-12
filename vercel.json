@@ -1,7 +1,6 @@
 {
-  "buildCommand": "echo 'Static site deployment'",
+  "buildCommand": "",
   "outputDirectory": ".",
-  "framework": "static",
   "cleanUrls": true,
   "trailingSlash": false,
   "rewrites": [
