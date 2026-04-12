@@ -1,93 +1,59 @@
-import { auth, provider, db } from "./firebase.js";
+import { auth, db } from "./firebase.js";
+import { calcolaPreventivo } from "./engine/core.js";
+import { predictPrice } from "./engine/ai.js";
+import { stats } from "./engine/analytics.js";
+import { exportPDF } from "./engine/pdf.js";
+import { protect } from "./engine/security.js";
 
 import {
+  GoogleAuthProvider,
   signInWithPopup,
-  signOut,
+  signInWithEmailAndPassword,
   onAuthStateChanged
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-import {
-  collection,
-  addDoc,
-  query,
-  where,
-  getDocs
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+let history = [];
 
-let user = null;
+protect();
 
-/* LOGIN GOOGLE */
-window.login = async () => {
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    console.error("LOGIN ERROR:", e);
-    alert("Errore login");
-  }
+// LOGIN
+document.getElementById("google").onclick = async () => {
+  const provider = new GoogleAuthProvider();
+  await signInWithPopup(auth, provider);
 };
 
-/* LOGOUT */
-window.logout = async () => {
-  await signOut(auth);
+// CALCOLO
+document.getElementById("calcola").onclick = () => {
+
+  const data = {
+    tipo: tipo.value,
+    mq: Number(mq.value),
+    qualita: qualita.value,
+    citta: citta.value
+  };
+
+  const r = calcolaPreventivo(data);
+
+  document.getElementById("output").innerText =
+    `€${r.min.toFixed(0)} - ${r.mid.toFixed(0)} - ${r.max.toFixed(0)}`;
+
+  const ai = predictPrice(history, data.tipo);
+  console.log("AI confidence:", ai);
 };
 
-/* STATO UTENTE */
-onAuthStateChanged(auth, async (u) => {
-  user = u;
+// PDF
+document.getElementById("pdf").onclick = () => {
+  exportPDF({
+    tipo: tipo.value,
+    mq: mq.value,
+    mid: 1000
+  });
+};
 
+// AUTH
+onAuthStateChanged(auth, user => {
   if (user) {
-    document.getElementById("loginBox").style.display = "none";
-    document.getElementById("app").style.display = "block";
-    document.getElementById("userEmail").innerText = user.email;
-
-    await loadPreventivi();
-  } else {
-    document.getElementById("loginBox").style.display = "block";
-    document.getElementById("app").style.display = "none";
+    authDiv.style.display = "none";
+    app.style.display = "block";
   }
 });
-
-/* CREA PREVENTIVO */
-window.creaPreventivo = async () => {
-  const cliente = document.getElementById("cliente").value;
-  const servizio = document.getElementById("servizio").value;
-  const prezzo = Number(document.getElementById("prezzo").value);
-
-  if (!cliente || !servizio || !prezzo) return;
-
-  await addDoc(collection(db, "preventivi"), {
-    uid: user.uid,
-    cliente,
-    servizio,
-    prezzo,
-    createdAt: Date.now()
-  });
-
-  await loadPreventivi();
-};
-
-/* CARICA PREVENTIVI */
-async function loadPreventivi() {
-  const q = query(
-    collection(db, "preventivi"),
-    where("uid", "==", user.uid)
-  );
-
-  const snap = await getDocs(q);
-
-  let html = "";
-
-  snap.forEach((doc) => {
-    const d = doc.data();
-
-    html += `
-      <div class="card">
-        <b>${d.cliente}</b><br>
-        ${d.servizio}<br>
-        ${d.prezzo} €
-      </div>
-    `;
-  });
-
-  document.getElementById("lista").innerHTML = html;
-}
