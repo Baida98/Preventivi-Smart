@@ -1,10 +1,17 @@
 /**
- * Preventivi-Smart Pro v17.0 — Hierarchical Flow & Google Auth
+ * Preventivi-Smart Pro v19.0 — 3-Level Hierarchical Flow
+ * Macro -> Sub -> Scenario
  */
 
 import { initSecurityShield } from "./engine/security-shield.js";
 import { initUIProtection } from "./engine/ui-protection.js";
-import { getAllCategories, getTradesByCategory, getTradeById, REGIONAL_COEFFICIENTS } from "./engine/database.js";
+import { 
+  getAllCategories, 
+  getSubCategories, 
+  getTradesByCategory, 
+  getTradeById, 
+  REGIONAL_COEFFICIENTS 
+} from "./engine/database.js";
 import { analyzeQuote, computeStats, analyzeTrend } from "./engine/ai-analyzer.js";
 import { renderDashboard } from "./engine/dashboard-ui.js";
 
@@ -18,11 +25,10 @@ try {
 
 // ===== STATO GLOBALE =====
 let currentStep = 1;
-let currentCategory = null;
-let currentTrade = null;
+let currentPath = []; // [macroId, subId, tradeId]
 let userHistory = [];
 let wizardMode = 'professional';
-let userProfile = null; // Per Google Login
+let userProfile = null;
 
 window._psQuote = null;
 const setQuote = (v) => { window._psQuote = v; };
@@ -45,7 +51,6 @@ function checkAuth() {
 }
 
 function handleGoogleLogin() {
-  // Mock Google Login
   userProfile = { name: "Utente Demo", email: "demo@gmail.com", picture: "fa-user-circle" };
   localStorage.setItem("ps_user", JSON.stringify(userProfile));
   updateUserUI();
@@ -76,24 +81,14 @@ function setupEventListeners() {
   document.getElementById("runAnalysisBtn")?.addEventListener("click", runAnalysis);
   document.getElementById("btnDownloadPDF")?.addEventListener("click", downloadPDF);
   
-  // Visual Feedback: Update icons on input
-  document.getElementById("regionSelect")?.addEventListener("change", (e) => {
-    updateVisualFeedback('region', e.target.value);
-  });
-  document.getElementById("quantityInput")?.addEventListener("input", (e) => {
-    updateVisualFeedback('quantity', e.target.value);
-  });
-  document.getElementById("receivedPriceInput")?.addEventListener("input", (e) => {
-    updateVisualFeedback('price', e.target.value);
-  });
+  // Visual Feedback
+  document.getElementById("regionSelect")?.addEventListener("change", (e) => updateVisualFeedback('region', e.target.value));
+  document.getElementById("quantityInput")?.addEventListener("input", (e) => updateVisualFeedback('quantity', e.target.value));
+  document.getElementById("receivedPriceInput")?.addEventListener("input", (e) => updateVisualFeedback('price', e.target.value));
 }
 
 function updateVisualFeedback(type, value) {
-  const iconMap = {
-    region: 'fa-location-dot',
-    quantity: 'fa-ruler-combined',
-    price: 'fa-coins'
-  };
+  const iconMap = { region: 'fa-location-dot', quantity: 'fa-ruler-combined', price: 'fa-coins' };
   const feedbackEl = document.getElementById(`feedback-${type}`);
   if (feedbackEl) {
     feedbackEl.innerHTML = value ? `<i class="fa-solid ${iconMap[type]} animate-pulse-soft"></i>` : '';
@@ -116,7 +111,9 @@ function startWizard(mode) {
   if (step3Label) step3Label.textContent = (mode === 'professional') ? "Prezzo" : "Analisi";
 
   currentStep = 1;
+  currentPath = [];
   goToStep(1);
+  renderCategories();
 }
 
 function goToStep(step) {
@@ -136,14 +133,10 @@ function goToStep(step) {
 
 function nextStep() {
   if (currentStep === 1) {
-    if (!currentCategory) {
+    if (currentPath.length === 0) {
       showToast("Seleziona una categoria", "info");
       return;
     }
-    // Se abbiamo selezionato la categoria, mostriamo le sottocategorie nello stesso step o avanziamo?
-    // Facciamo uno step intermedio 1.5 per le sottocategorie
-    renderSubTrades(currentCategory.id);
-    return; 
   }
   
   if (currentStep === 2) {
@@ -164,9 +157,16 @@ function nextStep() {
 }
 
 function prevStep() {
-  if (currentStep === 1 && document.getElementById("tradesGrid").dataset.view === "sub") {
-    renderCategories();
-    return;
+  if (currentStep === 1) {
+    if (currentPath.length === 2) { // Siamo agli scenari di una sottocategoria
+      renderSubCategories(currentPath[0]);
+      currentPath.pop();
+      return;
+    } else if (currentPath.length === 1) { // Siamo alle sottocategorie o scenari diretti
+      renderCategories();
+      currentPath = [];
+      return;
+    }
   }
   if (currentStep === 4 && wizardMode === 'quick') currentStep = 2;
   else currentStep--;
@@ -175,7 +175,7 @@ function prevStep() {
 
 function updateProgress(step) {
   for (let i = 1; i <= 4; i++) {
-    const node = document.getElementById(`ps${i}`);
+    const node = document.getElementById("ps" + i);
     if (node) {
       node.classList.remove("active", "done");
       if (i < step) node.classList.add("done");
@@ -189,7 +189,7 @@ function updateProgress(step) {
   }
 }
 
-// ===== RENDERING CATEGORIES & TRADES =====
+// ===== RENDERING LOGIC (3 LEVELS) =====
 function renderCategories() {
   const grid = document.getElementById("tradesGrid");
   if (!grid) return;
@@ -205,24 +205,61 @@ function renderCategories() {
     </div>
   `).join("");
   
-  // Update Header
   document.querySelector("#step1 .step-title").textContent = "Cosa dobbiamo analizzare?";
-  document.querySelector("#step1 .step-subtitle").textContent = "Seleziona il tipo di professionista";
+  document.querySelector("#step1 .step-subtitle").textContent = "Seleziona la categoria principale";
 }
 
 window.selectCategory = (id) => {
-  const cats = getAllCategories();
-  currentCategory = cats.find(c => c.id === id);
-  renderSubTrades(id);
+  currentPath = [id];
+  const subs = getSubCategories(id);
+  
+  if (subs.length > 0) {
+    renderSubCategories(id);
+  } else {
+    renderFinalTrades(id);
+  }
 };
 
-function renderSubTrades(catId) {
+function renderSubCategories(parentId) {
   const grid = document.getElementById("tradesGrid");
   grid.dataset.view = "sub";
-  const trades = getTradesByCategory(catId);
+  const subs = getSubCategories(parentId);
+  const parent = getAllCategories().find(c => c.id === parentId);
+  
+  grid.innerHTML = subs.map(s => `
+    <div class="trade-card animate-scale-in" onclick="selectSubCategory('${s.id}')">
+      <div class="trade-icon" style="background: ${s.color}15; color: ${s.color}">
+        <i class="fa-solid ${s.icon}"></i>
+      </div>
+      <h3 class="trade-name">${s.name}</h3>
+      <p class="trade-desc">Seleziona il servizio specifico</p>
+    </div>
+  `).join("");
+  
+  document.querySelector("#step1 .step-title").textContent = parent.name;
+  document.querySelector("#step1 .step-subtitle").textContent = "Filtra per tipo di servizio";
+}
+
+window.selectSubCategory = (id) => {
+  currentPath = [currentPath[0], id];
+  renderFinalTrades(id);
+};
+
+function renderFinalTrades(parentId) {
+  const grid = document.getElementById("tradesGrid");
+  grid.dataset.view = "final";
+  const trades = getTradesByCategory(parentId);
+  
+  // Trova il colore del genitore per coerenza
+  let color = "#3b82f6";
+  const sub = getSubCategories(currentPath[0]).find(s => s.id === parentId);
+  const macro = getAllCategories().find(c => c.id === (currentPath[0]));
+  if (sub) color = sub.color;
+  else if (macro) color = macro.color;
+
   grid.innerHTML = trades.map(t => `
     <div class="trade-card animate-scale-in" onclick="selectTrade('${t.id}')">
-      <div class="trade-icon" style="background: ${currentCategory.color}15; color: ${currentCategory.color}">
+      <div class="trade-icon" style="background: ${color}15; color: ${color}">
         <i class="fa-solid ${t.icon}"></i>
       </div>
       <h3 class="trade-name">${t.name}</h3>
@@ -230,15 +267,26 @@ function renderSubTrades(catId) {
     </div>
   `).join("");
   
-  // Update Header
-  document.querySelector("#step1 .step-title").textContent = currentCategory.name;
+  const title = sub ? sub.name : macro.name;
+  document.querySelector("#step1 .step-title").textContent = title;
   document.querySelector("#step1 .step-subtitle").textContent = "Qual è il problema specifico?";
 }
 
 window.selectTrade = (id) => {
-  currentTrade = getTradeById(id);
+  const trade = getTradeById(id);
+  if (!trade) return;
+  
+  currentPath.push(id);
+  const tradeObj = getTradeById(id);
   const unitLabel = document.getElementById("unitLabel");
-  if (unitLabel) unitLabel.textContent = currentTrade.unit;
+  if (unitLabel) unitLabel.textContent = tradeObj.unit;
+  
+  // Mostra feedback visivo dell'unità
+  const unitIconMap = { 'mq': 'fa-vector-square', 'intervento': 'fa-wrench', 'ora': 'fa-clock', 'ml': 'fa-ruler' };
+  const unitIcon = unitIconMap[tradeObj.unit] || 'fa-tag';
+  document.getElementById("feedback-quantity").innerHTML = `<i class="fa-solid ${unitIcon} text-gray-400"></i>`;
+
+  currentTrade = tradeObj;
   currentStep = 2;
   goToStep(2);
 };
@@ -285,7 +333,7 @@ async function runAnalysis() {
     receivedPrice: finalReceivedPrice,
     marketMin: marketMid * 0.85, marketMid, marketMax: marketMid * 1.25,
     tradeId: currentTrade.id, region, mode: wizardMode
-  }, { marketMin: marketMid * 0.85, marketMid, marketMax: marketMid * 1.25 });
+  });
 
   renderAnalysisResults(analysis);
   loading.classList.add("hidden");

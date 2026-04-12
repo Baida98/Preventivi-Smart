@@ -132,14 +132,18 @@
                     <div class="form-group">
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <label class="form-label">Regione</label>
-                            <span id="feedback-region" class="visual-feedback-icon"></span>
+                            <div id="feedback-region" class="visual-feedback-icon">
+                                <i class="fa-solid fa-location-dot text-gray-200"></i>
+                            </div>
                         </div>
                         <select class="form-select" id="regionSelect"></select>
                     </div>
                     <div class="form-group">
                         <div style="display: flex; align-items: center; justify-content: space-between;">
                             <label class="form-label">Quantità (<span id="unitLabel">mq</span>)</label>
-                            <span id="feedback-quantity" class="visual-feedback-icon"></span>
+                            <div id="feedback-quantity" class="visual-feedback-icon">
+                                <i class="fa-solid fa-ruler-combined text-gray-200"></i>
+                            </div>
                         </div>
                         <input type="number" id="quantityInput" class="form-input" placeholder="Es. 50">
                     </div>
