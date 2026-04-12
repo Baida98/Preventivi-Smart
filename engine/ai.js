@@ -1,18 +1,19 @@
-export function calcolaAI(dati, tipo, zona) {
-  const filtrati = dati.filter(p => p.tipo === tipo && p.zona === zona);
+export function predictPrice(history, tipo) {
 
-  if (filtrati.length < 3) return null;
+  const filtered = history.filter(x => x.tipo === tipo);
 
-  let totale = 0;
+  if (filtered.length < 5) {
+    return { confidence: 0 };
+  }
 
-  filtrati.forEach(p => totale += p.stima);
+  const avg = filtered.reduce((s, x) => s + x.mid, 0) / filtered.length;
 
-  const media = totale / filtrati.length;
+  const variance = filtered.reduce((s, x) =>
+    s + Math.pow(x.mid - avg, 2), 0
+  ) / filtered.length;
 
   return {
-    min: media * 0.85,
-    medio: media,
-    max: media * 1.2,
-    affidabilita: Math.min(95, 50 + filtrati.length * 5)
+    predicted: avg,
+    confidence: Math.max(0, 100 - variance / 1000)
   };
 }
