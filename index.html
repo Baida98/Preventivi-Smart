@@ -1,241 +1,225 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Preventivi-Smart Pro — Protezione Economica AI</title>
-  
-  <!-- Font & Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-  
-  <!-- CSS -->
-  <link rel="stylesheet" href="style.css">
-  <link rel="stylesheet" href="style-v2-additions.css">
-  
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-</head>
-<body class="mobile-first">
-
-  <!-- TOAST CONTAINER -->
-  <div id="toastContainer" class="toast-container"></div>
-
-  <!-- HEADER / NAV -->
-  <header class="main-header">
-    <div class="container nav-flex">
-      <div class="logo">
-        <i class="fas fa-shield-halved text-primary"></i>
-        <span>PREVENTIVI-SMART <small>PRO</small></span>
-      </div>
-      <div class="user-nav" id="userNav">
-        <!-- Inserito via JS -->
-      </div>
-    </div>
-  </header>
-
-  <main id="app-root">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Preventivi-Smart Pro | La tua protezione economica</title>
     
-    <!-- SECTION 1: HERO (LEVA PSICOLOGICA 1: SICUREZZA) -->
-    <section id="hero" class="hero-section">
-      <div class="container">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style-v2-additions.css">
+</head>
+<body class="ethereal-theme">
 
-        <h1 class="hero-title">Non farti fregare. <br><span class="text-primary">Verifica ogni preventivo</span> con l'AI.</h1>
-        <p class="hero-desc">Analizziamo i tuoi preventivi confrontandoli con dati reali di mercato. Risparmia fino al 30% evitando errori costosi.</p>
-        
-        <div class="hero-stats">
-          <div class="hero-stat">
-            <span class="stat-value">12.5k+</span>
-            <span class="stat-label">Dati Reali</span>
-          </div>
-          <div class="hero-stat">
-            <span class="stat-value">98%</span>
-            <span class="stat-label">Affidabilità AI</span>
-          </div>
-          <div class="hero-stat">
-            <span class="stat-value">€2.4M</span>
-            <span class="stat-label">Risparmiati</span>
-          </div>
-        </div>
+    <!-- TOAST CONTAINER -->
+    <div id="toastContainer" class="toast-container"></div>
 
-        <div class="hero-actions-grid">
-          <div class="action-card premium-card" onclick="startWizard('professional')">
-            <div class="card-badge">CONSIGLIATO</div>
-            <div class="card-icon premium-icon"><i class="fas fa-magnifying-glass-chart"></i></div>
-            <h3 class="card-title">Analisi Professionale</h3>
-            <p class="card-desc">Confronta il tuo preventivo con i dati reali. Scopri se stai pagando il giusto prezzo.</p>
-            <div class="card-features">
-              <div class="feature"><i class="fas fa-check"></i> Benchmark orario</div>
-              <div class="feature"><i class="fas fa-check"></i> Consigli negoziazione</div>
-              <div class="feature"><i class="fas fa-check"></i> Certificato AI</div>
+    <!-- MAIN HEADER -->
+    <header class="main-header">
+        <div class="container nav-flex">
+            <div class="logo">
+                <i class="fa-solid fa-shield-halved"></i>
+                <span>PREVENTIVI-SMART <small>PRO</small></span>
             </div>
-            <button class="btn btn-primary btn-full pulse">Inizia Analisi</button>
-          </div>
-          <div class="action-card free-card" onclick="startWizard('quick')">
-            <div class="card-icon free-icon"><i class="fas fa-bolt"></i></div>
-            <h3 class="card-title">Stima Rapida</h3>
-            <p class="card-desc">Calcolo veloce del prezzo medio di mercato per il tuo lavoro.</p>
-            <div class="card-features">
-              <div class="feature"><i class="fas fa-check"></i> Istantaneo</div>
-              <div class="feature"><i class="fas fa-check"></i> Senza dati</div>
-            </div>
-            <button class="btn btn-outline btn-full">Stima Veloce</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 2: WIZARD (LEVA PSICOLOGICA 4: GUIDA) -->
-    <section id="wizard" class="wizard-section hidden">
-      <div class="container">
-        
-        <!-- PROGRESS BAR -->
-        <div class="progress-container">
-          <div class="progress-steps">
-            <div id="ps1" class="step-node active" data-label="Tipo"><i class="fas fa-wrench"></i></div>
-            <div id="ps2" class="step-node" data-label="Dettagli"><i class="fas fa-list-check"></i></div>
-            <div id="ps3" class="step-node" data-label="Prezzo"><i class="fas fa-euro-sign"></i></div>
-            <div id="ps4" class="step-node" data-label="Analisi"><i class="fas fa-robot"></i></div>
-          </div>
-          <div class="progress-line">
-            <div id="pl1" class="line-fill"></div>
-          </div>
-        </div>
-
-        <div class="wizard-card card">
-          <!-- STEP 1: SCELTA MESTIERE / SCENARIO -->
-          <div id="step1" class="wizard-step">
-            <h2 class="step-title">Che tipo di lavoro devi verificare?</h2>
-            <p class="step-subtitle">Scegli lo scenario più vicino al tuo caso reale.</p>
-            
-            <div class="category-filters">
-              <button class="filter-btn active" data-cat="all">Tutti</button>
-              <button class="filter-btn" data-cat="idraulica">Idraulica</button>
-              <button class="filter-btn" data-cat="elettricita">Elettricità</button>
-              <button class="filter-btn" data-cat="finiture">Finiture</button>
-            </div>
-
-            <div class="trades-grid" id="tradesGrid">
-              <!-- Inserito via JS -->
-            </div>
-          </div>
-
-          <!-- STEP 2: DETTAGLI TECNICI -->
-          <div id="step2" class="wizard-step hidden">
-            <h2 class="step-title" id="step2Title">Dettagli del lavoro</h2>
-            <p class="step-subtitle">Queste informazioni servono all'AI per calcolare la congruità.</p>
-            
-            <div class="form-group">
-              <label>Regione dell'intervento</label>
-              <select id="regionSelect" class="form-control">
+            <div class="user-nav" id="userNav">
                 <!-- Inserito via JS -->
-              </select>
             </div>
-
-            <div class="form-group">
-              <label>Quantità (mq, ore, punti, ecc.)</label>
-              <div class="input-with-unit">
-                <input type="number" id="quantityInput" class="form-control" placeholder="Es. 50">
-                <span class="unit-label" id="unitLabel">mq</span>
-              </div>
-            </div>
-
-            <div id="dynamicQuestions" class="dynamic-questions">
-              <!-- Inserito via JS -->
-            </div>
-
-            <div class="wizard-nav">
-              <button class="btn btn-text" id="prevStepBtn"><i class="fas fa-arrow-left"></i> Indietro</button>
-              <button class="btn btn-primary" id="nextStepBtn">Continua <i class="fas fa-arrow-right"></i></button>
-            </div>
-          </div>
-
-          <!-- STEP 3: PREZZO RICEVUTO -->
-          <div id="step3" class="wizard-step hidden">
-            <h2 class="step-title">Quanto ti hanno chiesto?</h2>
-            <p class="step-subtitle">Inserisci l'importo totale del preventivo che hai ricevuto.</p>
-            
-            <div class="price-input-container">
-              <span class="currency-symbol">€</span>
-              <input type="number" id="receivedPriceInput" class="price-input" placeholder="0.00">
-            </div>
-
-            <div class="trust-notice">
-              <i class="fas fa-user-shield"></i>
-              <span>I tuoi dati sono protetti e usati solo per migliorare l'accuratezza dell'AI.</span>
-            </div>
-
-            <div class="wizard-nav">
-              <button class="btn btn-text" id="prevStep3Btn"><i class="fas fa-arrow-left"></i> Indietro</button>
-              <button class="btn btn-primary btn-lg" id="runAnalysisBtn">
-                <i class="fas fa-robot"></i> ANALIZZA ORA
-              </button>
-            </div>
-          </div>
-
-          <!-- STEP 4: RISULTATI / ANALISI (LEVA 5: FEEDBACK IMMEDIATO) -->
-          <div id="step4" class="wizard-step hidden">
-            <div id="analysisLoading" class="loading-container">
-              <div class="spinner"></div>
-              <p>L'AI sta confrontando i dati di mercato...</p>
-            </div>
-            
-            <div id="analysisResults" class="results-container hidden">
-              <!-- Inserito via JS: congruity-report.js -->
-            </div>
-
-            <div class="wizard-nav results-nav hidden" id="resultsNav">
-              <button class="btn btn-outline" onclick="location.reload()">Nuova Analisi</button>
-              <button class="btn btn-primary" id="btnDownloadPDF">
-                <i class="fas fa-file-pdf"></i> Scarica Report PDF
-              </button>
-            </div>
-          </div>
         </div>
-      </div>
+    </header>
+
+    <!-- HERO SECTION: ETHEREAL & FLOATING -->
+    <section class="hero" id="hero-section">
+        <div class="hero-content">
+            <h1 class="hero-title">
+                Non farti <span class="highlight">fregare</span>.<br>
+                Verifica ogni preventivo.
+            </h1>
+            <p class="hero-subtitle">
+                Usa la potenza dell'AI per analizzare i tuoi preventivi edili e impiantistici. 
+                Scopri se il prezzo è giusto o se stai pagando troppo in meno di 60 secondi.
+            </p>
+            
+            <div class="hero-stats">
+                <div class="stat-item">
+                    <span class="stat-value">12.5k+</span>
+                    <span class="stat-label">Dati Reali</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">98%</span>
+                    <span class="stat-label">Affidabilità AI</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value">€2.4M</span>
+                    <span class="stat-label">Risparmiati</span>
+                </div>
+            </div>
+            
+            <div class="hero-actions-grid">
+                <!-- PREMIUM ACTION -->
+                <div class="action-card premium-card" onclick="startWizard('professional')">
+                    <span class="card-badge">CONSIGLIATO</span>
+                    <div class="card-icon">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    </div>
+                    <h3 class="card-title">Analisi Professionale</h3>
+                    <p class="card-desc">Analizza un preventivo che hai già ricevuto con l'AI avanzata.</p>
+                    <div class="card-features">
+                        <div class="feature"><i class="fa-solid fa-check"></i> Benchmark Orario</div>
+                        <div class="feature"><i class="fa-solid fa-check"></i> Consigli Negoziazione</div>
+                        <div class="feature"><i class="fa-solid fa-check"></i> Report PDF Pro</div>
+                    </div>
+                    <button class="btn btn-primary btn-full">Inizia Analisi</button>
+                </div>
+                
+                <!-- FREE ACTION -->
+                <div class="action-card free-card" onclick="startWizard('quick')">
+                    <div class="card-icon">
+                        <i class="fa-solid fa-bolt-lightning"></i>
+                    </div>
+                    <h3 class="card-title">Stima Rapida</h3>
+                    <p class="card-desc">Calcola velocemente il costo di mercato per un nuovo lavoro.</p>
+                    <div class="card-features">
+                        <div class="feature"><i class="fa-solid fa-check"></i> Prezzi Medi Regionali</div>
+                        <div class="feature"><i class="fa-solid fa-check"></i> 14 Mestieri Inclusi</div>
+                        <div class="feature"><i class="fa-solid fa-check"></i> Risultato Istantaneo</div>
+                    </div>
+                    <button class="btn btn-secondary btn-full">Calcola Ora</button>
+                </div>
+            </div>
+        </div>
     </section>
 
-    <!-- SECTION 3: DASHBOARD (LEVA 3: STORICO E TRUST) -->
+    <!-- MAIN APP CONTAINER -->
+    <main class="app-container" id="app-root" style="display: none;">
+        <div class="wizard-container">
+            <!-- STEP PROGRESS -->
+            <div class="step-progress" id="progress-bar">
+                <div class="step-item active" id="ps1">
+                    <div class="step-number">1</div>
+                    <span class="step-label">Mestiere</span>
+                </div>
+                <div class="step-item" id="ps2">
+                    <div class="step-number">2</div>
+                    <span class="step-label">Dettagli</span>
+                </div>
+                <div class="step-item" id="ps3">
+                    <div class="step-number">3</div>
+                    <span class="step-label">Prezzo</span>
+                </div>
+                <div class="step-item" id="ps4">
+                    <div class="step-number">4</div>
+                    <span class="step-label">Analisi</span>
+                </div>
+            </div>
+
+            <!-- STEP 1: SELEZIONE MESTIERE -->
+            <div class="step-content" id="step1">
+                <h2 class="form-label" style="font-size: 1.5rem; text-align: center; margin-bottom: 24px;">Che tipo di lavoro devi verificare?</h2>
+                <div class="trades-grid" id="tradesGrid">
+                    <!-- Dinamicamente popolato da database.js -->
+                </div>
+            </div>
+
+            <!-- STEP 2: DETTAGLI LAVORO -->
+            <div class="step-content hidden" id="step2">
+                <h2 class="form-label" style="font-size: 1.5rem; text-align: center; margin-bottom: 24px;">Dettagli dell'intervento</h2>
+                
+                <div class="form-group">
+                    <label class="form-label">Regione del lavoro</label>
+                    <select class="form-select" id="regionSelect">
+                        <!-- Popolato via JS -->
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Quantità (<span id="unitLabel">mq</span>)</label>
+                    <input type="number" id="quantityInput" class="form-input" placeholder="Es. 50">
+                </div>
+
+                <div id="dynamicQuestions" class="dynamic-questions">
+                    <!-- Popolato dinamicamente -->
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Dettagli particolari (AI Training)</label>
+                    <textarea class="form-textarea" id="context-text" placeholder="Es: lavoro in quota, materiali di pregio, accesso difficile..."></textarea>
+                </div>
+
+                <div class="wizard-nav" style="display: flex; gap: 12px; margin-top: 32px;">
+                    <button class="btn btn-secondary btn-full" id="prevStepBtn">Indietro</button>
+                    <button class="btn btn-primary btn-full" id="nextStepBtn">Continua</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: PREZZO RICEVUTO -->
+            <div class="step-content hidden" id="step3">
+                <h2 class="form-label" style="font-size: 1.5rem; text-align: center; margin-bottom: 24px;">Quanto ti hanno chiesto?</h2>
+                <p style="text-align: center; color: var(--gray-600); margin-bottom: 32px;">Inserisci l'importo totale del preventivo che hai ricevuto.</p>
+                
+                <div class="price-input-container" style="display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 40px;">
+                    <span style="font-size: 2.5rem; font-weight: 800; color: var(--sapphire);">€</span>
+                    <input type="number" id="receivedPriceInput" class="form-input" style="font-size: 2.5rem; font-weight: 800; text-align: center; border: none; border-bottom: 4px solid var(--gray-200); width: 250px; border-radius: 0;" placeholder="0.00">
+                </div>
+
+                <div class="wizard-nav" style="display: flex; gap: 12px; margin-top: 32px;">
+                    <button class="btn btn-secondary btn-full" id="prevStep3Btn">Indietro</button>
+                    <button class="btn btn-primary btn-full" id="runAnalysisBtn">Analizza Ora</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: RISULTATI -->
+            <div class="step-content hidden" id="step4">
+                <div id="analysisLoading" class="loading-container" style="text-align: center; padding: 40px;">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 20px; color: var(--gray-600);">L'AI sta scansionando il mercato...</p>
+                </div>
+                
+                <div id="analysisResults" class="results-container hidden">
+                    <!-- Popolato dinamicamente -->
+                </div>
+                
+                <div class="wizard-nav hidden" id="resultsNav" style="display: flex; gap: 12px; margin-top: 32px;">
+                    <button class="btn btn-secondary btn-full" onclick="location.reload()">Nuova Analisi</button>
+                    <button class="btn btn-primary btn-full" id="btnDownloadPDF">Scarica Report PDF</button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- DASHBOARD SECTION -->
     <section id="dashboard" class="dashboard-section hidden">
-      <div class="container">
-        <div class="dash-header">
-          <h2>Il tuo Storico Protezione</h2>
-          <button class="btn btn-primary btn-sm" id="dashNewAnalysisBtn">
-            <i class="fas fa-plus"></i> Nuova Analisi
-          </button>
+        <div class="container">
+            <div class="dash-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px;">
+                <h2 style="font-weight: 800;">Il tuo Storico</h2>
+                <button class="btn btn-primary btn-sm" id="dashNewAnalysisBtn">Nuova Analisi</button>
+            </div>
+            <div class="dash-stats-grid" id="dashStats">
+                <!-- Popolato via JS -->
+            </div>
+            <div class="history-list card" id="historyList" style="margin-top: 32px;">
+                <!-- Inserito via JS -->
+            </div>
         </div>
-
-        <div class="dash-stats-grid">
-          <div class="dash-stat-card">
-            <span class="stat-label">Preventivi Analizzati</span>
-            <span class="stat-value" id="statTotal">0</span>
-          </div>
-          <div class="dash-stat-card">
-            <span class="stat-label">Risparmio Potenziale</span>
-            <span class="stat-value text-success" id="statSavings">€0</span>
-          </div>
-          <div class="dash-stat-card">
-            <span class="stat-label">Score Affidabilità Medio</span>
-            <span class="stat-value text-primary" id="statScore">0%</span>
-          </div>
-        </div>
-
-        <div class="dash-charts">
-          <div class="chart-card card">
-            <h3>Andamento Prezzi Ricevuti vs Mercato</h3>
-            <canvas id="trendChart"></canvas>
-          </div>
-        </div>
-
-        <div class="history-list card" id="historyList">
-          <!-- Inserito via JS -->
-        </div>
-      </div>
     </section>
 
-  </main>
+    <!-- FOOTER -->
+    <footer style="padding: 60px 20px; text-align: center; color: var(--gray-500); font-size: 0.85rem; border-top: 1px solid var(--gray-100); margin-top: 60px;">
+        <p>&copy; 2026 Preventivi-Smart Pro. Tutti i diritti riservati.</p>
+        <p style="margin-top: 8px; font-weight: 300;">La tua protezione economica contro i preventivi gonfiati.</p>
+    </footer>
 
-  <!-- SCRIPTS -->
-  <script type="module" src="app-v3.js"></script>
+    <!-- Scripts -->
+    <script type="module" src="app-v3.js"></script>
 </body>
 </html>
