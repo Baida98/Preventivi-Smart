@@ -38,6 +38,8 @@ document.addEventListener('DOMContentLoaded', () => {
     window.selectSub = selectSub;
     window.selectTrade = selectTrade;
     window.goBackSelection = goBackSelection;
+    window.startWizard = startWizard;
+    window.runAnalysis = runAnalysis;
 });
 
 function initRegions() {
@@ -282,17 +284,20 @@ async function runAnalysis() {
     await new Promise(r => setTimeout(r, 1500));
 
     const tradeData = database.getTradeById ? database.getTradeById(selectedTrade) : database.getTrade(selectedMacro, selectedSub, selectedTrade);
+    const regionalCoeff = database.REGIONAL_COEFFICIENTS[region] || 1.0;
     
     let multiplier = 1.0;
     document.querySelectorAll('.dynamic-q').forEach(select => {
         multiplier *= parseFloat(select.value);
     });
 
+    const baseMarketPrice = tradeData.basePrice * qty * multiplier * regionalCoeff;
+
     const analysis = analyzeQuote({
         receivedPrice: isQuickMode ? 0 : price,
-        marketMin: tradeData.priceMin * qty * multiplier,
-        marketMid: tradeData.priceMid * qty * multiplier,
-        marketMax: tradeData.priceMax * qty * multiplier,
+        marketMin: baseMarketPrice * 0.85,
+        marketMid: baseMarketPrice,
+        marketMax: baseMarketPrice * 1.25,
         tradeId: selectedTrade,
         region: region,
         mode: isQuickMode ? 'quick' : 'full'

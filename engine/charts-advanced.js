@@ -160,3 +160,19 @@ export function cleanupCharts() {
     comparisonChartInstance = null;
   }
 }
+
+/**
+ * Funzione principale per renderizzare tutti i grafici avanzati
+ */
+export function renderAdvancedCharts(data) {
+  // Breakdown Chart
+  renderQuoteBreakdownChart('breakdownChart', data);
+  
+  // Comparison Chart (adattamento dati)
+  const comparisonData = {
+    minPrice: data.marketData.min,
+    midPrice: data.marketData.mid,
+    maxPrice: data.marketData.max
+  };
+  renderPriceComparisonChart('benchmarkChart', comparisonData);
+}
