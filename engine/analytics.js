@@ -1,17 +1,22 @@
-export function stats(history) {
+export function buildAnalytics(quotes) {
 
-  const total = history.length;
+  if (!quotes || quotes.length === 0) {
+    return {
+      total: 0,
+      avg: 0,
+      max: 0,
+      min: 0
+    };
+  }
 
-  const avg = history.reduce((s, x) => s + x.mid, 0) / (total || 1);
+  const prices = quotes.map(q => q.mid);
 
-  const byType = history.reduce((acc, x) => {
-    acc[x.tipo] = (acc[x.tipo] || 0) + 1;
-    return acc;
-  }, {});
+  const total = prices.reduce((a, b) => a + b, 0);
 
   return {
     total,
-    avg,
-    byType
+    avg: total / prices.length,
+    max: Math.max(...prices),
+    min: Math.min(...prices)
   };
 }
