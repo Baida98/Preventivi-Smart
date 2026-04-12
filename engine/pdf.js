@@ -1,157 +1,203 @@
 /**
- * Modulo per la generazione di preventivi in PDF
- * Utilizza jsPDF per creare documenti professionali
+ * Modulo PDF Preventivi-Smart Pro v6.0
+ * Genera preventivi professionali con jsPDF
  */
 
 export function generatePDF(quote) {
-  // Carica jsPDF dinamicamente
+  // Carica jsPDF dinamicamente se non già presente
+  if (window.jspdf) {
+    createPDF(window.jspdf.jsPDF, quote);
+    return;
+  }
   const script = document.createElement('script');
   script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
-  script.onload = () => {
-    const { jsPDF } = window.jspdf;
-    createPDF(jsPDF, quote);
-  };
+  script.onload = () => createPDF(window.jspdf.jsPDF, quote);
   document.head.appendChild(script);
 }
 
 function createPDF(jsPDF, quote) {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ unit: 'mm', format: 'a4' });
 
-  // Colori
-  const primaryColor = [59, 130, 246];
-  const darkColor = [15, 23, 42];
-  const textColor = [50, 50, 50];
-  const lightGray = [240, 240, 240];
+  // ---- Palette ----
+  const navy   = [15, 23, 42];
+  const amber  = [217, 119, 6];
+  const amberL = [251, 191, 36];
+  const white  = [255, 255, 255];
+  const gray   = [100, 116, 139];
+  const bgGray = [248, 250, 252];
+  const border = [226, 232, 240];
 
-  // Header
-  doc.setFillColor(...primaryColor);
-  doc.rect(0, 0, 210, 40, 'F');
+  const fmt = (v) => new Intl.NumberFormat('it-IT', { style: 'currency', currency: 'EUR' }).format(v);
+  const dateStr = new Date(quote.timestamp).toLocaleDateString('it-IT', { day: '2-digit', month: 'long', year: 'numeric' });
+  const qualityLabels = { economica: 'Economico', standard: 'Standard', premium: 'Premium', lusso: 'Luxury' };
 
-  doc.setTextColor(255, 255, 255);
-  doc.setFontSize(24);
+  // ---- HEADER ----
+  doc.setFillColor(...navy);
+  doc.rect(0, 0, 210, 45, 'F');
+
+  // Accent strip
+  doc.setFillColor(...amber);
+  doc.rect(0, 42, 210, 3, 'F');
+
+  doc.setTextColor(...white);
+  doc.setFontSize(22);
   doc.setFont(undefined, 'bold');
-  doc.text('PREVENTIVO PROFESSIONALE', 15, 25);
+  doc.text('PREVENTIVI-SMART PRO', 15, 18);
 
-  // Data e numero
-  doc.setTextColor(...textColor);
   doc.setFontSize(10);
   doc.setFont(undefined, 'normal');
-  doc.text(`Data: ${quote.timestamp}`, 15, 50);
-  doc.text(`ID: ${quote.id || 'N/A'}`, 15, 56);
+  doc.setTextColor(148, 163, 184);
+  doc.text('Preventivo Professionale · Prezzari 2025/2026', 15, 27);
 
-  // Sezione principale
-  let yPos = 70;
+  doc.setFontSize(9);
+  doc.setTextColor(...white);
+  doc.text(`Data: ${dateStr}`, 15, 37);
+  doc.text(`Rif: PS-${Date.now().toString().slice(-6)}`, 130, 37);
 
-  // Titolo lavoro
+  // ---- TITOLO LAVORO ----
+  let y = 58;
+  doc.setFillColor(...bgGray);
+  doc.roundedRect(15, y - 6, 180, 22, 3, 3, 'F');
+  doc.setDrawColor(...border);
+  doc.roundedRect(15, y - 6, 180, 22, 3, 3, 'S');
+
+  doc.setTextColor(...navy);
   doc.setFontSize(14);
   doc.setFont(undefined, 'bold');
-  doc.setTextColor(...darkColor);
-  doc.text(`${quote.tradeName}`, 15, yPos);
-  yPos += 10;
+  doc.text(quote.tradeName, 22, y + 4);
 
-  // Dettagli
-  doc.setFontSize(11);
-  doc.setFont(undefined, 'normal');
-  doc.text(`Quantità: ${quote.quantity} ${quote.unit}`, 15, yPos);
-  yPos += 7;
-  doc.text(`Regione: ${quote.region}`, 15, yPos);
-  yPos += 7;
-  doc.text(`Qualità Materiali: ${quote.quality}`, 15, yPos);
-  yPos += 12;
-
-  // Tabella di breakdown
-  doc.setFillColor(...primaryColor);
-  doc.setTextColor(255, 255, 255);
-  doc.setFont(undefined, 'bold');
-  doc.rect(15, yPos - 5, 180, 8, 'F');
-  doc.text('Dettaglio Calcolo', 20, yPos);
-  yPos += 10;
-
-  doc.setTextColor(...textColor);
-  doc.setFont(undefined, 'normal');
-  doc.setFontSize(10);
-
-  const breakdownData = [
-    ['Prezzo base', formatCurrency(quote.basePrice)],
-    ['Coefficiente regionale', `${quote.regionalCoeff.toFixed(2)}x`],
-    ['Qualità materiali', `${quote.qualityCoeff.toFixed(2)}x`],
-    ['Specifiche lavoro', `${quote.answerMultiplier.toFixed(2)}x`]
-  ];
-
-  breakdownData.forEach((row, idx) => {
-    if (idx % 2 === 0) {
-      doc.setFillColor(...lightGray);
-      doc.rect(15, yPos - 5, 180, 7, 'F');
-    }
-    doc.text(row[0], 20, yPos);
-    doc.text(row[1], 170, yPos, { align: 'right' });
-    yPos += 7;
-  });
-
-  yPos += 5;
-
-  // Prezzi finali
-  doc.setFillColor(...primaryColor);
-  doc.setTextColor(255, 255, 255);
-  doc.setFont(undefined, 'bold');
-  doc.setFontSize(11);
-  doc.rect(15, yPos - 5, 180, 8, 'F');
-  doc.text('Stima Preventivo', 20, yPos);
-  yPos += 12;
-
-  doc.setTextColor(...textColor);
-  doc.setFont(undefined, 'normal');
-  doc.setFontSize(10);
-
-  const priceData = [
-    ['Prezzo Minimo', formatCurrency(quote.minPrice)],
-    ['Prezzo Stimato', formatCurrency(quote.midPrice)],
-    ['Prezzo Massimo', formatCurrency(quote.maxPrice)]
-  ];
-
-  priceData.forEach((row, idx) => {
-    if (idx === 1) {
-      doc.setFillColor(251, 191, 36);
-      doc.rect(15, yPos - 5, 180, 10, 'F');
-      doc.setTextColor(255, 255, 255);
-      doc.setFont(undefined, 'bold');
-      doc.setFontSize(12);
-    } else {
-      if (idx % 2 === 0) {
-        doc.setFillColor(...lightGray);
-        doc.rect(15, yPos - 5, 180, 7, 'F');
-      }
-      doc.setTextColor(...textColor);
-      doc.setFont(undefined, 'normal');
-      doc.setFontSize(10);
-    }
-    doc.text(row[0], 20, yPos);
-    doc.text(row[1], 170, yPos, { align: 'right' });
-    yPos += idx === 1 ? 10 : 7;
-  });
-
-  yPos += 10;
-
-  // Note finali
   doc.setFontSize(9);
-  doc.setTextColor(100, 100, 100);
-  doc.text('Nota: Questo preventivo è una stima basata sui parametri forniti.', 15, yPos);
-  yPos += 5;
-  doc.text('Per un preventivo definitivo, contattare un professionista qualificato.', 15, yPos);
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(...gray);
+  doc.text(`${quote.quantity} ${quote.unit}  ·  ${quote.region}  ·  Qualità ${qualityLabels[quote.quality] || quote.quality}`, 22, y + 11);
 
-  // Footer
+  // ---- PREZZO PRINCIPALE ----
+  y = 92;
+  doc.setFillColor(...amber);
+  doc.roundedRect(15, y, 180, 28, 4, 4, 'F');
+
+  doc.setTextColor(...white);
+  doc.setFontSize(9);
+  doc.setFont(undefined, 'normal');
+  doc.text('STIMA TOTALE INVESTIMENTO', 105, y + 8, { align: 'center' });
+
+  doc.setFontSize(26);
+  doc.setFont(undefined, 'bold');
+  doc.text(fmt(quote.midPrice), 105, y + 20, { align: 'center' });
+
+  // Range min/max
+  y = 126;
+  doc.setFillColor(...bgGray);
+  doc.roundedRect(15, y, 86, 18, 3, 3, 'F');
+  doc.roundedRect(109, y, 86, 18, 3, 3, 'F');
+
   doc.setFontSize(8);
-  doc.setTextColor(150, 150, 150);
-  doc.text('Preventivi-Smart Pro © 2025', 15, 285);
-  doc.text(`Generato il ${new Date().toLocaleString('it-IT')}`, 170, 285, { align: 'right' });
+  doc.setFont(undefined, 'normal');
+  doc.setTextColor(...gray);
+  doc.text('MINIMO', 58, y + 6, { align: 'center' });
+  doc.text('MASSIMO', 152, y + 6, { align: 'center' });
 
-  // Download
-  doc.save(`Preventivo_${quote.tradeName}_${Date.now()}.pdf`);
-}
+  doc.setFontSize(12);
+  doc.setFont(undefined, 'bold');
+  doc.setTextColor(...navy);
+  doc.text(fmt(quote.minPrice), 58, y + 14, { align: 'center' });
+  doc.text(fmt(quote.maxPrice), 152, y + 14, { align: 'center' });
 
-function formatCurrency(value) {
-  return new Intl.NumberFormat('it-IT', {
-    style: 'currency',
-    currency: 'EUR'
-  }).format(value);
+  // ---- BREAKDOWN COSTI ----
+  y = 154;
+  doc.setFillColor(...navy);
+  doc.roundedRect(15, y, 180, 9, 2, 2, 'F');
+  doc.setTextColor(...white);
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'bold');
+  doc.text('ANALISI DEI COSTI', 20, y + 6);
+  y += 14;
+
+  const breakdownRows = [
+    ['Manodopera Specializzata', fmt(quote.manodopera)],
+    ['Materiali e Forniture', fmt(quote.materiali)],
+    ['Oneri di Sicurezza (PSC)', fmt(Math.round(quote.midPrice * 0.05))],
+  ];
+
+  breakdownRows.forEach((row, idx) => {
+    if (idx % 2 === 0) {
+      doc.setFillColor(...bgGray);
+      doc.rect(15, y - 5, 180, 8, 'F');
+    }
+    doc.setTextColor(...navy);
+    doc.setFontSize(10);
+    doc.setFont(undefined, 'normal');
+    doc.text(row[0], 20, y);
+    doc.text(row[1], 190, y, { align: 'right' });
+    y += 9;
+  });
+
+  // Totale
+  doc.setFillColor(...amberL);
+  doc.rect(15, y - 5, 180, 9, 'F');
+  doc.setTextColor(...navy);
+  doc.setFont(undefined, 'bold');
+  doc.setFontSize(11);
+  doc.text('TOTALE STIMATO', 20, y + 1);
+  doc.text(fmt(quote.midPrice), 190, y + 1, { align: 'right' });
+  y += 16;
+
+  // ---- COEFFICIENTI ----
+  doc.setFillColor(...navy);
+  doc.roundedRect(15, y, 180, 9, 2, 2, 'F');
+  doc.setTextColor(...white);
+  doc.setFontSize(10);
+  doc.setFont(undefined, 'bold');
+  doc.text('COEFFICIENTI APPLICATI', 20, y + 6);
+  y += 14;
+
+  const coeffRows = [
+    ['Prezzo Base Unitario', `€ ${quote.basePrice.toFixed(2)} / ${quote.unit}`],
+    ['Coefficiente Regionale', `${quote.regionalCoeff.toFixed(2)}x (${quote.region})`],
+    ['Qualità Materiali', `${quote.qualityCoeff.toFixed(2)}x (${qualityLabels[quote.quality] || quote.quality})`],
+    ['Specifiche Lavoro', `${quote.answerMultiplier.toFixed(2)}x`],
+  ];
+
+  coeffRows.forEach((row, idx) => {
+    if (idx % 2 === 0) {
+      doc.setFillColor(...bgGray);
+      doc.rect(15, y - 5, 180, 8, 'F');
+    }
+    doc.setTextColor(...navy);
+    doc.setFontSize(9.5);
+    doc.setFont(undefined, 'normal');
+    doc.text(row[0], 20, y);
+    doc.setTextColor(...gray);
+    doc.text(row[1], 190, y, { align: 'right' });
+    doc.setTextColor(...navy);
+    y += 9;
+  });
+
+  y += 6;
+
+  // ---- NOTE ----
+  doc.setFillColor(254, 243, 199);
+  doc.roundedRect(15, y, 180, 18, 3, 3, 'F');
+  doc.setDrawColor(...amber);
+  doc.roundedRect(15, y, 180, 18, 3, 3, 'S');
+  doc.setTextColor(146, 64, 14);
+  doc.setFontSize(8.5);
+  doc.setFont(undefined, 'bold');
+  doc.text('Nota Importante', 20, y + 6);
+  doc.setFont(undefined, 'normal');
+  doc.text('Questa è una stima indicativa basata sui parametri inseriti e sui prezzari 2025/2026.', 20, y + 12);
+  doc.text('Per un preventivo vincolante richiedere sopralluogo a un professionista qualificato.', 20, y + 17);
+
+  // ---- FOOTER ----
+  doc.setFillColor(...navy);
+  doc.rect(0, 282, 210, 15, 'F');
+  doc.setFillColor(...amber);
+  doc.rect(0, 282, 210, 2, 'F');
+  doc.setTextColor(...white);
+  doc.setFontSize(8);
+  doc.setFont(undefined, 'normal');
+  doc.text('Preventivi-Smart Pro © 2025 · preventivi-smart.it', 15, 291);
+  doc.text(`Generato il ${new Date().toLocaleString('it-IT')}`, 195, 291, { align: 'right' });
+
+  doc.save(`Preventivo_${quote.tradeName.replace(/\s+/g, '_')}_${Date.now()}.pdf`);
 }
