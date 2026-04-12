@@ -448,7 +448,9 @@ async function runAnalysis() {
   const coeff = REGIONAL_COEFFICIENTS[region] || 1.0;
   
   // Calcolo accurato: Base * Qty * Regione * Difficoltà (Opzione)
-  const marketMid = currentTrade.basePrice * qty * coeff * selectedOptionMultiplier;
+  // Se l'unità è "intervento", la quantità è 1 di default se non specificata diversamente
+  const effectiveQty = (currentTrade.unit === 'intervento') ? 1 : qty;
+  const marketMid = currentTrade.basePrice * effectiveQty * coeff * selectedOptionMultiplier;
   const finalReceivedPrice = (wizardMode === 'quick') ? marketMid : receivedPrice;
 
   const analysis = analyzeQuote({
