@@ -365,6 +365,152 @@ export const TRADES_DATABASE = [
       ]}
     ]
   },
+  // MANUTENZIONE ELETTRICA
+  { 
+    id: "ele_manutenzione_impianto", parent: "ele_manutenzione", name: "Manutenzione Impianto Elettrico", icon: "fa-screwdriver", 
+    basePrice: 120, unit: "intervento", 
+    description: "Controllo periodico e manutenzione impianto elettrico.",
+    questions: [
+      { label: "Tipo di controllo?", options: [
+        { text: "Ispezione visiva", multiplier: 1.0 },
+        { text: "Controllo con strumenti", multiplier: 1.3 },
+        { text: "Certificazione completa", multiplier: 1.8 }
+      ]},
+      { label: "Età dell'impianto?", options: [
+        { text: "Recente (< 10 anni)", multiplier: 1.0 },
+        { text: "Medio (10-20 anni)", multiplier: 1.2 },
+        { text: "Vecchio (> 20 anni)", multiplier: 1.5 }
+      ]}
+    ]
+  },
+  { 
+    id: "ele_controllo_salvavita", parent: "ele_manutenzione", name: "Controllo Salvavita", icon: "fa-square-check", 
+    basePrice: 60, unit: "intervento", 
+    description: "Test periodico interruttore differenziale.",
+    questions: [
+      { label: "Numero di salvavita?", options: [
+        { text: "Uno", multiplier: 1.0 },
+        { text: "2-3", multiplier: 1.1 },
+        { text: "Più di 3", multiplier: 1.2 }
+      ]},
+      { label: "Tipo di test?", options: [
+        { text: "Test pulsante", multiplier: 1.0 },
+        { text: "Test con strumento", multiplier: 1.4 },
+        { text: "Sostituzione se difettoso", multiplier: 2.0 }
+      ]}
+    ]
+  },
+  
+  // SPECIALIZZATI PITTORE
+  { 
+    id: "pit_carta_parati", parent: "pit_specializzati", name: "Carta da Parati", icon: "fa-palette", 
+    basePrice: 25, unit: "mq", 
+    description: "Applicazione carta da parati e rivestimenti.",
+    questions: [
+      { label: "Tipo di carta?", options: [
+        { text: "Carta standard", multiplier: 1.0 },
+        { text: "Vinilica", multiplier: 1.2 },
+        { text: "Tessuto/Pregiata", multiplier: 1.5 }
+      ]},
+      { label: "Preparazione pareti?", options: [
+        { text: "Già preparate", multiplier: 1.0 },
+        { text: "Pulizia + primer", multiplier: 1.2 },
+        { text: "Rasatura completa", multiplier: 1.6 }
+      ]}
+    ]
+  },
+  
+  // INSTALLAZIONI SERRAMENTI
+  { 
+    id: "ser_infissi_nuovi", parent: "ser_installazioni", name: "Installazione Infissi Nuovi", icon: "fa-door-open", 
+    basePrice: 400, unit: "infisso", 
+    description: "Installazione nuove finestre o porte.",
+    questions: [
+      { label: "Tipo di infisso?", options: [
+        { text: "Finestra singola", multiplier: 1.0 },
+        { text: "Porta-finestra", multiplier: 1.4 },
+        { text: "Porta blindata", multiplier: 1.8 }
+      ]},
+      { label: "Materiale?", options: [
+        { text: "Alluminio", multiplier: 1.0 },
+        { text: "PVC", multiplier: 1.1 },
+        { text: "Legno", multiplier: 1.3 }
+      ]}
+    ]
+  },
+  
+  // DEMOLIZIONE MURATORE
+  { 
+    id: "mur_demolizione_pareti", parent: "mur_demolizione", name: "Demolizione Pareti", icon: "fa-explosion", 
+    basePrice: 80, unit: "mq", 
+    description: "Demolizione pareti non portanti e rimozione macerie.",
+    questions: [
+      { label: "Tipo di parete?", options: [
+        { text: "Cartongesso", multiplier: 0.8 },
+        { text: "Mattoni forati", multiplier: 1.0 },
+        { text: "Mattoni pieni", multiplier: 1.3 }
+      ]},
+      { label: "Smaltimento macerie?", options: [
+        { text: "Escluso", multiplier: 1.0 },
+        { text: "Incluso (trasporto)", multiplier: 1.5 },
+        { text: "Incluso (smaltimento autorizzato)", multiplier: 2.0 }
+      ]}
+    ]
+  },
+  
+  // TRASLOCHI
+  { 
+    id: "srv_trasloco_locale", parent: "srv_traslochi", name: "Trasloco Locale", icon: "fa-truck", 
+    basePrice: 100, unit: "ora", 
+    description: "Trasloco entro lo stesso comune.",
+    questions: [
+      { label: "Piano di partenza?", options: [
+        { text: "Piano terra", multiplier: 1.0 },
+        { text: "1-3 piano", multiplier: 1.2 },
+        { text: "4+ piano (senza ascensore)", multiplier: 1.6 }
+      ]},
+      { label: "Piano di arrivo?", options: [
+        { text: "Piano terra", multiplier: 1.0 },
+        { text: "1-3 piano", multiplier: 1.2 },
+        { text: "4+ piano (senza ascensore)", multiplier: 1.6 }
+      ]}
+    ]
+  },
+  { 
+    id: "srv_trasloco_nazionale", parent: "srv_traslochi", name: "Trasloco Nazionale", icon: "fa-truck", 
+    basePrice: 1500, unit: "trasloco", 
+    description: "Trasloco tra diverse regioni.",
+    questions: [
+      { label: "Distanza?", options: [
+        { text: "Fino a 300km", multiplier: 1.0 },
+        { text: "300-600km", multiplier: 1.3 },
+        { text: "Oltre 600km", multiplier: 1.6 }
+      ]},
+      { label: "Volume stimato?", options: [
+        { text: "Piccolo (1-2 stanze)", multiplier: 1.0 },
+        { text: "Medio (3-4 stanze)", multiplier: 1.4 },
+        { text: "Grande (5+ stanze)", multiplier: 1.8 }
+      ]}
+    ]
+  },
+  { 
+    id: "srv_imballaggio", parent: "srv_traslochi", name: "Servizio Imballaggio", icon: "fa-box", 
+    basePrice: 50, unit: "ora", 
+    description: "Imballaggio e preparazione oggetti per il trasloco.",
+    questions: [
+      { label: "Tipo di oggetti?", options: [
+        { text: "Oggetti comuni", multiplier: 1.0 },
+        { text: "Fragili (piatti, bicchieri)", multiplier: 1.3 },
+        { text: "Molto fragili (quadri, specchi)", multiplier: 1.6 }
+      ]},
+      { label: "Quantità?", options: [
+        { text: "Pochi oggetti", multiplier: 1.0 },
+        { text: "Medi quantitativi", multiplier: 1.2 },
+        { text: "Intera casa", multiplier: 1.5 }
+      ]}
+    ]
+  },
+  
   // PULIZIE
   { 
     id: "srv_pulizia_casa", parent: "srv_pulizie", name: "Pulizia Generale Casa", icon: "fa-broom", 
@@ -380,6 +526,23 @@ export const TRADES_DATABASE = [
         { text: "Ordinaria", multiplier: 1.0 },
         { text: "Profonda", multiplier: 1.5 },
         { text: "Post-ristrutturazione", multiplier: 2.0 }
+      ]}
+    ]
+  },
+  { 
+    id: "srv_pulizia_uffici", parent: "srv_pulizie", name: "Pulizia Uffici/Negozi", icon: "fa-broom", 
+    basePrice: 20, unit: "ora", 
+    description: "Pulizia professionale uffici e locali commerciali.",
+    questions: [
+      { label: "Metratura?", options: [
+        { text: "Piccolo (< 100mq)", multiplier: 1.0 },
+        { text: "Medio (100-300mq)", multiplier: 1.1 },
+        { text: "Grande (> 300mq)", multiplier: 1.3 }
+      ]},
+      { label: "Frequenza?", options: [
+        { text: "Una tantum", multiplier: 1.0 },
+        { text: "Giornaliera", multiplier: 0.8 },
+        { text: "Settimanale", multiplier: 0.9 }
       ]}
     ]
   }
