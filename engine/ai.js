@@ -22,7 +22,8 @@ export async function aiPredict(tipo, citta) {
       confidence: Math.min(100, d.count * 10)
     };
 
-  } catch {
+  } catch (e) {
+    console.error("AI Predict error:", e);
     return { price: null, confidence: 0 };
   }
 }

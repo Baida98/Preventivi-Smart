@@ -2,11 +2,13 @@
 <html>
 <head>
 <link rel="stylesheet" href="style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
 <body>
 
-<div id="auth">
+<div id="authDiv" class="app">
+  <h2>Login</h2>
   <input id="email" placeholder="email">
   <input id="password" type="password">
 
@@ -14,7 +16,7 @@
   <button id="google">Google</button>
 </div>
 
-<div id="app" style="display:none;">
+<div id="appDiv" class="app" style="display:none;">
 
   <h2>Dashboard Preventivi</h2>
 
@@ -24,7 +26,7 @@
     <option>bagno</option>
   </select>
 
-  <input id="mq">
+  <input id="mq" placeholder="Inserisci mq">
   <select id="qualita">
     <option>bassa</option>
     <option>media</option>
@@ -38,7 +40,9 @@
   </select>
 
   <button id="calcola">Calcola</button>
+  <button id="save">Salva Preventivo</button>
   <button id="pdf">Export PDF</button>
+  <button id="logout">Logout</button>
 
   <h3 id="output"></h3>
 

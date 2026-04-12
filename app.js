@@ -1,6 +1,7 @@
 import { auth, db } from "./firebase.js";
 import { calcolaBase } from "./engine/core.js";
 import { aiPredict, aiTrain } from "./engine/ai.js";
+import { generatePDF } from "./engine/pdf.js";
 
 import {
   GoogleAuthProvider,
@@ -29,15 +30,15 @@ document.getElementById("google").onclick = async () => {
 
 document.getElementById("logout").onclick = () => signOut(auth);
 
-/* ---------------- PIPELINE UNICA ---------------- */
+/* ---------------- CALCOLO ---------------- */
 
 document.getElementById("calcola").onclick = async () => {
 
   const input = {
-    tipo: tipo.value,
-    mq: Number(mq.value),
-    qualita: qualita.value,
-    citta: citta.value
+    tipo: document.getElementById("tipo").value,
+    mq: Number(document.getElementById("mq").value),
+    qualita: document.getElementById("qualita").value,
+    citta: document.getElementById("citta").value
   };
 
   // 1. CORE (base matematica)
@@ -69,11 +70,21 @@ document.getElementById("calcola").onclick = async () => {
   };
 
   // 5. UI
-  output.innerText =
+  document.getElementById("output").innerText =
     `€ ${finalPrice.toFixed(0)} (AI ${ai.confidence}%)`;
 };
 
-/* ---------------- SAVE + TRAIN ---------------- */
+/* ---------------- EXPORT PDF ---------------- */
+
+document.getElementById("pdf").onclick = () => {
+  if (currentQuote) {
+    generatePDF(currentQuote);
+  } else {
+    alert("Nessun preventivo calcolato");
+  }
+};
+
+/* ---------------- SAVE + TRAIN AI ---------------- */
 
 document.getElementById("save").onclick = async () => {
 
@@ -114,6 +125,10 @@ document.getElementById("save").onclick = async () => {
 /* ---------------- AUTH ---------------- */
 
 onAuthStateChanged(auth, (user) => {
+  const authDiv = document.getElementById("authDiv");
+  const appDiv = document.getElementById("appDiv");
+
+  if (!authDiv || !appDiv) return;
 
   if (user) {
     authDiv.style.display = "none";
