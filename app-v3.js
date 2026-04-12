@@ -1,6 +1,6 @@
 /**
- * Preventivi-Smart Pro v10.1 — Core Engine
- * Gestione Wizard, Login e Protezione Business Model
+ * Preventivi-Smart Pro v10.2 — Core Engine
+ * Fix Definitivo Interattività e Protezione Business Model
  */
 
 import database from './engine/database.js';
@@ -28,9 +28,16 @@ const userNav = document.getElementById('userNav');
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("DOM fully loaded and parsed");
     initRegions();
     updateUserUI();
     setupEventListeners();
+    
+    // Esponiamo le funzioni necessarie al window per gli onclick inline
+    window.selectMacro = selectMacro;
+    window.selectSub = selectSub;
+    window.selectTrade = selectTrade;
+    window.goBackSelection = goBackSelection;
 });
 
 function initRegions() {
@@ -63,13 +70,13 @@ function updateUserUI() {
 }
 
 function setupEventListeners() {
-    // Hero Actions - Fix: Targeting the cards directly as they have the IDs
+    // Hero Actions
     document.getElementById('startAnalysisBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
+        console.log("Start Analysis Clicked");
         startWizard(false);
     });
     document.getElementById('startQuickBtn')?.addEventListener('click', (e) => {
-        e.preventDefault();
+        console.log("Start Quick Clicked");
         startWizard(true);
     });
 
@@ -110,7 +117,7 @@ function validateStep2() {
 function startWizard(quick) {
     isQuickMode = quick;
     
-    // BUSINESS PROTECTION: Limit quick mode for non-logged users
+    // BUSINESS PROTECTION
     if (isQuickMode && !currentUser) {
         const quickCount = parseInt(localStorage.getItem('ps_quick_count') || '0');
         if (quickCount >= 1) {
@@ -120,11 +127,12 @@ function startWizard(quick) {
         }
     }
 
-    heroSection.classList.add('hidden');
-    appRoot.style.display = 'block';
-    appRoot.classList.remove('hidden');
+    if (heroSection) heroSection.classList.add('hidden');
+    if (appRoot) {
+        appRoot.style.display = 'block';
+        appRoot.classList.remove('hidden');
+    }
     
-    // Reset state
     currentStep = 1;
     selectedMacro = null;
     selectedSub = null;
@@ -152,10 +160,10 @@ function renderMacroCategories() {
     if (backBtn) backBtn.classList.add('hidden');
 }
 
-window.selectMacro = (id) => {
+function selectMacro(id) {
     selectedMacro = id;
     renderSubCategories(id);
-};
+}
 
 function renderSubCategories(macroId) {
     if (!tradesGrid) return;
@@ -172,10 +180,10 @@ function renderSubCategories(macroId) {
     if (backBtn) backBtn.classList.remove('hidden');
 }
 
-window.selectSub = (id) => {
+function selectSub(id) {
     selectedSub = id;
     renderTrades(selectedMacro, id);
-};
+}
 
 function renderTrades(macroId, subId) {
     if (!tradesGrid) return;
@@ -189,7 +197,7 @@ function renderTrades(macroId, subId) {
     `).join('');
 }
 
-window.selectTrade = (id) => {
+function selectTrade(id) {
     selectedTrade = id;
     const tradeData = database.getTradeById ? database.getTradeById(id) : database.getTrade(selectedMacro, selectedSub, id);
     
@@ -198,9 +206,9 @@ window.selectTrade = (id) => {
     
     renderDynamicQuestions(tradeData.questions || []);
     goToStep(2);
-};
+}
 
-window.goBackSelection = () => {
+function goBackSelection() {
     if (selectedSub) {
         selectedSub = null;
         renderSubCategories(selectedMacro);
@@ -208,7 +216,7 @@ window.goBackSelection = () => {
         selectedMacro = null;
         renderMacroCategories();
     }
-};
+}
 
 function renderDynamicQuestions(questions) {
     if (!dynamicQuestions) return;
@@ -227,7 +235,6 @@ function goToStep(step) {
     const targetStep = document.getElementById(`step${step}`);
     if (targetStep) targetStep.classList.remove('hidden');
     
-    // Update Progress Bar
     document.querySelectorAll('.step-item').forEach((el, idx) => {
         el.classList.remove('active', 'completed');
         if (idx + 1 === step) el.classList.add('active');
@@ -258,7 +265,6 @@ async function runAnalysis() {
         return;
     }
 
-    // BUSINESS PROTECTION: Final check for quick mode
     if (isQuickMode && !currentUser) {
         const quickCount = parseInt(localStorage.getItem('ps_quick_count') || '0');
         localStorage.setItem('ps_quick_count', (quickCount + 1).toString());
@@ -273,12 +279,10 @@ async function runAnalysis() {
     results.classList.add('hidden');
     nav.classList.add('hidden');
 
-    // Simulate AI Processing
     await new Promise(r => setTimeout(r, 1500));
 
     const tradeData = database.getTradeById ? database.getTradeById(selectedTrade) : database.getTrade(selectedMacro, selectedSub, selectedTrade);
     
-    // Calculate dynamic multiplier
     let multiplier = 1.0;
     document.querySelectorAll('.dynamic-q').forEach(select => {
         multiplier *= parseFloat(select.value);
