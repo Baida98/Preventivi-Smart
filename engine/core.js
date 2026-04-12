@@ -1,27 +1,31 @@
-export function calculate(input, stats) {
+export function calcolaPreventivo({ tipo, mq, qualita, citta }) {
 
-  const base = stats[input.tipo] || {
-    avg: 30
+  const baseCityMultiplier = {
+    milano: 1.25,
+    roma: 1.15,
+    napoli: 0.95,
+    default: 1
   };
 
-  let m = 1;
+  const base = {
+    imbiancatura: 12,
+    piastrelle: 25,
+    bagno: 1200
+  }[tipo] || 10;
 
-  // stato reale lavoro
-  if (input.stato === "scarso") m += 0.45;
-  if (input.stato === "buono") m -= 0.15;
+  const qualitaM = {
+    bassa: 0.8,
+    media: 1,
+    alta: 1.35
+  }[qualita];
 
-  // difficoltà reale
-  if (input.difficolta === "alta") m += 0.35;
-  if (input.difficolta === "bassa") m -= 0.2;
+  const cityM = baseCityMultiplier[citta] || 1;
 
-  // extra nascosti
-  if (input.extra) m += 0.2;
-
-  const value = base.avg * input.qta * m;
+  const mid = base * mq * qualitaM * cityM;
 
   return {
-    min: value * 0.8,
-    mid: value,
-    max: value * 1.2
+    min: mid * 0.85,
+    mid,
+    max: mid * 1.2
   };
 }
