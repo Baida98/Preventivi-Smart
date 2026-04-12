@@ -1,36 +1,29 @@
 export function calcolaBase({ tipo, mq, qualita, citta }) {
 
-  // PREZZI BASE
-  const basePrezzi = {
+  const baseMap = {
     imbiancatura: 12,
     piastrelle: 25,
     bagno: 1200
   };
 
-  const base = basePrezzi[tipo] || 10;
-
-  // QUALITÀ
-  const molQualita = {
+  const qualitaMap = {
     bassa: 0.8,
     media: 1,
     alta: 1.3
   };
 
-  // CITTÀ (mercato reale semplificato)
-  const molCitta = {
+  const cittaMap = {
     milano: 1.25,
     roma: 1.15,
-    napoli: 0.95,
-    default: 1
+    napoli: 0.95
   };
 
-  const mqSafe = mq && mq > 0 ? mq : 1;
+  const base = baseMap[tipo] ?? 10;
+  const q = qualitaMap[qualita] ?? 1;
+  const c = cittaMap[citta] ?? 1;
+  const mqSafe = Number(mq) > 0 ? Number(mq) : 1;
 
-  const mid =
-    base *
-    mqSafe *
-    (molQualita[qualita] || 1) *
-    (molCitta[citta] || molCitta.default);
+  const mid = base * mqSafe * q * c;
 
   return {
     min: mid * 0.85,
