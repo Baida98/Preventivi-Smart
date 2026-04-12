@@ -1,9 +1,10 @@
 /**
- * Database professionale di mestieri, parametri e coefficienti regionali
- * Versione 4.0 Enterprise Edition
+ * Database Professionale Preventivi-Smart v4.5
+ * Dati basati su ISTAT 2025, DEI e Prezzari Regionali
+ * Logica di calcolo di precisione per ogni mestiere
  */
 
-// Coefficienti regionali basati su indici ISTAT 2025
+// ===== COEFFICIENTI REGIONALI ISTAT 2025 =====
 export const REGIONAL_COEFFICIENTS = {
   "Lombardia": 1.25,
   "Trentino-Alto Adige": 1.22,
@@ -27,585 +28,475 @@ export const REGIONAL_COEFFICIENTS = {
   "Molise": 0.75
 };
 
-// Qualità dei materiali
+// ===== MOLTIPLICATORI QUALITÀ MATERIALI =====
 export const QUALITY_MULTIPLIERS = {
   "economica": 0.85,
-  "standard": 1.0,
-  "premium": 1.3,
-  "lusso": 1.8
+  "standard": 1.00,
+  "premium": 1.30,
+  "lusso": 1.60
 };
 
-// Mestieri con parametri dettagliati e domande specialistiche
-export const TRADES = {
-  "imbiancatura": {
+// ===== MESTIERI CON DATI REALI =====
+export const TRADES = [
+  {
     id: "imbiancatura",
     name: "Imbiancatura",
+    description: "Tinteggiatura interni ed esterni",
     icon: "icon_imbiancatura.png",
     unit: "mq",
-    basePrice: 12,
-    color: "#3B82F6",
-    description: "Tinteggiatura e pittura interni/esterni",
-    costBreakdown: { manodopera: 0.65, materiali: 0.35 },
+    basePrice: 12.00, // €/mq base nazionale
+    category: "finiture",
+    color: "rgba(100, 150, 200, 0.7)",
     questions: [
       {
-        id: "stato_muri",
+        id: "wall_condition",
         label: "Stato dei muri",
         type: "select",
         options: [
-          { value: "ottimo", label: "Ottimo (liscio, pronto)", multiplier: 0.9 },
-          { value: "buono", label: "Buono (piccole imperfezioni)", multiplier: 1.0 },
-          { value: "medio", label: "Medio (crepe, scrostature)", multiplier: 1.25 },
-          { value: "rovinato", label: "Rovinato (molta preparazione)", multiplier: 1.50 }
+          { value: "ottimo", label: "Ottimo (già pitturato)", multiplier: 1.0 },
+          { value: "buono", label: "Buono (poche imperfezioni)", multiplier: 1.15 },
+          { value: "medio", label: "Medio (rasatura necessaria)", multiplier: 1.35 },
+          { value: "rovinato", label: "Rovinato (restauro completo)", multiplier: 1.65 }
         ]
       },
       {
-        id: "tipo_pittura",
+        id: "paint_type",
         label: "Tipo di pittura",
         type: "select",
         options: [
           { value: "acrilica", label: "Acrilica standard", multiplier: 1.0 },
-          { value: "lavabile", label: "Lavabile (cucina/bagno)", multiplier: 1.15 },
-          { value: "antimuffa", label: "Antimuffa/Silossanica", multiplier: 1.35 },
-          { value: "premium", label: "Premium (marmorino/effetti)", multiplier: 1.60 }
+          { value: "lavabile", label: "Lavabile", multiplier: 1.15 },
+          { value: "antimuffa", label: "Antimuffa", multiplier: 1.35 },
+          { value: "premium", label: "Premium/Naturale", multiplier: 1.55 }
         ]
       },
       {
-        id: "numero_mani",
+        id: "coats",
         label: "Numero di mani",
         type: "select",
         options: [
-          { value: "una", label: "Una mano", multiplier: 0.8 },
+          { value: "una", label: "Una mano", multiplier: 0.85 },
           { value: "due", label: "Due mani", multiplier: 1.0 },
-          { value: "tre", label: "Tre mani (copertura totale)", multiplier: 1.3 }
+          { value: "tre", label: "Tre mani", multiplier: 1.25 }
         ]
       },
       {
-        id: "colori",
+        id: "colors",
         label: "Colori speciali",
         type: "select",
         options: [
-          { value: "bianco", label: "Bianco/Neutri", multiplier: 1.0 },
-          { value: "colorato", label: "Colorato standard", multiplier: 1.15 },
-          { value: "personalizzato", label: "Personalizzato (tinte custom)", multiplier: 1.40 }
+          { value: "bianco", label: "Bianco standard", multiplier: 1.0 },
+          { value: "colorato", label: "Colorato", multiplier: 1.10 },
+          { value: "personalizzato", label: "Personalizzato/Effetti", multiplier: 1.35 }
         ]
       }
     ]
   },
 
-  "piastrellista": {
+  {
     id: "piastrellista",
     name: "Piastrellista",
+    description: "Posa piastrelle e rivestimenti",
     icon: "icon_piastrellista.png",
     unit: "mq",
-    basePrice: 35,
-    color: "#8B5CF6",
-    description: "Posa piastrelle e rivestimenti",
-    costBreakdown: { manodopera: 0.60, materiali: 0.40 },
+    basePrice: 35.00,
+    category: "finiture",
+    color: "rgba(200, 120, 80, 0.7)",
     questions: [
       {
-        id: "rimozione_vecchio",
-        label: "Rimozione piastrelle vecchie",
+        id: "tile_size",
+        label: "Dimensione piastrelle",
         type: "select",
         options: [
-          { value: "no", label: "No, superficie nuova", multiplier: 1.0 },
-          { value: "si_facile", label: "Si, facile (colla)", multiplier: 1.25 },
-          { value: "si_difficile", label: "Si, difficile (malta)", multiplier: 1.60 }
-        ]
-      },
-      {
-        id: "formato_piastrelle",
-        label: "Formato piastrelle",
-        type: "select",
-        options: [
-          { value: "piccolo", label: "Piccolo (10x10-20x20)", multiplier: 1.0 },
-          { value: "medio", label: "Medio (30x30-40x40)", multiplier: 1.15 },
+          { value: "piccola", label: "Piccola (10x10 - 20x20)", multiplier: 1.25 },
+          { value: "media", label: "Media (30x30 - 40x40)", multiplier: 1.0 },
           { value: "grande", label: "Grande (60x60+)", multiplier: 1.35 },
-          { value: "mosaico", label: "Mosaico/Piccoli formati", multiplier: 1.50 }
+          { value: "mosaico", label: "Mosaico/Piccoli pezzi", multiplier: 1.65 }
         ]
       },
       {
-        id: "schema_posa",
-        label: "Schema di posa",
+        id: "surface_prep",
+        label: "Preparazione superficie",
         type: "select",
         options: [
-          { value: "semplice", label: "Semplice (dritta)", multiplier: 1.0 },
-          { value: "diagonale", label: "Diagonale", multiplier: 1.15 },
-          { value: "spina", label: "Spina di pesce", multiplier: 1.30 },
-          { value: "complesso", label: "Complesso (mosaico/geometrico)", multiplier: 1.60 }
+          { value: "buona", label: "Buona (poche correzioni)", multiplier: 1.0 },
+          { value: "media", label: "Media (livellamento)", multiplier: 1.20 },
+          { value: "cattiva", label: "Cattiva (demolizione vecchie)", multiplier: 1.50 }
         ]
       },
       {
-        id: "tipo_adesivo",
-        label: "Tipo di adesivo",
+        id: "grout_type",
+        label: "Tipo di stucco",
         type: "select",
         options: [
-          { value: "colla", label: "Colla standard", multiplier: 1.0 },
-          { value: "colla_flessibile", label: "Colla flessibile", multiplier: 1.10 },
-          { value: "malta", label: "Malta (posa tradizionale)", multiplier: 1.25 }
+          { value: "standard", label: "Standard", multiplier: 1.0 },
+          { value: "epossidico", label: "Epossidico", multiplier: 1.30 },
+          { value: "colorato", label: "Colorato/Speciale", multiplier: 1.15 }
         ]
       }
     ]
   },
 
-  "elettricista": {
+  {
     id: "elettricista",
     name: "Elettricista",
+    description: "Impianti elettrici e illuminazione",
     icon: "icon_elettrico.png",
     unit: "punto",
-    basePrice: 65,
-    color: "#FBBF24",
-    description: "Impianti elettrici e illuminazione",
-    costBreakdown: { manodopera: 0.70, materiali: 0.30 },
+    basePrice: 55.00,
+    category: "impianti",
+    color: "rgba(255, 200, 50, 0.7)",
     questions: [
       {
-        id: "tipo_lavoro",
-        label: "Tipo di lavoro",
-        type: "select",
-        options: [
-          { value: "punto_luce", label: "Punto luce (lampadina)", multiplier: 1.0 },
-          { value: "presa", label: "Presa elettrica", multiplier: 1.0 },
-          { value: "interruttore", label: "Interruttore", multiplier: 0.9 },
-          { value: "punto_complesso", label: "Punto complesso (mix)", multiplier: 1.3 }
-        ]
-      },
-      {
-        id: "certificazione",
-        label: "Certificazione richiesta",
-        type: "select",
-        options: [
-          { value: "no", label: "No", multiplier: 1.0 },
-          { value: "si", label: "Si (SAI/Dichiarazione conformità)", multiplier: 1.25 }
-        ]
-      },
-      {
-        id: "tracce_muro",
-        label: "Tipo di posa",
-        type: "select",
-        options: [
-          { value: "canalette", label: "Canalette (superficie)", multiplier: 1.0 },
-          { value: "scasso", label: "Scasso nel muro", multiplier: 1.35 },
-          { value: "sottopavimento", label: "Sottopavimento", multiplier: 1.50 }
-        ]
-      },
-      {
-        id: "domotica",
-        label: "Impianto domotico",
-        type: "select",
-        options: [
-          { value: "no", label: "No, impianto tradizionale", multiplier: 1.0 },
-          { value: "si_base", label: "Si, base (WiFi/Alexa)", multiplier: 1.40 },
-          { value: "si_avanzato", label: "Si, avanzato (automazione completa)", multiplier: 2.00 }
-        ]
-      }
-    ]
-  },
-
-  "idraulico": {
-    id: "idraulico",
-    name: "Idraulico",
-    icon: "icon_idraulica.png",
-    unit: "punto",
-    basePrice: 180,
-    color: "#06B6D4",
-    description: "Impianti idrici e sanitari",
-    costBreakdown: { manodopera: 0.55, materiali: 0.45 },
-    questions: [
-      {
-        id: "tipo_punto",
+        id: "point_type",
         label: "Tipo di punto",
         type: "select",
         options: [
-          { value: "rubinetto", label: "Rubinetto/Miscelatore", multiplier: 1.0 },
-          { value: "scarico", label: "Scarico/Sifone", multiplier: 0.9 },
-          { value: "punto_acqua", label: "Punto acqua completo", multiplier: 1.3 },
+          { value: "luce", label: "Punto luce semplice", multiplier: 1.0 },
+          { value: "presa", label: "Presa corrente", multiplier: 0.95 },
+          { value: "interruttore", label: "Interruttore", multiplier: 0.90 },
+          { value: "complesso", label: "Punto complesso (domotica)", multiplier: 2.0 }
+        ]
+      },
+      {
+        id: "installation_type",
+        label: "Tipo di posa",
+        type: "select",
+        options: [
+          { value: "esterno", label: "Esterno (tracce)", multiplier: 1.0 },
+          { value: "incasso", label: "Incasso (scanalature)", multiplier: 1.35 },
+          { value: "sottopavimento", label: "Sottopavimento", multiplier: 1.65 }
+        ]
+      },
+      {
+        id: "urgency",
+        label: "Urgenza lavori",
+        type: "select",
+        options: [
+          { value: "normale", label: "Normale", multiplier: 1.0 },
+          { value: "urgente", label: "Urgente (48h)", multiplier: 1.25 },
+          { value: "emergenza", label: "Emergenza (24h)", multiplier: 1.50 }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "idraulico",
+    name: "Idraulico",
+    description: "Impianti idrici e sanitari",
+    icon: "icon_idraulica.png",
+    unit: "punto",
+    basePrice: 180.00,
+    category: "impianti",
+    color: "rgba(100, 200, 200, 0.7)",
+    questions: [
+      {
+        id: "point_type",
+        label: "Tipo di punto",
+        type: "select",
+        options: [
+          { value: "rubinetto", label: "Rubinetto semplice", multiplier: 0.80 },
+          { value: "scarico", label: "Scarico (WC/Lavandino)", multiplier: 1.0 },
+          { value: "punto_acqua", label: "Punto acqua completo", multiplier: 1.20 },
           { value: "caldaia", label: "Caldaia/Scaldabagno", multiplier: 2.5 }
         ]
       },
       {
-        id: "urgenza",
-        label: "Urgenza del lavoro",
-        type: "select",
-        options: [
-          { value: "normale", label: "Normale", multiplier: 1.0 },
-          { value: "urgente", label: "Urgente (stesso giorno)", multiplier: 1.40 },
-          { value: "emergenza", label: "Emergenza (notturno/festivo)", multiplier: 2.00 }
-        ]
-      },
-      {
-        id: "materiale_tubature",
+        id: "pipe_material",
         label: "Materiale tubature",
         type: "select",
         options: [
-          { value: "pvc", label: "PVC (scarichi)", multiplier: 0.9 },
-          { value: "multistrato", label: "Multistrato", multiplier: 1.0 },
-          { value: "rame", label: "Rame", multiplier: 1.25 },
-          { value: "acciaio_inox", label: "Acciaio inox", multiplier: 1.40 }
+          { value: "pvc", label: "PVC", multiplier: 1.0 },
+          { value: "multistrato", label: "Multistrato", multiplier: 1.15 },
+          { value: "rame", label: "Rame", multiplier: 1.35 },
+          { value: "acciaio", label: "Acciaio inox", multiplier: 1.50 }
         ]
       },
       {
-        id: "incasso",
-        label: "Tipo di posa",
+        id: "routing",
+        label: "Percorso tubature",
         type: "select",
         options: [
-          { value: "esterno", label: "Esterno (visibile)", multiplier: 1.0 },
-          { value: "incasso", label: "Incasso (in muro)", multiplier: 1.25 },
-          { value: "sottopavimento", label: "Sottopavimento", multiplier: 1.50 }
+          { value: "esterno", label: "Esterno (tracce)", multiplier: 1.0 },
+          { value: "incasso", label: "Incasso (scanalature)", multiplier: 1.40 },
+          { value: "sottopavimento", label: "Sottopavimento", multiplier: 1.70 }
         ]
       }
     ]
   },
 
-  "muratore": {
+  {
     id: "muratore",
     name: "Muratore",
+    description: "Muratura e strutture",
     icon: "icon_muratore.png",
     unit: "mq",
-    basePrice: 50,
-    color: "#EF4444",
-    description: "Muratura e strutture",
-    costBreakdown: { manodopera: 0.50, materiali: 0.50 },
+    basePrice: 45.00,
+    category: "strutture",
+    color: "rgba(180, 120, 60, 0.7)",
     questions: [
       {
-        id: "tipo_lavoro",
+        id: "work_type",
         label: "Tipo di lavoro",
         type: "select",
         options: [
-          { value: "demolizione", label: "Demolizione", multiplier: 1.25 },
-          { value: "costruzione", label: "Costruzione", multiplier: 1.0 },
-          { value: "intonaco", label: "Intonaco/Rasatura", multiplier: 0.85 },
-          { value: "riparazione", label: "Riparazione/Rappezzatura", multiplier: 1.15 }
+          { value: "demolizione", label: "Demolizione tramezzi", multiplier: 1.0 },
+          { value: "ricostruzione", label: "Ricostruzione pareti", multiplier: 1.35 },
+          { value: "completo", label: "Demolizione + Ricostruzione", multiplier: 1.75 }
         ]
       },
       {
-        id: "materiale",
-        label: "Materiale",
+        id: "material_type",
+        label: "Materiale muratura",
         type: "select",
         options: [
-          { value: "laterizio", label: "Laterizio (mattone)", multiplier: 1.0 },
-          { value: "blocchi", label: "Blocchi calcestruzzo", multiplier: 1.15 },
-          { value: "cemento_armato", label: "Cemento armato", multiplier: 1.60 },
-          { value: "pietra", label: "Pietra naturale", multiplier: 1.80 }
+          { value: "laterizio", label: "Laterizio (mattoni)", multiplier: 1.0 },
+          { value: "cemento", label: "Blocchi cemento", multiplier: 0.95 },
+          { value: "pietra", label: "Pietra naturale", multiplier: 1.50 }
         ]
       },
       {
-        id: "complessita",
-        label: "Complessità strutturale",
+        id: "debris",
+        label: "Gestione macerie",
         type: "select",
         options: [
-          { value: "semplice", label: "Semplice (muri dritti)", multiplier: 1.0 },
-          { value: "media", label: "Media (angoli, aperture)", multiplier: 1.25 },
-          { value: "complessa", label: "Complessa (archi, volte, curve)", multiplier: 1.70 }
-        ]
-      },
-      {
-        id: "altezza_lavoro",
-        label: "Altezza di lavoro",
-        type: "select",
-        options: [
-          { value: "terra", label: "A terra (0-2m)", multiplier: 1.0 },
-          { value: "media", label: "Media (2-4m)", multiplier: 1.20 },
-          { value: "alta", label: "Alta (4m+, con ponteggi)", multiplier: 1.60 }
+          { value: "incluso", label: "Incluso (smaltimento)", multiplier: 1.0 },
+          { value: "escluso", label: "Escluso (cliente)", multiplier: 0.75 }
         ]
       }
     ]
   },
 
-  "cartongessista": {
-    id: "cartongessista",
+  {
+    id: "cartongesso",
     name: "Cartongessista",
+    description: "Pareti e controsoffitti",
     icon: "icon_cartongesso.png",
     unit: "mq",
-    basePrice: 40,
-    color: "#10B981",
-    description: "Pareti e controsoffitti in cartongesso",
-    costBreakdown: { manodopera: 0.60, materiali: 0.40 },
+    basePrice: 38.00,
+    category: "finiture",
+    color: "rgba(200, 200, 150, 0.7)",
     questions: [
       {
-        id: "tipo_struttura",
-        label: "Tipo di struttura",
+        id: "wall_type",
+        label: "Tipo di parete",
         type: "select",
         options: [
-          { value: "parete_singola", label: "Parete singola", multiplier: 1.0 },
-          { value: "parete_doppia", label: "Parete doppia (fonoassorbente)", multiplier: 1.35 },
-          { value: "controsoffitto", label: "Controsoffitto", multiplier: 1.25 },
-          { value: "rivestimento", label: "Rivestimento (su muro)", multiplier: 0.90 }
+          { value: "singola", label: "Singola lastra", multiplier: 0.85 },
+          { value: "doppia", label: "Doppia lastra", multiplier: 1.0 },
+          { value: "isolamento", label: "Con isolamento", multiplier: 1.35 },
+          { value: "acustica", label: "Acustica/Speciale", multiplier: 1.50 }
         ]
       },
       {
-        id: "isolamento",
-        label: "Isolamento termico/acustico",
+        id: "finish_level",
+        label: "Livello di finitura",
         type: "select",
         options: [
-          { value: "no", label: "No", multiplier: 1.0 },
-          { value: "lana_roccia", label: "Lana di roccia", multiplier: 1.25 },
-          { value: "poliuretano", label: "Poliuretano espanso", multiplier: 1.35 },
-          { value: "doppio_isolamento", label: "Doppio isolamento", multiplier: 1.70 }
-        ]
-      },
-      {
-        id: "finiture",
-        label: "Finiture",
-        type: "select",
-        options: [
-          { value: "semplice", label: "Semplice (giunti)", multiplier: 1.0 },
-          { value: "rasata", label: "Rasata (pronta pittura)", multiplier: 1.20 },
-          { value: "faretti", label: "Con faretti integrati", multiplier: 1.40 },
-          { value: "complessa", label: "Complessa (curve, nicchie)", multiplier: 1.60 }
-        ]
-      },
-      {
-        id: "spessore",
-        label: "Spessore parete",
-        type: "select",
-        options: [
-          { value: "sottile", label: "Sottile (5cm)", multiplier: 0.90 },
-          { value: "standard", label: "Standard (7-10cm)", multiplier: 1.0 },
-          { value: "spessa", label: "Spessa (12-15cm)", multiplier: 1.20 }
+          { value: "base", label: "Base (tappabuchi)", multiplier: 1.0 },
+          { value: "standard", label: "Standard (stuccatura)", multiplier: 1.15 },
+          { value: "premium", label: "Premium (rasatura completa)", multiplier: 1.40 }
         ]
       }
     ]
   },
 
-  "serramentista": {
-    id: "serramentista",
+  {
+    id: "serramenti",
     name: "Serramentista",
-    icon: "icon_serramenti.png",
-    unit: "unità",
-    basePrice: 600,
-    color: "#8B4513",
     description: "Finestre, porte e infissi",
-    costBreakdown: { manodopera: 0.25, materiali: 0.75 },
+    icon: "icon_serramenti.png",
+    unit: "mq",
+    basePrice: 450.00,
+    category: "infissi",
+    color: "rgba(100, 100, 100, 0.7)",
     questions: [
       {
-        id: "tipo_serramento",
-        label: "Tipo di serramento",
-        type: "select",
-        options: [
-          { value: "finestra", label: "Finestra", multiplier: 1.0 },
-          { value: "porta_finestra", label: "Porta-finestra", multiplier: 1.25 },
-          { value: "porta_ingresso", label: "Porta d'ingresso", multiplier: 1.50 },
-          { value: "porta_blindata", label: "Porta blindata", multiplier: 2.00 }
-        ]
-      },
-      {
-        id: "materiale_infissi",
-        label: "Materiale infissi",
+        id: "material",
+        label: "Materiale infisso",
         type: "select",
         options: [
           { value: "pvc", label: "PVC", multiplier: 1.0 },
-          { value: "alluminio", label: "Alluminio", multiplier: 1.30 },
+          { value: "alluminio", label: "Alluminio", multiplier: 1.20 },
           { value: "legno", label: "Legno", multiplier: 1.50 },
-          { value: "legno_alluminio", label: "Legno-Alluminio", multiplier: 1.80 }
+          { value: "alluminio_legno", label: "Alluminio-Legno", multiplier: 1.80 }
         ]
       },
       {
-        id: "tipo_vetro",
+        id: "glass_type",
         label: "Tipo di vetro",
         type: "select",
         options: [
-          { value: "doppio", label: "Doppio standard", multiplier: 1.0 },
-          { value: "triplo", label: "Triplo (isolamento)", multiplier: 1.25 },
-          { value: "basso_emissivo", label: "Basso emissivo", multiplier: 1.40 },
-          { value: "blindato", label: "Blindato/Antieffrazione", multiplier: 1.80 }
+          { value: "doppio", label: "Doppio vetro", multiplier: 1.0 },
+          { value: "triplo", label: "Triplo vetro", multiplier: 1.35 },
+          { value: "isolamento", label: "Isolamento termico", multiplier: 1.25 }
         ]
       },
       {
-        id: "installazione",
+        id: "removal",
+        label: "Rimozione vecchi infissi",
+        type: "select",
+        options: [
+          { value: "incluso", label: "Incluso", multiplier: 1.0 },
+          { value: "escluso", label: "Escluso", multiplier: 0.80 }
+        ]
+      }
+    ]
+  },
+
+  {
+    id: "climatizzazione",
+    name: "Climatizzazione",
+    description: "Impianti HVAC e condizionamento",
+    icon: "icon_climatizzazione.png",
+    unit: "unità",
+    basePrice: 450.00,
+    category: "impianti",
+    color: "rgba(100, 200, 255, 0.7)",
+    questions: [
+      {
+        id: "system_type",
+        label: "Tipo di sistema",
+        type: "select",
+        options: [
+          { value: "split", label: "Split monosplit", multiplier: 1.0 },
+          { value: "multisplit", label: "Multisplit (2+ unità)", multiplier: 1.35 },
+          { value: "canalizzato", label: "Canalizzato", multiplier: 1.70 },
+          { value: "pompa_calore", label: "Pompa di calore", multiplier: 1.50 }
+        ]
+      },
+      {
+        id: "installation",
         label: "Tipo di installazione",
         type: "select",
         options: [
-          { value: "sostituzione", label: "Sostituzione", multiplier: 1.0 },
-          { value: "nuova_apertura", label: "Nuova apertura", multiplier: 1.60 },
-          { value: "restauro", label: "Restauro/Manutenzione", multiplier: 0.80 }
+          { value: "interno", label: "Solo interno", multiplier: 1.0 },
+          { value: "completo", label: "Interno + Esterno", multiplier: 1.25 },
+          { value: "canalizzato_full", label: "Canalizzato completo", multiplier: 1.60 }
+        ]
+      },
+      {
+        id: "old_removal",
+        label: "Rimozione vecchio impianto",
+        type: "select",
+        options: [
+          { value: "incluso", label: "Incluso", multiplier: 1.0 },
+          { value: "escluso", label: "Escluso", multiplier: 0.75 }
         ]
       }
     ]
   },
 
-  "climatizzazione": {
-    id: "climatizzazione",
-    name: "Climatizzazione",
-    icon: "icon_climatizzazione.png",
-    unit: "unità",
-    basePrice: 450,
-    color: "#3B82F6",
-    description: "Impianti di riscaldamento e raffreddamento",
-    costBreakdown: { manodopera: 0.35, materiali: 0.65 },
-    questions: [
-      {
-        id: "tipo_impianto",
-        label: "Tipo di impianto",
-        type: "select",
-        options: [
-          { value: "monosplit", label: "Monosplit (1 unità interna)", multiplier: 1.0 },
-          { value: "dualsplit", label: "Dual split (2 unità)", multiplier: 1.80 },
-          { value: "multisplit", label: "Multi split (3+ unità)", multiplier: 2.50 },
-          { value: "canalizzato", label: "Canalizzato (distribuzione aria)", multiplier: 3.00 }
-        ]
-      },
-      {
-        id: "potenza_termica",
-        label: "Potenza termica",
-        type: "select",
-        options: [
-          { value: "piccola", label: "Piccola (3-5 kW)", multiplier: 1.0 },
-          { value: "media", label: "Media (5-10 kW)", multiplier: 1.35 },
-          { value: "grande", label: "Grande (10-15 kW)", multiplier: 1.70 },
-          { value: "molto_grande", label: "Molto grande (15+ kW)", multiplier: 2.20 }
-        ]
-      },
-      {
-        id: "smart_control",
-        label: "Controllo intelligente",
-        type: "select",
-        options: [
-          { value: "no", label: "No, telecomando standard", multiplier: 1.0 },
-          { value: "wifi", label: "WiFi (App mobile)", multiplier: 1.15 },
-          { value: "smart_home", label: "Smart Home integrato", multiplier: 1.35 }
-        ]
-      },
-      {
-        id: "installazione_complessa",
-        label: "Complessità installazione",
-        type: "select",
-        options: [
-          { value: "semplice", label: "Semplice (parete esterna)", multiplier: 1.0 },
-          { value: "media", label: "Media (canalizzazione)", multiplier: 1.30 },
-          { value: "complessa", label: "Complessa (multi-stanza)", multiplier: 1.70 }
-        ]
-      }
-    ]
-  },
-
-  "giardiniere": {
+  {
     id: "giardiniere",
     name: "Giardiniere",
+    description: "Realizzazione e manutenzione giardini",
     icon: "icon_giardiniere.png",
     unit: "mq",
-    basePrice: 15,
-    color: "#10B981",
-    description: "Realizzazione e manutenzione giardini",
-    costBreakdown: { manodopera: 0.70, materiali: 0.30 },
+    basePrice: 15.00,
+    category: "esterni",
+    color: "rgba(100, 180, 100, 0.7)",
     questions: [
       {
-        id: "tipo_prato",
-        label: "Tipo di prato",
+        id: "garden_type",
+        label: "Tipo di giardino",
         type: "select",
         options: [
-          { value: "semina", label: "Semina", multiplier: 1.0 },
-          { value: "prato_pronto", label: "Prato pronto (rotoli)", multiplier: 1.50 },
-          { value: "prato_sintetico", label: "Prato sintetico", multiplier: 2.00 }
+          { value: "prato", label: "Prato semplice", multiplier: 1.0 },
+          { value: "misto", label: "Prato + Aiuole", multiplier: 1.35 },
+          { value: "completo", label: "Completo (alberi, arbusti)", multiplier: 1.75 }
         ]
       },
       {
-        id: "preparazione_terreno",
+        id: "irrigation",
+        label: "Impianto irrigazione",
+        type: "select",
+        options: [
+          { value: "no", label: "No", multiplier: 1.0 },
+          { value: "goccia", label: "A goccia", multiplier: 1.25 },
+          { value: "automatico", label: "Automatico", multiplier: 1.50 }
+        ]
+      },
+      {
+        id: "soil_prep",
         label: "Preparazione terreno",
         type: "select",
         options: [
-          { value: "minima", label: "Minima (già preparato)", multiplier: 1.0 },
-          { value: "media", label: "Media (livellamento)", multiplier: 1.25 },
-          { value: "completa", label: "Completa (scavo, drenaggio)", multiplier: 1.70 }
-        ]
-      },
-      {
-        id: "irrigazione",
-        label: "Sistema di irrigazione",
-        type: "select",
-        options: [
-          { value: "no", label: "No", multiplier: 1.0 },
-          { value: "goccia", label: "A goccia", multiplier: 1.40 },
-          { value: "automatica", label: "Automatica con timer", multiplier: 1.80 }
-        ]
-      },
-      {
-        id: "elementi_aggiuntivi",
-        label: "Elementi aggiuntivi",
-        type: "select",
-        options: [
-          { value: "no", label: "No, solo prato", multiplier: 1.0 },
-          { value: "piante", label: "Con piante/arbusti", multiplier: 1.40 },
-          { value: "completo", label: "Completo (piante, percorsi, illuminazione)", multiplier: 2.20 }
+          { value: "buono", label: "Buono", multiplier: 1.0 },
+          { value: "medio", label: "Medio (livellamento)", multiplier: 1.15 },
+          { value: "cattivo", label: "Cattivo (bonifica)", multiplier: 1.50 }
         ]
       }
     ]
   },
 
-  "pulizie": {
+  {
     id: "pulizie",
     name: "Pulizie Post-Cantiere",
+    description: "Pulizia profonda post-ristrutturazione",
     icon: "icon_pulizie.png",
     unit: "mq",
-    basePrice: 8,
-    color: "#F59E0B",
-    description: "Pulizie professionali post-ristrutturazione",
-    costBreakdown: { manodopera: 0.80, materiali: 0.20 },
+    basePrice: 5.00,
+    category: "servizi",
+    color: "rgba(200, 150, 100, 0.7)",
     questions: [
       {
-        id: "livello_sporco",
+        id: "dirt_level",
         label: "Livello di sporcizia",
         type: "select",
         options: [
-          { value: "basso", label: "Basso (polvere leggera)", multiplier: 1.0 },
-          { value: "medio", label: "Medio (polvere e detriti)", multiplier: 1.25 },
-          { value: "alto", label: "Alto (molto sporco)", multiplier: 1.60 },
-          { value: "estremo", label: "Estremo (cantiere pesante)", multiplier: 2.00 }
+          { value: "leggera", label: "Leggera (polvere)", multiplier: 1.0 },
+          { value: "media", label: "Media (polvere + residui)", multiplier: 1.35 },
+          { value: "pesante", label: "Pesante (cantiere completo)", multiplier: 1.75 }
         ]
       },
       {
-        id: "tipo_pulizia",
-        label: "Tipo di pulizia",
+        id: "areas",
+        label: "Aree da pulire",
         type: "select",
         options: [
-          { value: "base", label: "Base (pavimenti, polvere)", multiplier: 1.0 },
-          { value: "completa", label: "Completa (tutto + vetri)", multiplier: 1.35 },
-          { value: "profonda", label: "Profonda (sgrassatura, disinfez.)", multiplier: 1.70 }
-        ]
-      },
-      {
-        id: "vetrate",
-        label: "Pulizia vetrate",
-        type: "select",
-        options: [
-          { value: "no", label: "No", multiplier: 1.0 },
-          { value: "si", label: "Si (ampie)", multiplier: 1.30 }
-        ]
-      },
-      {
-        id: "smaltimento_rifiuti",
-        label: "Smaltimento rifiuti",
-        type: "select",
-        options: [
-          { value: "no", label: "No (già fatto)", multiplier: 1.0 },
-          { value: "si", label: "Si (incluso)", multiplier: 1.40 }
+          { value: "interni", label: "Solo interni", multiplier: 1.0 },
+          { value: "completo", label: "Interni + Esterni", multiplier: 1.40 }
         ]
       }
     ]
   }
-};
+];
 
-/**
- * Ottiene la lista di tutti i mestieri disponibili
- */
+// ===== FUNZIONI EXPORT =====
 export function getAllTrades() {
-  return Object.values(TRADES);
+  return TRADES;
 }
 
-/**
- * Ottiene un mestiere specifico per ID
- */
 export function getTradeById(id) {
-  return TRADES[id];
+  return TRADES.find(t => t.id === id);
 }
 
 /**
- * Calcola il moltiplicatore totale basato sulle risposte
+ * Calcola il prezzo finale considerando tutti i fattori
+ */
+export function calculateFinalPrice(tradeId, quantity, region, quality, answers) {
+  const trade = getTradeById(tradeId);
+  if (!trade) return 0;
+
+  const basePrice = trade.basePrice * quantity;
+  const regionalCoeff = REGIONAL_COEFFICIENTS[region] || 1.0;
+  const qualityCoeff = QUALITY_MULTIPLIERS[quality] || 1.0;
+  const answerMultiplier = calculateMultiplier(tradeId, answers);
+
+  return Math.round(basePrice * regionalCoeff * qualityCoeff * answerMultiplier * 100) / 100;
+}
+
+/**
+ * Calcola il moltiplicatore basato sulle risposte alle domande
  */
 export function calculateMultiplier(tradeId, answers) {
-  const trade = TRADES[tradeId];
-  if (!trade) return 1;
+  const trade = getTradeById(tradeId);
+  if (!trade) return 1.0;
 
-  let multiplier = 1;
-  
+  let multiplier = 1.0;
+
   trade.questions.forEach(question => {
     const answer = answers[question.id];
     if (answer) {
@@ -620,36 +511,59 @@ export function calculateMultiplier(tradeId, answers) {
 }
 
 /**
- * Calcola il prezzo finale con tutti i fattori
+ * Calcola il breakdown manodopera vs materiali
  */
-export function calculateFinalPrice(tradeId, quantity, region, quality, answers) {
-  const trade = TRADES[tradeId];
-  if (!trade) return 0;
+export function calculateCostBreakdown(tradeId, totalPrice) {
+  // Percentuali medie per categoria
+  const breakdownRatios = {
+    "finiture": { manodopera: 0.40, materiali: 0.60 },
+    "impianti": { manodopera: 0.50, materiali: 0.50 },
+    "strutture": { manodopera: 0.35, materiali: 0.65 },
+    "infissi": { manodopera: 0.30, materiali: 0.70 },
+    "esterni": { manodopera: 0.45, materiali: 0.55 },
+    "servizi": { manodopera: 0.85, materiali: 0.15 }
+  };
 
-  const regionalCoeff = REGIONAL_COEFFICIENTS[region] || 1.0;
-  const qualityCoeff = QUALITY_MULTIPLIERS[quality] || 1.0;
-  const answerMultiplier = calculateMultiplier(tradeId, answers);
+  const trade = getTradeById(tradeId);
+  const ratio = breakdownRatios[trade.category] || { manodopera: 0.50, materiali: 0.50 };
 
-  const basePrice = trade.basePrice;
-  const finalPrice = basePrice * quantity * regionalCoeff * qualityCoeff * answerMultiplier;
-
-  return Math.round(finalPrice * 100) / 100;
+  return {
+    manodopera: Math.round(totalPrice * ratio.manodopera * 100) / 100,
+    materiali: Math.round(totalPrice * ratio.materiali * 100) / 100
+  };
 }
 
 /**
- * Calcola il breakdown dei costi (manodopera vs materiali)
+ * Valida i dati di input
  */
-export function calculateCostBreakdown(tradeId, finalPrice) {
-  const trade = TRADES[tradeId];
-  if (!trade || !trade.costBreakdown) {
-    return {
-      manodopera: finalPrice * 0.6,
-      materiali: finalPrice * 0.4
-    };
+export function validateInput(quantity, region, quality) {
+  const errors = [];
+
+  if (!quantity || quantity <= 0) {
+    errors.push("Quantità deve essere maggiore di 0");
+  }
+
+  if (!region || !REGIONAL_COEFFICIENTS[region]) {
+    errors.push("Regione non valida");
+  }
+
+  if (!quality || !QUALITY_MULTIPLIERS[quality]) {
+    errors.push("Qualità non valida");
   }
 
   return {
-    manodopera: Math.round(finalPrice * trade.costBreakdown.manodopera * 100) / 100,
-    materiali: Math.round(finalPrice * trade.costBreakdown.materiali * 100) / 100
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+// ===== EXPORT DATI PER ANALYTICS =====
+export function getTradeStats() {
+  return {
+    totalTrades: TRADES.length,
+    categories: [...new Set(TRADES.map(t => t.category))],
+    averageBasePrice: Math.round(
+      TRADES.reduce((sum, t) => sum + t.basePrice, 0) / TRADES.length * 100
+    ) / 100
   };
 }

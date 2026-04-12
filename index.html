@@ -46,20 +46,86 @@
       </div>
     </header>
 
-    <!-- STEP 1: LOGIN -->
+    <!-- STEP 1: LOGIN/REGISTRATION -->
     <section id="step1" class="step-section">
-      <div class="step-container">
-        <div class="step-header">
-          <h2>Accedi al tuo Account</h2>
-          <p>Accedi con Google per salvare i tuoi preventivi e accedere in futuro</p>
+      <div class="auth-container">
+        <div class="auth-card">
+          <h2>Accedi o Registrati</h2>
+          <p class="auth-subtitle">Accedi con Email e Password per salvare i tuoi preventivi</p>
+          
+          <!-- TAB TOGGLE -->
+          <div class="auth-tabs">
+            <button class="auth-tab active" data-tab="login">
+              <i class="fas fa-sign-in-alt"></i> Accedi
+            </button>
+            <button class="auth-tab" data-tab="register">
+              <i class="fas fa-user-plus"></i> Registrati
+            </button>
+          </div>
+
+          <!-- LOGIN FORM -->
+          <form id="loginForm" class="auth-form active">
+            <div class="form-group">
+              <label for="loginEmail">Email</label>
+              <input type="email" id="loginEmail" placeholder="tuo@email.com" required>
+              <span class="form-error" id="loginEmailError"></span>
+            </div>
+            
+            <div class="form-group">
+              <label for="loginPassword">Password</label>
+              <input type="password" id="loginPassword" placeholder="••••••••" required>
+              <span class="form-error" id="loginPasswordError"></span>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fas fa-sign-in-alt"></i> Accedi
+            </button>
+            
+            <div class="form-error" id="loginError"></div>
+          </form>
+
+          <!-- REGISTRATION FORM -->
+          <form id="registerForm" class="auth-form">
+            <div class="form-group">
+              <label for="registerName">Nome Completo</label>
+              <input type="text" id="registerName" placeholder="Mario Rossi" required>
+              <span class="form-error" id="registerNameError"></span>
+            </div>
+            
+            <div class="form-group">
+              <label for="registerEmail">Email</label>
+              <input type="email" id="registerEmail" placeholder="tuo@email.com" required>
+              <span class="form-error" id="registerEmailError"></span>
+            </div>
+            
+            <div class="form-group">
+              <label for="registerPassword">Password</label>
+              <input type="password" id="registerPassword" placeholder="••••••••" required>
+              <span class="form-error" id="registerPasswordError"></span>
+            </div>
+            
+            <div class="form-group">
+              <label for="registerPasswordConfirm">Conferma Password</label>
+              <input type="password" id="registerPasswordConfirm" placeholder="••••••••" required>
+              <span class="form-error" id="registerPasswordConfirmError"></span>
+            </div>
+            
+            <button type="submit" class="btn btn-primary btn-block">
+              <i class="fas fa-user-plus"></i> Registrati
+            </button>
+            
+            <div class="form-error" id="registerError"></div>
+          </form>
+
+          <!-- SKIP LOGIN -->
+          <div class="auth-divider">
+            <span>oppure</span>
+          </div>
+          
+          <button id="skipLoginBtn" class="btn btn-secondary btn-block">
+            <i class="fas fa-arrow-right"></i> Continua Senza Accesso
+          </button>
         </div>
-        <button class="btn btn-google" id="googleLoginBtn">
-          <i class="fab fa-google"></i> Accedi con Google
-        </button>
-        <div class="divider">oppure</div>
-        <button class="btn btn-secondary" id="skipLoginBtn">
-          Continua senza login
-        </button>
       </div>
     </section>
 
