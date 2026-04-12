@@ -2,50 +2,29 @@
 <html lang="it">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Preventivi Smart AI</title>
+<title>Preventivi Smart Pro</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<h1>Preventivi Smart AI</h1>
+<div class="app">
 
-<!-- LOGIN -->
-<div class="box">
-  <input id="email" placeholder="Email">
-  <input id="password" type="password" placeholder="Password">
-  <button onclick="login()">Login</button>
-</div>
+<h2>Preventivi Smart Pro</h2>
 
-<!-- CALCOLO -->
-<div class="box">
-  <select id="tipo">
-    <option value="imbianchitura">Imbiancatura</option>
-    <option value="piastrelle">Piastrelle</option>
-    <option value="elettrico">Impianto elettrico</option>
-  </select>
+<button onclick="login()">Login Google</button>
+<button onclick="logout()">Logout</button>
 
-  <input id="quantita" type="number" placeholder="Quantità">
+<div id="user"></div>
 
-  <select id="zona">
-    <option value="Nord">Nord</option>
-    <option value="Centro">Centro</option>
-    <option value="Sud">Sud</option>
-  </select>
+<div id="wizard"></div>
 
-  <select id="qualita">
-    <option value="bassa">Bassa</option>
-    <option value="media">Media</option>
-    <option value="alta">Alta</option>
-  </select>
+<button id="next">Continua</button>
 
-  <button id="calcola">Calcola</button>
+<h2 id="result"></h2>
 
-  <div id="risultato"></div>
 </div>
 
 <script type="module" src="app.js"></script>
-
 </body>
 </html>
