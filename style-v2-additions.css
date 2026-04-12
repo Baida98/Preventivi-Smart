@@ -1552,3 +1552,468 @@
     text-align: center;
   }
 }
+
+
+/* ===== MODE SELECTOR v11.0 ===== */
+
+.mode-selector-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  margin: 3rem 0;
+  animation: fadeIn 0.6s ease-out;
+}
+
+.mode-card {
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+}
+
+.mode-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, var(--mode-color), var(--mode-color-light));
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.mode-card:hover {
+  border-color: var(--mode-color);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  transform: translateY(-4px);
+}
+
+.mode-card:hover::before {
+  transform: scaleX(1);
+}
+
+.mode-card.quick {
+  --mode-color: #0ea5e9;
+  --mode-color-light: #bfdbfe;
+}
+
+.mode-card.professional {
+  --mode-color: #8b5cf6;
+  --mode-color-light: #ddd6fe;
+  border: 2px solid #ddd6fe;
+  background: linear-gradient(135deg, #faf5ff, #f3f4f6);
+}
+
+.mode-badge {
+  display: inline-block;
+  background: var(--mode-color);
+  color: white;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+}
+
+.mode-badge.pro {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.mode-icon {
+  font-size: 2.5rem;
+  color: var(--mode-color);
+  margin-bottom: 1rem;
+}
+
+.mode-title {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.mode-description {
+  color: #6b7280;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.mode-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  margin-bottom: 1.5rem;
+}
+
+.mode-feature {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9rem;
+  color: #374151;
+}
+
+.mode-feature i {
+  color: var(--mode-color);
+  font-weight: 700;
+}
+
+.mode-time {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+}
+
+.mode-time i {
+  color: var(--mode-color);
+}
+
+.mode-button {
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  background: var(--mode-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.mode-button:hover {
+  background: var(--mode-color-dark, var(--mode-color));
+  transform: scale(1.02);
+}
+
+.mode-button.pro {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+}
+
+.mode-button.pro:hover {
+  background: linear-gradient(135deg, #7c3aed, #6d28d9);
+}
+
+/* ===== PROFESSIONAL ANALYSIS REPORT v11.0 ===== */
+
+.professional-report {
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 16px;
+  padding: 2.5rem;
+  margin: 2rem 0;
+}
+
+.report-header {
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 2rem;
+  margin-bottom: 2rem;
+}
+
+.report-title {
+  font-size: 1.75rem;
+  font-weight: 900;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.report-subtitle {
+  color: #64748b;
+  font-size: 0.95rem;
+}
+
+.report-meta {
+  display: flex;
+  gap: 2rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.report-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.report-meta-label {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+}
+
+.report-meta-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* ===== CONGRUITY ANALYSIS SECTION ===== */
+
+.congruity-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-left: 4px solid #8b5cf6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.congruity-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+}
+
+.congruity-title i {
+  color: #8b5cf6;
+}
+
+.congruity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.congruity-item {
+  background: #f9fafb;
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+  border: 1px solid #e5e7eb;
+}
+
+.congruity-label {
+  font-size: 0.8rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  letter-spacing: 0.05em;
+}
+
+.congruity-value {
+  font-size: 2rem;
+  font-weight: 900;
+  color: #1f2937;
+  line-height: 1;
+  margin-bottom: 0.25rem;
+}
+
+.congruity-unit {
+  font-size: 0.85rem;
+  color: #9ca3af;
+}
+
+.congruity-recommendation {
+  background: linear-gradient(135deg, #f0f9ff, #e0e7ff);
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  padding: 1.25rem;
+  margin-top: 1rem;
+}
+
+.congruity-recommendation-title {
+  font-weight: 700;
+  color: #1e40af;
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.congruity-recommendation-text {
+  color: #1e40af;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+/* ===== RISK ASSESSMENT SECTION ===== */
+
+.risk-assessment-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-left: 4px solid #ef4444;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.risk-assessment-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+}
+
+.risk-assessment-title i {
+  color: #ef4444;
+}
+
+.risk-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.risk-item {
+  border-left: 4px solid #ef4444;
+  border-radius: 8px;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.risk-item.warning {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.risk-item.recommendation {
+  border-left-color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.risk-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.risk-item-icon {
+  font-size: 1.25rem;
+}
+
+.risk-item-title {
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.risk-item-description {
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.risk-item-action {
+  display: inline-block;
+  background: #1f2937;
+  color: white;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.risk-item-action:hover {
+  background: #111827;
+  transform: scale(1.05);
+}
+
+/* ===== PROFESSIONAL ADVICE SECTION ===== */
+
+.professional-advice-section {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  border-left: 4px solid #3b82f6;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.professional-advice-title {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1f2937;
+  margin-bottom: 1.5rem;
+}
+
+.professional-advice-title i {
+  color: #3b82f6;
+}
+
+.advice-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.advice-item {
+  border-left: 4px solid #3b82f6;
+  border-radius: 8px;
+  padding: 1.25rem;
+  background: #f0f9ff;
+}
+
+.advice-item-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.advice-item-icon {
+  font-size: 1.5rem;
+  color: #3b82f6;
+}
+
+.advice-item-title {
+  font-weight: 700;
+  color: #1e40af;
+  font-size: 1rem;
+}
+
+.advice-item-text {
+  color: #1e40af;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin-left: 2.25rem;
+}
+
+/* ===== RESPONSIVE ===== */
+
+@media (max-width: 768px) {
+  .mode-selector-container {
+    grid-template-columns: 1fr;
+  }
+
+  .professional-report {
+    padding: 1.5rem;
+  }
+
+  .report-meta {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .congruity-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
