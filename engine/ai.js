@@ -1,19 +1,45 @@
-export function predictPrice(history, tipo) {
+import { db } from "../firebase.js";
+import { doc, getDoc, setDoc, updateDoc } 
+from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-  const filtered = history.filter(x => x.tipo === tipo);
+export async function aiPredict(tipo, citta) {
 
-  if (filtered.length < 5) {
-    return { confidence: 0 };
+  const id = `${tipo}_${citta}`;
+  const ref = doc(db, "ai_stats", id);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    return { price: null, confidence: 0 };
   }
 
-  const avg = filtered.reduce((s, x) => s + x.mid, 0) / filtered.length;
-
-  const variance = filtered.reduce((s, x) =>
-    s + Math.pow(x.mid - avg, 2), 0
-  ) / filtered.length;
+  const d = snap.data();
 
   return {
-    predicted: avg,
-    confidence: Math.max(0, 100 - variance / 1000)
+    price: d.avg,
+    confidence: Math.min(100, d.count * 10)
   };
+}
+
+export async function aiTrain(tipo, citta, prezzo) {
+
+  const id = `${tipo}_${citta}`;
+  const ref = doc(db, "ai_stats", id);
+  const snap = await getDoc(ref);
+
+  if (!snap.exists()) {
+    await setDoc(ref, {
+      avg: prezzo,
+      total: prezzo,
+      count: 1
+    });
+    return;
+  }
+
+  const d = snap.data();
+
+  await updateDoc(ref, {
+    count: d.count + 1,
+    total: d.total + prezzo,
+    avg: (d.total + prezzo) / (d.count + 1)
+  });
 }
