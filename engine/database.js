@@ -319,8 +319,8 @@ export const TRADES = [
         options: [
           { value: "pvc", label: "PVC", multiplier: 1.0 },
           { value: "alluminio", label: "Alluminio", multiplier: 1.20 },
-          { value: "legno", label: "Legno", multiplier: 1.50 },
-          { value: "alluminio_legno", label: "Alluminio-Legno", multiplier: 1.80 }
+          { value: "legno", label: "Legno", multiplier: 1.45 },
+          { value: "legno_alluminio", label: "Legno-Alluminio", multiplier: 1.65 }
         ]
       },
       {
@@ -328,147 +328,27 @@ export const TRADES = [
         label: "Tipo di vetro",
         type: "select",
         options: [
-          { value: "doppio", label: "Doppio vetro", multiplier: 1.0 },
-          { value: "triplo", label: "Triplo vetro", multiplier: 1.35 },
-          { value: "isolamento", label: "Isolamento termico", multiplier: 1.25 }
-        ]
-      },
-      {
-        id: "removal",
-        label: "Rimozione vecchi infissi",
-        type: "select",
-        options: [
-          { value: "incluso", label: "Incluso", multiplier: 1.0 },
-          { value: "escluso", label: "Escluso", multiplier: 0.80 }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: "climatizzazione",
-    name: "Climatizzazione",
-    description: "Impianti HVAC e condizionamento",
-    icon: "icon_climatizzazione.png",
-    unit: "unità",
-    basePrice: 450.00,
-    category: "impianti",
-    color: "rgba(100, 200, 255, 0.7)",
-    questions: [
-      {
-        id: "system_type",
-        label: "Tipo di sistema",
-        type: "select",
-        options: [
-          { value: "split", label: "Split monosplit", multiplier: 1.0 },
-          { value: "multisplit", label: "Multisplit (2+ unità)", multiplier: 1.35 },
-          { value: "canalizzato", label: "Canalizzato", multiplier: 1.70 },
-          { value: "pompa_calore", label: "Pompa di calore", multiplier: 1.50 }
-        ]
-      },
-      {
-        id: "installation",
-        label: "Tipo di installazione",
-        type: "select",
-        options: [
-          { value: "interno", label: "Solo interno", multiplier: 1.0 },
-          { value: "completo", label: "Interno + Esterno", multiplier: 1.25 },
-          { value: "canalizzato_full", label: "Canalizzato completo", multiplier: 1.60 }
-        ]
-      },
-      {
-        id: "old_removal",
-        label: "Rimozione vecchio impianto",
-        type: "select",
-        options: [
-          { value: "incluso", label: "Incluso", multiplier: 1.0 },
-          { value: "escluso", label: "Escluso", multiplier: 0.75 }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: "giardiniere",
-    name: "Giardiniere",
-    description: "Realizzazione e manutenzione giardini",
-    icon: "icon_giardiniere.png",
-    unit: "mq",
-    basePrice: 15.00,
-    category: "esterni",
-    color: "rgba(100, 180, 100, 0.7)",
-    questions: [
-      {
-        id: "garden_type",
-        label: "Tipo di giardino",
-        type: "select",
-        options: [
-          { value: "prato", label: "Prato semplice", multiplier: 1.0 },
-          { value: "misto", label: "Prato + Aiuole", multiplier: 1.35 },
-          { value: "completo", label: "Completo (alberi, arbusti)", multiplier: 1.75 }
-        ]
-      },
-      {
-        id: "irrigation",
-        label: "Impianto irrigazione",
-        type: "select",
-        options: [
-          { value: "no", label: "No", multiplier: 1.0 },
-          { value: "goccia", label: "A goccia", multiplier: 1.25 },
-          { value: "automatico", label: "Automatico", multiplier: 1.50 }
-        ]
-      },
-      {
-        id: "soil_prep",
-        label: "Preparazione terreno",
-        type: "select",
-        options: [
-          { value: "buono", label: "Buono", multiplier: 1.0 },
-          { value: "medio", label: "Medio (livellamento)", multiplier: 1.15 },
-          { value: "cattivo", label: "Cattivo (bonifica)", multiplier: 1.50 }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: "pulizie",
-    name: "Pulizie Post-Cantiere",
-    description: "Pulizia profonda post-ristrutturazione",
-    icon: "icon_pulizie.png",
-    unit: "mq",
-    basePrice: 5.00,
-    category: "servizi",
-    color: "rgba(200, 150, 100, 0.7)",
-    questions: [
-      {
-        id: "dirt_level",
-        label: "Livello di sporcizia",
-        type: "select",
-        options: [
-          { value: "leggera", label: "Leggera (polvere)", multiplier: 1.0 },
-          { value: "media", label: "Media (polvere + residui)", multiplier: 1.35 },
-          { value: "pesante", label: "Pesante (cantiere completo)", multiplier: 1.75 }
-        ]
-      },
-      {
-        id: "areas",
-        label: "Aree da pulire",
-        type: "select",
-        options: [
-          { value: "interni", label: "Solo interni", multiplier: 1.0 },
-          { value: "completo", label: "Interni + Esterni", multiplier: 1.40 }
+          { value: "doppio", label: "Doppio vetro standard", multiplier: 1.0 },
+          { value: "triplo", label: "Triplo vetro", multiplier: 1.25 },
+          { value: "selettivo", label: "Basso emissivo/Selettivo", multiplier: 1.40 }
         ]
       }
     ]
   }
 ];
 
-// ===== FUNZIONI EXPORT =====
+// ===== FUNZIONI DI SUPPORTO =====
+
+/**
+ * Ottiene tutti i mestieri
+ */
 export function getAllTrades() {
   return TRADES;
 }
 
+/**
+ * Ottiene un mestiere specifico per ID
+ */
 export function getTradeById(id) {
   return TRADES.find(t => t.id === id);
 }
@@ -479,11 +359,11 @@ export function getTradeById(id) {
 export function calculateFinalPrice(tradeId, quantity, region, quality, answers) {
   const trade = getTradeById(tradeId);
   if (!trade) return 0;
-
+  
   const basePrice = trade.basePrice * quantity;
   const regionalCoeff = REGIONAL_COEFFICIENTS[region] || 1.0;
   const qualityCoeff = QUALITY_MULTIPLIERS[quality] || 1.0;
-  const answerMultiplier = calculateMultiplier(tradeId, answers);
+  const answerMultiplier = calculateAnswerMultiplier(tradeId, answers);
 
   return Math.round(basePrice * regionalCoeff * qualityCoeff * answerMultiplier * 100) / 100;
 }
@@ -491,12 +371,11 @@ export function calculateFinalPrice(tradeId, quantity, region, quality, answers)
 /**
  * Calcola il moltiplicatore basato sulle risposte alle domande
  */
-export function calculateMultiplier(tradeId, answers) {
+export function calculateAnswerMultiplier(tradeId, answers) {
   const trade = getTradeById(tradeId);
   if (!trade) return 1.0;
 
   let multiplier = 1.0;
-
   trade.questions.forEach(question => {
     const answer = answers[question.id];
     if (answer) {

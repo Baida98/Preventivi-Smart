@@ -1,19 +1,32 @@
 /**
- * Preventivi-Smart Pro v3.0
+ * Preventivi-Smart Pro v3.0 - Corretto e Ottimizzato
  * Applicazione completa con gestione sessione, mestieri dinamici e calcoli regionali
  */
 
 import { auth, db } from "./firebase.js";
-import { getAllTrades, getTradeById, calculateFinalPrice, REGIONAL_COEFFICIENTS, QUALITY_MULTIPLIERS } from "./engine/database.js";
+import { 
+  getAllTrades, 
+  getTradeById, 
+  calculateFinalPrice, 
+  REGIONAL_COEFFICIENTS, 
+  QUALITY_MULTIPLIERS 
+} from "./engine/database.js";
 import { generatePDF } from "./engine/pdf.js";
 import { quoteHistory } from "./engine/history.js";
-
-import {
-  GoogleAuthProvider,
-  signInWithPopup,
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+import { 
+  loginUser, 
+  registerUser, 
+  logoutUser, 
+  onAuthStateChange 
+} from "./engine/auth.js";
+import { 
+  setupRealtimeValidation, 
+  showEmailError, 
+  showPasswordError, 
+  validateForm,
+  showErrorMessage,
+  showSuccessMessage
+} from "./engine/validation.js";
 
 import {
   collection,
@@ -35,10 +48,31 @@ const logoutBtn = document.getElementById("logoutBtn");
 const historyBtn = document.getElementById("historyBtn");
 const headerTitle = document.getElementById("headerTitle");
 
-// Step 1 - Login
+// Step 1 - Auth
 const step1 = document.getElementById("step1");
-const googleLoginBtn = document.getElementById("googleLoginBtn");
 const skipLoginBtn = document.getElementById("skipLoginBtn");
+const authTabs = document.querySelectorAll(".auth-tab");
+const authForms = document.querySelectorAll(".auth-form");
+const loginForm = document.getElementById("loginForm");
+const registerForm = document.getElementById("registerForm");
+
+// Input Login
+const loginEmail = document.getElementById("loginEmail");
+const loginPassword = document.getElementById("loginPassword");
+const loginEmailError = document.getElementById("loginEmailError");
+const loginPasswordError = document.getElementById("loginPasswordError");
+const loginError = document.getElementById("loginError");
+
+// Input Register
+const registerName = document.getElementById("registerName");
+const registerEmail = document.getElementById("registerEmail");
+const registerPassword = document.getElementById("registerPassword");
+const registerPasswordConfirm = document.getElementById("registerPasswordConfirm");
+const registerNameError = document.getElementById("registerNameError");
+const registerEmailError = document.getElementById("registerEmailError");
+const registerPasswordError = document.getElementById("registerPasswordError");
+const registerPasswordConfirmError = document.getElementById("registerPasswordConfirmError");
+const registerError = document.getElementById("registerError");
 
 // Step 2 - Mestieri
 const step2 = document.getElementById("step2");
@@ -47,9 +81,9 @@ const tradesGrid = document.getElementById("tradesGrid");
 // Step 3 - Dettagli
 const step3 = document.getElementById("step3");
 const step3Title = document.getElementById("step3Title");
-const quantity = document.getElementById("quantity");
-const region = document.getElementById("region");
-const quality = document.getElementById("quality");
+const quantityInput = document.getElementById("quantity");
+const regionSelect = document.getElementById("region");
+const qualitySelect = document.getElementById("quality");
 const unitLabel = document.getElementById("unitLabel");
 const dynamicQuestions = document.getElementById("dynamicQuestions");
 const calculateBtn = document.getElementById("calculateBtn");
@@ -85,7 +119,8 @@ function formatCurrency(value) {
 
 function showStep(stepNumber) {
   document.querySelectorAll(".step-section").forEach(s => s.style.display = "none");
-  document.getElementById(`step${stepNumber}`).style.display = "block";
+  const targetStep = document.getElementById(`step${stepNumber}`);
+  if (targetStep) targetStep.style.display = "block";
   
   backBtn.style.display = stepNumber > 1 ? "block" : "none";
   
@@ -98,13 +133,78 @@ function showStep(stepNumber) {
   window.scrollTo(0, 0);
 }
 
-// ===== STEP 1: LOGIN =====
-googleLoginBtn.addEventListener("click", async () => {
-  try {
-    const provider = new GoogleAuthProvider();
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    alert("Errore login: " + e.message);
+// ===== STEP 1: AUTH (LOGIN / REGISTER) =====
+
+// Gestione Tab
+authTabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    const targetTab = tab.getAttribute("data-tab");
+    
+    authTabs.forEach(t => t.classList.remove("active"));
+    tab.classList.add("active");
+    
+    authForms.forEach(form => {
+      form.classList.remove("active");
+      if (form.id === `${targetTab}Form`) {
+        form.classList.add("active");
+      }
+    });
+  });
+});
+
+// Validazione Real-time
+if (loginEmail && loginEmailError) setupRealtimeValidation(loginEmail, showEmailError, loginEmailError);
+if (loginPassword && loginPasswordError) setupRealtimeValidation(loginPassword, showPasswordError, loginPasswordError);
+if (registerEmail && registerEmailError) setupRealtimeValidation(registerEmail, showEmailError, registerEmailError);
+if (registerPassword && registerPasswordError) setupRealtimeValidation(registerPassword, showPasswordError, registerPasswordError);
+
+// Submit Login
+loginForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = loginEmail.value.trim();
+  const password = loginPassword.value;
+  
+  const validation = validateForm({ email, password });
+  if (!validation.isValid) {
+    loginError.textContent = Object.values(validation.errors)[0];
+    return;
+  }
+  
+  loginError.textContent = "";
+  const result = await loginUser(email, password);
+  
+  if (result.success) {
+    showSuccessMessage("Bentornato!");
+    showStep(2);
+  } else {
+    loginError.textContent = "Errore: " + result.error;
+    showErrorMessage("Login fallito");
+  }
+});
+
+// Submit Registrazione
+registerForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const name = registerName.value.trim();
+  const email = registerEmail.value.trim();
+  const password = registerPassword.value;
+  const passwordConfirm = registerPasswordConfirm.value;
+  
+  const validation = validateForm({ name, email, password, passwordConfirm });
+  if (!validation.isValid) {
+    registerError.textContent = Object.values(validation.errors)[0];
+    return;
+  }
+  
+  registerError.textContent = "";
+  const result = await registerUser(email, password, name);
+  
+  if (result.success) {
+    showSuccessMessage("Account creato!");
+    showStep(2);
+  } else {
+    registerError.textContent = "Errore: " + result.error;
+    showErrorMessage("Registrazione fallita");
   }
 });
 
@@ -123,15 +223,17 @@ function renderTrades() {
       <h3>${trade.name}</h3>
       <p>${trade.description}</p>
     `;
-    card.addEventListener("click", () => selectTrade(trade.id));
+    card.addEventListener("click", (e) => selectTrade(trade.id, e));
     tradesGrid.appendChild(card);
   });
 }
 
-function selectTrade(tradeId) {
+function selectTrade(tradeId, event) {
   currentTrade = getTradeById(tradeId);
   document.querySelectorAll(".trade-card").forEach(card => card.classList.remove("active"));
-  event.target.closest(".trade-card").classList.add("active");
+  
+  const selectedCard = event.currentTarget;
+  selectedCard.classList.add("active");
   
   setTimeout(() => {
     unitLabel.textContent = currentTrade.unit;
@@ -167,43 +269,51 @@ function renderDynamicQuestions() {
 }
 
 calculateBtn.addEventListener("click", () => {
-  const qty = parseFloat(quantity.value);
-  const reg = region.value;
-  const qual = quality.value;
+  const qty = parseFloat(quantityInput.value);
+  const reg = regionSelect.value;
+  const qual = qualitySelect.value;
   
   if (!qty || !reg || !qual) {
-    alert("Compila tutti i campi obbligatori");
+    showErrorMessage("Compila tutti i campi obbligatori");
     return;
   }
   
   // Raccogli risposte dinamiche
   const answers = {};
+  let allQuestionsAnswered = true;
   currentTrade.questions.forEach(question => {
-    answers[question.id] = document.getElementById(question.id).value;
+    const val = document.getElementById(question.id).value;
+    if (!val) allQuestionsAnswered = false;
+    answers[question.id] = val;
   });
+
+  if (!allQuestionsAnswered) {
+    showErrorMessage("Rispondi a tutte le domande specifiche");
+    return;
+  }
   
-  // Calcola prezzo
+  // Calcola prezzo tramite database engine
+  const finalPrice = calculateFinalPrice(currentTrade.id, qty, reg, qual, answers);
+  
+  // Recupera coefficienti per il breakdown visivo
   const basePrice = currentTrade.basePrice * qty;
   const regionalCoeff = REGIONAL_COEFFICIENTS[reg];
   const qualityCoeff = QUALITY_MULTIPLIERS[qual];
   
-  // Calcola moltiplicatore dalle risposte
+  // Calcola moltiplicatore dalle risposte per il breakdown
   let answerMultiplier = 1;
   currentTrade.questions.forEach(question => {
     const answer = answers[question.id];
-    if (answer) {
-      const option = question.options.find(opt => opt.value === answer);
-      if (option && option.multiplier) {
-        answerMultiplier *= option.multiplier;
-      }
+    const option = question.options.find(opt => opt.value === answer);
+    if (option && option.multiplier) {
+      answerMultiplier *= option.multiplier;
     }
   });
   
-  const finalPrice = calculateFinalPrice(currentTrade.id, qty, reg, qual, answers);
   const minPrice = Math.round(finalPrice * 0.85 * 100) / 100;
   const maxPrice = Math.round(finalPrice * 1.2 * 100) / 100;
   
-  // Salva quote
+  // Salva quote nello stato corrente
   currentQuote = {
     trade: currentTrade.id,
     tradeName: currentTrade.name,
@@ -222,7 +332,13 @@ calculateBtn.addEventListener("click", () => {
     timestamp: new Date().toLocaleString('it-IT')
   };
   
+  // Aggiungi alla cronologia locale (genera ID e timestamp ISO internamente)
   quoteHistory.add(currentQuote);
+  
+  // Recupera l'ultimo preventivo con ID generato per l'esportazione corretta
+  const history = quoteHistory.getAll();
+  currentQuote = history[0];
+  
   displayQuote();
   showStep(4);
 });
@@ -247,15 +363,15 @@ function displayQuote() {
 }
 
 newQuoteBtn.addEventListener("click", () => {
-  quantity.value = "";
-  region.value = "";
-  quality.value = "standard";
+  quantityInput.value = "";
+  regionSelect.value = "";
+  qualitySelect.value = "standard";
   showStep(2);
 });
 
 saveQuoteBtn.addEventListener("click", async () => {
   if (!currentUser) {
-    alert("Devi essere loggato per salvare");
+    showErrorMessage("Devi essere loggato per salvare");
     return;
   }
   
@@ -265,9 +381,9 @@ saveQuoteBtn.addEventListener("click", async () => {
       uid: currentUser.uid,
       createdAt: new Date()
     });
-    alert("Preventivo salvato con successo!");
+    showSuccessMessage("Preventivo salvato nel cloud!");
   } catch (e) {
-    alert("Errore salvataggio: " + e.message);
+    showErrorMessage("Errore salvataggio: " + e.message);
   }
 });
 
@@ -297,10 +413,17 @@ function renderHistory() {
   history.forEach(quote => {
     const item = document.createElement("div");
     item.className = "history-item";
+    
+    // Gestione timestamp se ISO o già formattato
+    let displayTime = quote.timestamp;
+    if (displayTime.includes('T')) {
+      displayTime = new Date(displayTime).toLocaleString('it-IT');
+    }
+
     item.innerHTML = `
       <div class="history-item-info">
         <h4>${quote.tradeName}</h4>
-        <p>${quote.timestamp}</p>
+        <p>${displayTime}</p>
       </div>
       <div class="history-item-price">${formatCurrency(quote.midPrice)}</div>
     `;
@@ -322,20 +445,30 @@ backBtn.addEventListener("click", () => {
 startBtn.addEventListener("click", () => {
   heroSection.style.display = "none";
   appContainer.style.display = "flex";
-  showStep(1);
+  showStep(currentUser ? 2 : 1);
 });
 
-logoutBtn.addEventListener("click", () => {
-  signOut(auth);
+logoutBtn.addEventListener("click", async () => {
+  const result = await logoutUser();
+  if (result.success) {
+    showSuccessMessage("Logout effettuato");
+    location.reload(); // Ricarica per resettare lo stato
+  }
 });
 
 // ===== AUTH STATE =====
-onAuthStateChanged(auth, (user) => {
+onAuthStateChange((user) => {
   currentUser = user;
   if (user) {
-    skipLoginBtn.style.display = "none";
-    googleLoginBtn.textContent = "✓ Loggato";
-    googleLoginBtn.disabled = true;
+    if (skipLoginBtn) skipLoginBtn.style.display = "none";
+    if (logoutBtn) logoutBtn.style.display = "block";
+    // Se siamo nello step 1 e l'utente si logga, passiamo allo step 2
+    if (currentStep === 1 && appContainer.style.display !== "none") {
+      showStep(2);
+    }
+  } else {
+    if (skipLoginBtn) skipLoginBtn.style.display = "block";
+    if (logoutBtn) logoutBtn.style.display = "none";
   }
 });
 
