@@ -133,6 +133,16 @@ function startWizard(quick) {
     if (appRoot) {
         appRoot.style.display = 'block';
         appRoot.classList.remove('hidden');
+        
+        // Aggiungiamo una GIF di benvenuto nel wizard
+        const wizardIntro = document.querySelector('#step1 .step-header');
+        if (wizardIntro && !document.getElementById('wizardGif')) {
+            const gifDiv = document.createElement('div');
+            gifDiv.id = 'wizardGif';
+            gifDiv.style.cssText = "width: 100%; height: 120px; margin-bottom: 16px; border-radius: 12px; overflow: hidden;";
+            gifDiv.innerHTML = `<iframe src="https://giphy.com/embed/3o7TKMGpxS5S2fW3K0" width="100%" height="100%" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>`;
+            wizardIntro.prepend(gifDiv);
+        }
     }
     
     currentStep = 1;
@@ -315,8 +325,13 @@ function renderResults(data) {
     if (!container) return;
     const v = data.verdict;
 
+    const giphyId = v.severity === 'success' ? '3o7abKhOpu0NPGuh3y' : v.severity === 'warning' ? '3o7TKVUn7XYMhxuQs8' : '3o7TKSjRzylqK8/+uA';
+    
     container.innerHTML = `
         <div class="result-card animate-scale-in">
+            <div style="width: 100%; height: 150px; margin-bottom: 20px; border-radius: 12px; overflow: hidden;">
+                <iframe src="https://giphy.com/embed/${giphyId}" width="100%" height="100%" frameBorder="0" class="giphy-embed" allowFullScreen></iframe>
+            </div>
             <div class="verdict-badge verdict-${v.severity}">
                 ${v.label}
             </div>
