@@ -1,64 +1,225 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
-<link rel="stylesheet" href="style.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preventivi-Smart Pro | Preventivi Edili Professionali</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-
 <body>
+  <!-- HERO SECTION -->
+  <div id="heroSection" class="hero-section">
+    <div class="hero-background" style="background-image: url('assets/hero_banner.png');"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+      <div class="hero-logo">
+        <i class="fas fa-building"></i>
+        <h1>Preventivi-Smart Pro</h1>
+      </div>
+      <p class="hero-subtitle">Preventivi Edili Professionali Istantanei</p>
+      <button class="btn btn-primary btn-large" id="startBtn">
+        <i class="fas fa-play"></i> Inizia Ora
+      </button>
+    </div>
+  </div>
 
-<div id="authDiv" class="app">
-  <h2>Login</h2>
-  <input id="email" placeholder="email">
-  <input id="password" type="password">
+  <!-- MAIN APP CONTAINER -->
+  <div id="appContainer" class="app-container" style="display: none;">
+    
+    <!-- HEADER -->
+    <header class="app-header">
+      <div class="header-left">
+        <button class="btn-icon" id="backBtn" style="display: none;">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <h2 id="headerTitle">Nuovo Preventivo</h2>
+      </div>
+      <div class="header-right">
+        <button class="btn-icon" id="historyBtn" title="Cronologia">
+          <i class="fas fa-history"></i>
+        </button>
+        <button class="btn-icon" id="logoutBtn" title="Logout">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>
+    </header>
 
-  <button id="login">Login</button>
-  <button id="google">Google</button>
-</div>
+    <!-- STEP 1: LOGIN -->
+    <section id="step1" class="step-section">
+      <div class="step-container">
+        <div class="step-header">
+          <h2>Accedi al tuo Account</h2>
+          <p>Accedi con Google per salvare i tuoi preventivi</p>
+        </div>
+        <button class="btn btn-google" id="googleLoginBtn">
+          <i class="fab fa-google"></i> Accedi con Google
+        </button>
+        <div class="divider">oppure</div>
+        <button class="btn btn-secondary" id="skipLoginBtn">
+          Continua senza login
+        </button>
+      </div>
+    </section>
 
-<div id="appDiv" class="app" style="display:none;">
+    <!-- STEP 2: MESTIERE -->
+    <section id="step2" class="step-section" style="display: none;">
+      <div class="step-container">
+        <div class="step-header">
+          <h2>Seleziona il Mestiere</h2>
+          <p>Scegli il tipo di lavoro che desideri preventivare</p>
+        </div>
+        <div class="trades-grid" id="tradesGrid"></div>
+      </div>
+    </section>
 
-  <h2>Dashboard Preventivi</h2>
+    <!-- STEP 3: DETTAGLI -->
+    <section id="step3" class="step-section" style="display: none;">
+      <div class="step-container">
+        <div class="step-header">
+          <h2 id="step3Title">Dettagli del Preventivo</h2>
+          <p>Compila i campi per ottenere una stima precisa</p>
+        </div>
+        
+        <div class="form-group">
+          <label for="quantity">Quantità</label>
+          <div class="input-group">
+            <input type="number" id="quantity" placeholder="Es: 50" min="1" step="0.5">
+            <span class="unit-label" id="unitLabel">mq</span>
+          </div>
+        </div>
 
-  <label for="tipo" style="display: block; margin-top: 15px; font-size: 12px; color: #9ca3af;">Tipo di Lavoro</label>
-  <select id="tipo" required>
-    <option value="">-- Seleziona un tipo --</option>
-    <option value="imbiancatura">Imbiancatura</option>
-    <option value="piastrelle">Piastrelle</option>
-    <option value="bagno">Ristrutturazione Bagno</option>
-  </select>
+        <div class="form-group">
+          <label for="region">Regione</label>
+          <select id="region" required>
+            <option value="">-- Seleziona una regione --</option>
+            <option value="Lombardia">Lombardia</option>
+            <option value="Trentino-Alto Adige">Trentino-Alto Adige</option>
+            <option value="Valle d'Aosta">Valle d'Aosta</option>
+            <option value="Lazio">Lazio</option>
+            <option value="Veneto">Veneto</option>
+            <option value="Emilia-Romagna">Emilia-Romagna</option>
+            <option value="Piemonte">Piemonte</option>
+            <option value="Liguria">Liguria</option>
+            <option value="Toscana">Toscana</option>
+            <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia</option>
+            <option value="Marche">Marche</option>
+            <option value="Umbria">Umbria</option>
+            <option value="Abruzzo">Abruzzo</option>
+            <option value="Campania">Campania</option>
+            <option value="Sardegna">Sardegna</option>
+            <option value="Puglia">Puglia</option>
+            <option value="Sicilia">Sicilia</option>
+            <option value="Basilicata">Basilicata</option>
+            <option value="Calabria">Calabria</option>
+            <option value="Molise">Molise</option>
+          </select>
+        </div>
 
-  <label for="mq" style="display: block; margin-top: 15px; font-size: 12px; color: #9ca3af;">Metri Quadri</label>
-  <input id="mq" type="number" placeholder="Inserisci mq" min="1" step="0.5" required>
-  
-  <label for="qualita" style="display: block; margin-top: 15px; font-size: 12px; color: #9ca3af;">Qualita</label>
-  <select id="qualita" required>
-    <option value="">-- Seleziona qualita --</option>
-    <option value="bassa">Bassa</option>
-    <option value="media">Media</option>
-    <option value="alta">Alta</option>
-  </select>
+        <div class="form-group">
+          <label for="quality">Qualità Materiali</label>
+          <select id="quality" required>
+            <option value="economica">Economica (0.85x)</option>
+            <option value="standard" selected>Standard (1.0x)</option>
+            <option value="premium">Premium (1.3x)</option>
+            <option value="lusso">Lusso (1.8x)</option>
+          </select>
+        </div>
 
-  <label for="citta" style="display: block; margin-top: 15px; font-size: 12px; color: #9ca3af;">Citta</label>
-  <select id="citta" required>
-    <option value="">-- Seleziona citta --</option>
-    <option value="milano">Milano</option>
-    <option value="roma">Roma</option>
-    <option value="napoli">Napoli</option>
-  </select>
+        <div id="dynamicQuestions"></div>
 
-  <button id="calcola">Calcola</button>
-  <button id="save">Salva Preventivo</button>
-  <button id="pdf">Export PDF</button>
-  <button id="logout">Logout</button>
+        <button class="btn btn-primary btn-large" id="calculateBtn">
+          <i class="fas fa-calculator"></i> Calcola Preventivo
+        </button>
+      </div>
+    </section>
 
-  <h3 id="output"></h3>
+    <!-- STEP 4: RISULTATI -->
+    <section id="step4" class="step-section" style="display: none;">
+      <div class="step-container">
+        <div class="step-header">
+          <h2>Preventivo Calcolato</h2>
+          <p>Ecco la stima del tuo lavoro</p>
+        </div>
 
-  <canvas id="chart"></canvas>
+        <div class="quote-result-card">
+          <div class="quote-result-header">
+            <div class="quote-icon" id="quoteIcon"></div>
+            <div class="quote-title">
+              <h3 id="quoteTrade"></h3>
+              <p id="quoteDetails"></p>
+            </div>
+          </div>
 
-</div>
+          <div class="quote-price-section">
+            <div class="price-box">
+              <span class="price-label">Prezzo Minimo</span>
+              <span class="price-value" id="priceMin">€ 0,00</span>
+            </div>
+            <div class="price-box price-main">
+              <span class="price-label">Prezzo Stimato</span>
+              <span class="price-value-large" id="priceMid">€ 0,00</span>
+            </div>
+            <div class="price-box">
+              <span class="price-label">Prezzo Massimo</span>
+              <span class="price-value" id="priceMax">€ 0,00</span>
+            </div>
+          </div>
 
-<script type="module" src="app.js"></script>
+          <div class="quote-breakdown">
+            <h4>Dettaglio Calcolo</h4>
+            <div class="breakdown-item">
+              <span>Prezzo base:</span>
+              <span id="breakdownBase">€ 0,00</span>
+            </div>
+            <div class="breakdown-item">
+              <span>Coefficiente regionale:</span>
+              <span id="breakdownRegional">1.0x</span>
+            </div>
+            <div class="breakdown-item">
+              <span>Qualità materiali:</span>
+              <span id="breakdownQuality">1.0x</span>
+            </div>
+            <div class="breakdown-item">
+              <span>Specifiche lavoro:</span>
+              <span id="breakdownSpecifics">1.0x</span>
+            </div>
+          </div>
 
+          <div class="quote-chart-container" style="display: none;">
+            <h4>Andamento Preventivi</h4>
+            <canvas id="quoteChart"></canvas>
+          </div>
+        </div>
+
+        <div class="action-buttons">
+          <button class="btn btn-secondary" id="newQuoteBtn">
+            <i class="fas fa-plus"></i> Nuovo Preventivo
+          </button>
+          <button class="btn btn-primary" id="saveQuoteBtn" style="display: none;">
+            <i class="fas fa-save"></i> Salva Preventivo
+          </button>
+          <button class="btn btn-success" id="exportPdfBtn">
+            <i class="fas fa-download"></i> Scarica PDF
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- MODAL: CRONOLOGIA -->
+  <div id="historyModal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Cronologia Preventivi</h3>
+        <button class="btn-close" id="closeHistoryBtn">&times;</button>
+      </div>
+      <div class="modal-body" id="historyList"></div>
+    </div>
+  </div>
+
+  <script type="module" src="app-v3.js"></script>
 </body>
 </html>

@@ -1,12 +1,15 @@
 /**
  * Modulo per gestire la storia dei preventivi generati
+ * Con persistenza localStorage
  */
+
+import { historyStorage } from "./session.js";
 
 const MAX_HISTORY = 50;
 
 export class QuoteHistory {
   constructor() {
-    this.quotes = [];
+    this.quotes = historyStorage.loadHistory();
   }
 
   /**
@@ -23,6 +26,9 @@ export class QuoteHistory {
     if (this.quotes.length > MAX_HISTORY) {
       this.quotes = this.quotes.slice(0, MAX_HISTORY);
     }
+
+    // Salva nel localStorage
+    historyStorage.saveHistory(this.quotes);
   }
 
   /**
@@ -51,6 +57,7 @@ export class QuoteHistory {
    */
   clear() {
     this.quotes = [];
+    historyStorage.clearHistory();
   }
 
   /**
