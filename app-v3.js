@@ -18,6 +18,7 @@ import {
   REGIONAL_COEFFICIENTS 
 } from "./engine/database.js";
 import { analyzeQuote } from "./engine/ai-analyzer.js";
+import { renderQuoteBreakdownChart, renderPriceComparisonChart } from "./engine/charts-advanced.js";
 
 // ===== INIT SICUREZZA =====
 try {
@@ -396,6 +397,17 @@ async function runAnalysis() {
   });
 
   renderAnalysisResults(analysis);
+  
+  // Renderizza i grafici avanzati (Leva 4: Visualizzazione Dati)
+  setTimeout(() => {
+    renderQuoteBreakdownChart("breakdownChart", analysis);
+    renderPriceComparisonChart("comparisonChart", {
+        minPrice: analysis.marketData.min,
+        midPrice: analysis.marketData.mid,
+        maxPrice: analysis.marketData.max
+    });
+  }, 100);
+
   loading.classList.add("hidden");
   results.classList.remove("hidden");
   nav.classList.remove("hidden");
@@ -426,6 +438,16 @@ function renderAnalysisResults(analysis) {
       <div class="benchmark-item">
         <span class="b-label">Range Ufficiale (${analysis.benchmark.region})</span>
         <span class="b-value" style="font-size: 1rem;">€${Math.round(analysis.benchmark.marketMin).toLocaleString()} - €${Math.round(analysis.benchmark.marketMax).toLocaleString()}</span>
+      </div>
+    </div>
+    <div class="charts-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 24px 0;">
+      <div class="chart-box" style="background: var(--white); padding: 20px; border-radius: 16px; border: 1px solid var(--gray-100);">
+        <h4 style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 16px; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">Breakdown Costi</h4>
+        <canvas id="breakdownChart" height="200"></canvas>
+      </div>
+      <div class="chart-box" style="background: var(--white); padding: 20px; border-radius: 16px; border: 1px solid var(--gray-100);">
+        <h4 style="font-size: 0.85rem; color: var(--gray-500); margin-bottom: 16px; text-align: center; text-transform: uppercase; letter-spacing: 0.05em;">Benchmark Mercato</h4>
+        <canvas id="comparisonChart" height="200"></canvas>
       </div>
     </div>
     <div class="advice-section">

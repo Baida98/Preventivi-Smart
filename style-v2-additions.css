@@ -575,3 +575,18 @@ body.ethereal-theme {
     color: var(--emerald);
     margin-top: 4px;
 }
+
+/* CHARTS RESPONSIVENESS */
+@media (max-width: 768px) {
+    .charts-container {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .chart-box {
+        padding: 12px !important;
+    }
+}
+
+.chart-box canvas {
+    max-width: 100%;
+}
