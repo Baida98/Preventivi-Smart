@@ -13,17 +13,11 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-let currentUser = null;
+let userGlobal = null;
 
-/* =========================
-   LOGIN GOOGLE
-========================= */
+/* LOGIN */
 window.login = async () => {
-  try {
-    await signInWithPopup(auth, provider);
-  } catch (e) {
-    console.error(e);
-  }
+  await signInWithPopup(auth, provider);
 };
 
 /* LOGOUT */
@@ -31,16 +25,13 @@ window.logout = async () => {
   await signOut(auth);
 };
 
-/* =========================
-   STATO UTENTE
-========================= */
-onAuthStateChanged(auth, async (user) => {
-  currentUser = user;
+/* AUTH STATE */
+onAuthStateChanged(auth, (user) => {
+  userGlobal = user;
 
   if (user) {
     document.getElementById("loginBox").style.display = "none";
     document.getElementById("app").style.display = "block";
-
     document.getElementById("userEmail").innerText = user.email;
 
     loadPreventivi();
@@ -50,45 +41,42 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-/* =========================
-   CREA PREVENTIVO
-========================= */
+/* CREA PREVENTIVO */
 window.creaPreventivo = async () => {
   const cliente = document.getElementById("cliente").value;
   const servizio = document.getElementById("servizio").value;
-  const prezzo = parseFloat(document.getElementById("prezzo").value);
+  const prezzo = Number(document.getElementById("prezzo").value);
 
   if (!cliente || !servizio || !prezzo) return;
 
   await addDoc(collection(db, "preventivi"), {
-    uid: currentUser.uid,
+    uid: userGlobal.uid,
     cliente,
     servizio,
     prezzo,
-    data: new Date().toISOString()
+    createdAt: Date.now()
   });
 
   loadPreventivi();
 };
 
-/* =========================
-   CARICA PREVENTIVI
-========================= */
+/* CARICA PREVENTIVI */
 async function loadPreventivi() {
   const q = query(
     collection(db, "preventivi"),
-    where("uid", "==", currentUser.uid)
+    where("uid", "==", userGlobal.uid)
   );
 
   const snap = await getDocs(q);
 
   let html = "";
 
-  snap.forEach(doc => {
+  snap.forEach((doc) => {
     const d = doc.data();
     html += `
-      <div>
-        <b>${d.cliente}</b> - ${d.servizio} - ${d.prezzo}€
+      <div class="card">
+        <b>${d.cliente}</b><br>
+        ${d.servizio} - ${d.prezzo}€
       </div>
     `;
   });
