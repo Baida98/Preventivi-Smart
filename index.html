@@ -3,412 +3,675 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Preventivi-Smart Pro | Preventivi Edili 2025</title>
+  <title>Preventivi-Smart Pro — Analisi Preventivi Edilizia</title>
+  <meta name="description" content="Scopri se il tuo preventivo è giusto. Confronto con i prezzi reali di mercato, analisi AI e storico personale.">
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- FontAwesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+  <!-- CSS -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style-v2-additions.css">
 </head>
 <body>
 
-  <!-- ===== HERO SECTION ===== -->
-  <div id="heroSection" class="hero-section">
-    <div class="hero-bg-overlay"></div>
-    <div class="hero-particles" id="heroParticles"></div>
-    <div class="hero-content">
-      <div class="hero-badge">
-        <i class="fas fa-certificate"></i> Prezzari Ufficiali 2025/2026
+<!-- ============================================================
+     HERO SECTION
+     ============================================================ -->
+<section class="hero-section" id="heroSection">
+  <div class="hero-bg-overlay"></div>
+  <div class="hero-content">
+
+    <div class="hero-badge">
+      <i class="fas fa-shield-check"></i>
+      Prezzari Ufficiali 2025/2026 · Analisi AI
+    </div>
+
+    <div class="hero-logo">
+      <div class="hero-icon-wrap">
+        <i class="fas fa-magnifying-glass-chart"></i>
       </div>
-      <div class="hero-logo">
-        <div class="hero-icon-wrap">
-          <i class="fas fa-city"></i>
-        </div>
-        <h1>Preventivi<span class="accent-text">Smart</span></h1>
+      <h1>Preventivi<span class="accent-text">Smart</span></h1>
+    </div>
+
+    <p class="hero-subtitle">
+      Hai ricevuto un preventivo? <strong>Scopri in 60 secondi</strong> se è giusto,
+      troppo alto o sospettosamente basso. Confronto con il mercato reale italiano.
+    </p>
+
+    <div class="hero-stats">
+      <div class="hero-stat">
+        <span class="stat-num">14</span>
+        <span class="stat-label">Mestieri</span>
       </div>
-      <p class="hero-subtitle">Calcola preventivi edili professionali con <strong>14 specializzazioni</strong>, coefficienti regionali ISTAT e analisi costi dettagliata.</p>
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <span class="stat-num">14</span>
-          <span class="stat-label">Mestieri</span>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <span class="stat-num">20</span>
-          <span class="stat-label">Regioni</span>
-        </div>
-        <div class="hero-stat-divider"></div>
-        <div class="hero-stat">
-          <span class="stat-num">4</span>
-          <span class="stat-label">Livelli qualità</span>
-        </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="stat-num">20</span>
+        <span class="stat-label">Regioni</span>
       </div>
-      <button class="btn btn-hero" id="startBtn">
-        <i class="fas fa-calculator"></i> Calcola il tuo Preventivo
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="stat-num">AI</span>
+        <span class="stat-label">Analisi</span>
+      </div>
+      <div class="hero-stat-divider"></div>
+      <div class="hero-stat">
+        <span class="stat-num">PDF</span>
+        <span class="stat-label">Export</span>
+      </div>
+    </div>
+
+    <button class="btn-hero" id="startBtn">
+      <i class="fas fa-magnifying-glass"></i>
+      Analizza il Tuo Preventivo
+    </button>
+
+    <p class="hero-note">
+      <i class="fas fa-lock"></i> Gratuito · Nessuna carta richiesta ·
+      <i class="fas fa-clock" style="margin-left:0.5rem;"></i> Risultato in 60 secondi
+    </p>
+  </div>
+</section>
+
+<!-- ============================================================
+     APP CONTAINER
+     ============================================================ -->
+<div class="app-container" id="appContainer" style="display:none;">
+
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-left">
+      <button class="btn-icon" id="backBtn" style="display:none;" title="Indietro">
+        <i class="fas fa-arrow-left"></i>
       </button>
-      <p class="hero-note"><i class="fas fa-lock"></i> Gratuito · Nessuna registrazione obbligatoria</p>
+      <div class="header-brand">
+        <i class="fas fa-magnifying-glass-chart header-logo-icon"></i>
+        <span id="headerTitle">Preventivi Smart</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="user-badge" id="userBadge" style="display:none;">
+        <i class="fas fa-user-circle"></i>
+        <span id="userBadgeName"></span>
+      </div>
+      <button class="btn-icon" id="dashboardBtn" title="La mia Dashboard" style="display:none;">
+        <i class="fas fa-chart-line"></i>
+      </button>
+      <button class="btn-icon" id="historyBtn" title="Storico Preventivi">
+        <i class="fas fa-clock-rotate-left"></i>
+      </button>
+      <button class="btn-icon btn-icon-danger" id="logoutBtn" title="Esci" style="display:none;">
+        <i class="fas fa-right-from-bracket"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- PROGRESS BAR -->
+  <div class="progress-bar-wrap" id="progressBarWrap" style="display:none;">
+    <div class="progress-steps">
+      <div class="progress-step" id="ps1">
+        <div class="ps-dot"><i class="fas fa-user"></i></div>
+        <span>Accesso</span>
+      </div>
+      <div class="progress-line" id="pl1"></div>
+      <div class="progress-step" id="ps2">
+        <div class="ps-dot"><i class="fas fa-hard-hat"></i></div>
+        <span>Mestiere</span>
+      </div>
+      <div class="progress-line" id="pl2"></div>
+      <div class="progress-step" id="ps3">
+        <div class="ps-dot"><i class="fas fa-sliders"></i></div>
+        <span>Dettagli</span>
+      </div>
+      <div class="progress-line" id="pl3"></div>
+      <div class="progress-step" id="ps4">
+        <div class="ps-dot"><i class="fas fa-file-invoice-dollar"></i></div>
+        <span>Preventivo</span>
+      </div>
+      <div class="progress-line" id="pl4"></div>
+      <div class="progress-step" id="ps5">
+        <div class="ps-dot"><i class="fas fa-brain"></i></div>
+        <span>Analisi AI</span>
+      </div>
     </div>
   </div>
 
-  <!-- ===== MAIN APP CONTAINER ===== -->
-  <div id="appContainer" class="app-container" style="display: none;">
+  <!-- ============================================================
+       STEP 1: LOGIN
+       ============================================================ -->
+  <div class="step-section" id="step1" style="display:none;">
+    <div class="auth-wrapper">
+      <div class="auth-card-new">
 
-    <!-- HEADER -->
-    <header class="app-header">
-      <div class="header-left">
-        <button class="btn-icon" id="backBtn" style="display: none;" title="Indietro">
-          <i class="fas fa-arrow-left"></i>
-        </button>
-        <div class="header-brand">
-          <i class="fas fa-city header-logo-icon"></i>
-          <span id="headerTitle">Preventivi Smart</span>
+        <div class="auth-logo">
+          <i class="fas fa-magnifying-glass-chart"></i>
         </div>
-      </div>
-      <div class="header-right">
-        <div id="userBadge" class="user-badge" style="display: none;">
-          <i class="fas fa-user-circle"></i>
-          <span id="userBadgeName"></span>
-        </div>
-        <button class="btn-icon" id="historyBtn" title="Cronologia preventivi">
-          <i class="fas fa-clock-rotate-left"></i>
-        </button>
-        <button class="btn-icon btn-icon-danger" id="logoutBtn" title="Esci" style="display: none;">
-          <i class="fas fa-right-from-bracket"></i>
-        </button>
-      </div>
-    </header>
 
-    <!-- PROGRESS BAR -->
-    <div class="progress-bar-wrap" id="progressBarWrap" style="display: none;">
-      <div class="progress-steps">
-        <div class="progress-step active" id="ps1">
-          <div class="ps-dot"><i class="fas fa-user"></i></div>
-          <span>Accesso</span>
-        </div>
-        <div class="progress-line" id="pl1"></div>
-        <div class="progress-step" id="ps2">
-          <div class="ps-dot"><i class="fas fa-briefcase"></i></div>
-          <span>Mestiere</span>
-        </div>
-        <div class="progress-line" id="pl2"></div>
-        <div class="progress-step" id="ps3">
-          <div class="ps-dot"><i class="fas fa-sliders"></i></div>
-          <span>Dettagli</span>
-        </div>
-        <div class="progress-line" id="pl3"></div>
-        <div class="progress-step" id="ps4">
-          <div class="ps-dot"><i class="fas fa-chart-bar"></i></div>
-          <span>Risultati</span>
-        </div>
-      </div>
-    </div>
+        <h2 class="auth-title">Benvenuto</h2>
+        <p class="auth-subtitle">Accedi per salvare i tuoi preventivi e vedere l'andamento nel tempo.</p>
 
-    <!-- ===== STEP 1: AUTH (SEMPLIFICATO) ===== -->
-    <section id="step1" class="step-section" style="display: none;">
-      <div class="auth-wrapper">
-        <div class="auth-card-new">
-          <!-- Logo -->
-          <div class="auth-logo">
-            <i class="fas fa-city"></i>
-          </div>
-          <h2 class="auth-title">Benvenuto</h2>
-          <p class="auth-subtitle">Accedi per salvare i preventivi nel cloud, oppure continua come ospite.</p>
-
-          <!-- Tabs -->
-          <div class="auth-tabs-new">
-            <button class="auth-tab-new active" data-tab="login">
-              <i class="fas fa-sign-in-alt"></i> Accedi
-            </button>
-            <button class="auth-tab-new" data-tab="register">
-              <i class="fas fa-user-plus"></i> Registrati
-            </button>
-          </div>
-
-          <!-- Login Form -->
-          <form id="loginForm" class="auth-form active">
-            <div class="field-wrap">
-              <i class="fas fa-envelope field-icon"></i>
-              <input type="email" id="loginEmail" placeholder="Email" required autocomplete="email">
-            </div>
-            <div class="field-wrap">
-              <i class="fas fa-lock field-icon"></i>
-              <input type="password" id="loginPassword" placeholder="Password" required autocomplete="current-password">
-            </div>
-            <div class="form-error" id="loginError"></div>
-            <button type="submit" class="btn btn-auth">
-              <i class="fas fa-arrow-right-to-bracket"></i> Accedi
-            </button>
-          </form>
-
-          <!-- Register Form -->
-          <form id="registerForm" class="auth-form">
-            <div class="field-wrap">
-              <i class="fas fa-user field-icon"></i>
-              <input type="text" id="registerName" placeholder="Nome e Cognome" required autocomplete="name">
-            </div>
-            <div class="field-wrap">
-              <i class="fas fa-envelope field-icon"></i>
-              <input type="email" id="registerEmail" placeholder="Email" required autocomplete="email">
-            </div>
-            <div class="field-wrap">
-              <i class="fas fa-lock field-icon"></i>
-              <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri)" required autocomplete="new-password">
-            </div>
-            <div class="field-wrap">
-              <i class="fas fa-check-double field-icon"></i>
-              <input type="password" id="registerPasswordConfirm" placeholder="Conferma Password" required autocomplete="new-password">
-            </div>
-            <div class="form-error" id="registerError"></div>
-            <button type="submit" class="btn btn-auth">
-              <i class="fas fa-user-plus"></i> Crea Account
-            </button>
-          </form>
-
-          <!-- Divider -->
-          <div class="auth-divider">
-            <span>oppure</span>
-          </div>
-
-          <!-- Guest Button -->
-          <button id="skipLoginBtn" class="btn btn-guest">
-            <i class="fas fa-arrow-right"></i> Continua senza registrazione
+        <!-- Tab switcher -->
+        <div class="auth-tabs-new">
+          <button class="auth-tab-new active" data-tab="login">
+            <i class="fas fa-right-to-bracket"></i> Accedi
+          </button>
+          <button class="auth-tab-new" data-tab="register">
+            <i class="fas fa-user-plus"></i> Registrati
           </button>
         </div>
+
+        <!-- Form Login -->
+        <form class="auth-form active" id="loginForm">
+          <div class="field-wrap">
+            <i class="fas fa-envelope field-icon"></i>
+            <input type="email" id="loginEmail" placeholder="La tua email" autocomplete="email" required>
+          </div>
+          <div class="field-wrap">
+            <i class="fas fa-lock field-icon"></i>
+            <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password" required>
+          </div>
+          <p class="form-error" id="loginError"></p>
+          <button type="submit" class="btn-auth">
+            <i class="fas fa-right-to-bracket"></i> Accedi
+          </button>
+        </form>
+
+        <!-- Form Registrazione -->
+        <form class="auth-form" id="registerForm">
+          <div class="field-wrap">
+            <i class="fas fa-user field-icon"></i>
+            <input type="text" id="registerName" placeholder="Il tuo nome" autocomplete="name" required>
+          </div>
+          <div class="field-wrap">
+            <i class="fas fa-envelope field-icon"></i>
+            <input type="email" id="registerEmail" placeholder="La tua email" autocomplete="email" required>
+          </div>
+          <div class="field-wrap">
+            <i class="fas fa-lock field-icon"></i>
+            <input type="password" id="registerPassword" placeholder="Password (min. 6 caratteri)" required>
+          </div>
+          <div class="field-wrap">
+            <i class="fas fa-lock field-icon"></i>
+            <input type="password" id="registerPasswordConfirm" placeholder="Conferma password" required>
+          </div>
+          <p class="form-error" id="registerError"></p>
+          <button type="submit" class="btn-auth">
+            <i class="fas fa-user-plus"></i> Crea Account
+          </button>
+        </form>
+
+        <!-- Google -->
+        <div class="auth-divider">oppure</div>
+        <button class="btn-google" id="googleLoginBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+          </svg>
+          Continua con Google
+        </button>
+
+        <div class="auth-divider">oppure</div>
+        <button class="btn-guest" id="skipLoginBtn">
+          <i class="fas fa-user-slash"></i>
+          Continua senza registrazione
+        </button>
+
       </div>
-    </section>
+    </div>
+  </div>
 
-    <!-- ===== STEP 2: MESTIERI ===== -->
-    <section id="step2" class="step-section" style="display: none;">
-      <div class="step-header-block">
-        <h2 class="step-title">Scegli la Specializzazione</h2>
-        <p class="step-desc">Seleziona il tipo di lavoro per ottenere un preventivo calibrato con algoritmi specifici di settore.</p>
+  <!-- ============================================================
+       STEP 2: SCELTA MESTIERE
+       ============================================================ -->
+  <div class="step-section" id="step2" style="display:none;">
+    <div class="step-header-block">
+      <h2 class="step-title">Che tipo di lavoro?</h2>
+      <p class="step-desc">Seleziona il mestiere del preventivo che hai ricevuto</p>
+    </div>
+
+    <!-- Filtro categorie -->
+    <div class="category-filter" id="categoryFilter">
+      <button class="cat-btn active" data-cat="all"><i class="fas fa-th"></i> Tutti</button>
+      <button class="cat-btn" data-cat="finiture"><i class="fas fa-paint-roller"></i> Finiture</button>
+      <button class="cat-btn" data-cat="impianti"><i class="fas fa-bolt"></i> Impianti</button>
+      <button class="cat-btn" data-cat="strutture"><i class="fas fa-building"></i> Strutture</button>
+      <button class="cat-btn" data-cat="esterni"><i class="fas fa-tree"></i> Esterni</button>
+      <button class="cat-btn" data-cat="servizi"><i class="fas fa-broom"></i> Servizi</button>
+    </div>
+
+    <div class="trades-grid" id="tradesGrid"></div>
+  </div>
+
+  <!-- ============================================================
+       STEP 3: DETTAGLI LAVORO
+       ============================================================ -->
+  <div class="step-section" id="step3" style="display:none;">
+    <div class="step-container">
+
+      <!-- Header mestiere selezionato -->
+      <div class="trade-selected-header" id="tradeSelectedHeader">
+        <div class="trade-selected-icon" id="tradeSelectedIcon"></div>
+        <div>
+          <h3 id="step3Title">Mestiere</h3>
+          <p id="step3Subtitle" style="color:var(--text-muted);font-size:0.9rem;"></p>
+        </div>
       </div>
 
-      <!-- Filtro Categorie -->
-      <div class="category-filter" id="categoryFilter">
-        <button class="cat-btn active" data-cat="all">
-          <i class="fas fa-th"></i> Tutti
-        </button>
-        <button class="cat-btn" data-cat="finiture">
-          <i class="fas fa-paint-brush"></i> Finiture
-        </button>
-        <button class="cat-btn" data-cat="impianti">
-          <i class="fas fa-plug"></i> Impianti
-        </button>
-        <button class="cat-btn" data-cat="strutture">
-          <i class="fas fa-building"></i> Strutture
-        </button>
-        <button class="cat-btn" data-cat="esterni">
-          <i class="fas fa-tree"></i> Esterni
-        </button>
-        <button class="cat-btn" data-cat="servizi">
-          <i class="fas fa-hands-helping"></i> Servizi
-        </button>
-      </div>
-
-      <div class="trades-grid" id="tradesGrid"></div>
-    </section>
-
-    <!-- ===== STEP 3: DETTAGLI ===== -->
-    <section id="step3" class="step-section" style="display: none;">
-      <div class="step-container">
-        <!-- Trade Header -->
-        <div class="trade-selected-header" id="tradeSelectedHeader">
-          <div class="trade-selected-icon" id="tradeSelectedIcon"></div>
-          <div>
-            <h2 id="step3Title">Configurazione</h2>
-            <p id="step3Subtitle" class="step-desc">Inserisci i parametri tecnici per il calcolo preciso.</p>
+      <!-- Form base -->
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="quantity"><i class="fas fa-ruler-combined"></i> Quantità</label>
+          <div class="input-with-unit">
+            <input type="number" id="quantity" min="1" placeholder="es. 50" step="0.5">
+            <span class="unit-badge" id="unitLabel">mq</span>
           </div>
         </div>
 
-        <div class="form-grid">
-          <!-- Quantità -->
-          <div class="form-group">
-            <label><i class="fas fa-ruler-combined"></i> Quantità</label>
-            <div class="input-with-unit">
-              <input type="number" id="quantity" placeholder="Es: 100" min="1" step="0.5">
-              <span class="unit-badge" id="unitLabel">mq</span>
-            </div>
-          </div>
-
-          <!-- Regione -->
-          <div class="form-group">
-            <label><i class="fas fa-map-marker-alt"></i> Regione del Cantiere</label>
-            <select id="region" required>
-              <option value="">— Seleziona regione —</option>
-              <option value="Lombardia">Lombardia (+28%)</option>
-              <option value="Trentino-Alto Adige">Trentino-Alto Adige (+25%)</option>
-              <option value="Valle d'Aosta">Valle d'Aosta (+20%)</option>
-              <option value="Lazio">Lazio (+18%)</option>
-              <option value="Veneto">Veneto (+15%)</option>
-              <option value="Emilia-Romagna">Emilia-Romagna (+12%)</option>
-              <option value="Piemonte">Piemonte (+10%)</option>
-              <option value="Liguria">Liguria (+10%)</option>
-              <option value="Toscana">Toscana (+8%)</option>
-              <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia (+5%)</option>
-              <option value="Marche">Marche (base)</option>
-              <option value="Umbria">Umbria (-2%)</option>
+        <div class="form-group">
+          <label for="region"><i class="fas fa-map-marker-alt"></i> Regione del Cantiere</label>
+          <select id="region">
+            <option value="">— Seleziona regione —</option>
+            <optgroup label="Nord">
+              <option value="Lombardia">Lombardia (+25%)</option>
+              <option value="Piemonte">Piemonte (+8%)</option>
+              <option value="Veneto">Veneto (+12%)</option>
+              <option value="Emilia-Romagna">Emilia-Romagna (+10%)</option>
+              <option value="Liguria">Liguria (+5%)</option>
+              <option value="Friuli-Venezia Giulia">Friuli-Venezia Giulia (+3%)</option>
+              <option value="Trentino-Alto Adige">Trentino-Alto Adige (+15%)</option>
+              <option value="Valle d'Aosta">Valle d'Aosta (+10%)</option>
+            </optgroup>
+            <optgroup label="Centro">
+              <option value="Lazio">Lazio (+15%)</option>
+              <option value="Toscana">Toscana (+5%)</option>
+              <option value="Marche">Marche (0%)</option>
+              <option value="Umbria">Umbria (-3%)</option>
               <option value="Abruzzo">Abruzzo (-5%)</option>
-              <option value="Campania">Campania (-8%)</option>
-              <option value="Sardegna">Sardegna (-10%)</option>
+            </optgroup>
+            <optgroup label="Sud e Isole">
+              <option value="Campania">Campania (-5%)</option>
               <option value="Puglia">Puglia (-12%)</option>
               <option value="Sicilia">Sicilia (-15%)</option>
-              <option value="Basilicata">Basilicata (-18%)</option>
+              <option value="Sardegna">Sardegna (-8%)</option>
               <option value="Calabria">Calabria (-20%)</option>
+              <option value="Basilicata">Basilicata (-18%)</option>
               <option value="Molise">Molise (-22%)</option>
-            </select>
-          </div>
-
-          <!-- Qualità -->
-          <div class="form-group form-group-full">
-            <label><i class="fas fa-star"></i> Standard Qualitativo</label>
-            <div class="quality-selector" id="qualitySelector">
-              <label class="quality-opt" data-val="economica">
-                <input type="radio" name="quality" value="economica">
-                <div class="quality-card">
-                  <i class="fas fa-tag"></i>
-                  <span class="q-name">Economico</span>
-                  <span class="q-desc">-15% sul base</span>
-                </div>
-              </label>
-              <label class="quality-opt" data-val="standard">
-                <input type="radio" name="quality" value="standard" checked>
-                <div class="quality-card quality-recommended">
-                  <i class="fas fa-check-circle"></i>
-                  <span class="q-name">Standard</span>
-                  <span class="q-desc">Consigliato</span>
-                </div>
-              </label>
-              <label class="quality-opt" data-val="premium">
-                <input type="radio" name="quality" value="premium">
-                <div class="quality-card">
-                  <i class="fas fa-gem"></i>
-                  <span class="q-name">Premium</span>
-                  <span class="q-desc">+35% sul base</span>
-                </div>
-              </label>
-              <label class="quality-opt" data-val="lusso">
-                <input type="radio" name="quality" value="lusso">
-                <div class="quality-card">
-                  <i class="fas fa-crown"></i>
-                  <span class="q-name">Luxury</span>
-                  <span class="q-desc">+75% sul base</span>
-                </div>
-              </label>
-            </div>
-          </div>
+            </optgroup>
+          </select>
         </div>
 
-        <!-- Domande Dinamiche -->
-        <div class="dynamic-section">
-          <h3 class="dynamic-title"><i class="fas fa-clipboard-list"></i> Specifiche Tecniche</h3>
-          <div id="dynamicQuestions"></div>
+        <!-- Qualità -->
+        <div class="form-group form-group-full">
+          <label><i class="fas fa-star"></i> Qualità Materiali</label>
+          <div class="quality-selector">
+            <label class="quality-opt">
+              <input type="radio" name="quality" value="economica">
+              <div class="quality-card">
+                <i class="fas fa-tag"></i>
+                <span class="q-name">Economico</span>
+                <span class="q-desc">Materiali base</span>
+              </div>
+            </label>
+            <label class="quality-opt">
+              <input type="radio" name="quality" value="standard" checked>
+              <div class="quality-card quality-recommended">
+                <i class="fas fa-check-circle"></i>
+                <span class="q-name">Standard</span>
+                <span class="q-desc">Qualità media</span>
+              </div>
+            </label>
+            <label class="quality-opt">
+              <input type="radio" name="quality" value="premium">
+              <div class="quality-card">
+                <i class="fas fa-gem"></i>
+                <span class="q-name">Premium</span>
+                <span class="q-desc">Alta qualità</span>
+              </div>
+            </label>
+            <label class="quality-opt">
+              <input type="radio" name="quality" value="lusso">
+              <div class="quality-card">
+                <i class="fas fa-crown"></i>
+                <span class="q-name">Luxury</span>
+                <span class="q-desc">Top di gamma</span>
+              </div>
+            </label>
+          </div>
         </div>
-
-        <button class="btn btn-calculate" id="calculateBtn">
-          <i class="fas fa-calculator"></i> Genera Preventivo Dettagliato
-        </button>
       </div>
-    </section>
 
-    <!-- ===== STEP 4: RISULTATI ===== -->
-    <section id="step4" class="step-section" style="display: none;">
-      <div class="results-container">
-
-        <!-- Header Risultato -->
-        <div class="result-header-card">
-          <div class="result-trade-icon" id="resultTradeIcon"></div>
-          <div class="result-trade-info">
-            <h3 id="quoteTrade">Preventivo</h3>
-            <p id="quoteDetails">Dettaglio tecnico</p>
-          </div>
-          <div class="result-quality-badge" id="resultQualityBadge"></div>
+      <!-- Domande tecniche dinamiche -->
+      <div class="dynamic-section">
+        <div class="dynamic-title">
+          <i class="fas fa-list-check"></i>
+          Specifiche Tecniche del Lavoro
         </div>
-
-        <!-- Prezzo Principale -->
-        <div class="price-hero-card">
-          <div class="price-label-top">Stima Totale Investimento</div>
-          <div class="price-value-main" id="priceMid">€ 0,00</div>
-          <div class="price-range-row">
-            <div class="price-range-item price-min">
-              <i class="fas fa-arrow-down"></i>
-              <span>Minimo</span>
-              <strong id="priceMin">€ 0</strong>
-            </div>
-            <div class="price-range-divider"></div>
-            <div class="price-range-item price-max">
-              <i class="fas fa-arrow-up"></i>
-              <span>Massimo</span>
-              <strong id="priceMax">€ 0</strong>
-            </div>
-          </div>
-        </div>
-
-        <!-- Grafici -->
-        <div class="charts-row">
-          <div class="chart-card">
-            <h4 class="chart-title"><i class="fas fa-chart-pie"></i> Ripartizione Costi</h4>
-            <div class="chart-wrap">
-              <canvas id="breakdownChart"></canvas>
-            </div>
-          </div>
-          <div class="chart-card">
-            <h4 class="chart-title"><i class="fas fa-chart-bar"></i> Fascia di Prezzo</h4>
-            <div class="chart-wrap">
-              <canvas id="rangeChart"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <!-- Breakdown Dettagliato -->
-        <div class="breakdown-card">
-          <h4 class="breakdown-title"><i class="fas fa-list-check"></i> Analisi Dettagliata</h4>
-          <div class="quote-breakdown" id="quoteBreakdown"></div>
-        </div>
-
-        <!-- Coefficienti Applicati -->
-        <div class="coefficients-card" id="coefficientsCard">
-          <h4 class="coeff-title"><i class="fas fa-sliders"></i> Coefficienti Applicati</h4>
-          <div class="coeff-grid" id="coeffGrid"></div>
-        </div>
-
-        <!-- Azioni -->
-        <div class="result-actions">
-          <button class="btn btn-save" id="saveQuoteBtn" style="display: none;">
-            <i class="fas fa-cloud-arrow-up"></i> Salva nel Cloud
-          </button>
-          <button class="btn btn-pdf" id="exportPdfBtn">
-            <i class="fas fa-file-pdf"></i> Esporta PDF
-          </button>
-        </div>
-        <button class="btn btn-new-quote" id="newQuoteBtn">
-          <i class="fas fa-plus"></i> Nuovo Preventivo
-        </button>
+        <div id="dynamicQuestions"></div>
       </div>
-    </section>
 
-  </div>
-
-  <!-- ===== MODAL: CRONOLOGIA ===== -->
-  <div id="historyModal" class="modal-overlay" style="display: none;">
-    <div class="modal-box">
-      <div class="modal-head">
-        <div class="modal-head-title">
-          <i class="fas fa-clock-rotate-left"></i>
-          <h3>Cronologia Preventivi</h3>
-        </div>
-        <button class="modal-close" id="closeHistoryBtn">
-          <i class="fas fa-xmark"></i>
-        </button>
-      </div>
-      <div class="modal-body" id="historyList"></div>
+      <button class="btn-calculate" id="calculateBtn">
+        <i class="fas fa-calculator"></i>
+        Calcola Prezzo di Mercato
+      </button>
     </div>
   </div>
 
-  <!-- ===== TOAST ===== -->
-  <div id="toastContainer" class="toast-container"></div>
+  <!-- ============================================================
+       STEP 4: INSERISCI PREVENTIVO RICEVUTO
+       ============================================================ -->
+  <div class="step-section" id="step4" style="display:none;">
+    <div class="step-container">
 
-  <script type="module" src="app-v3.js"></script>
+      <div class="step-header-block">
+        <h2 class="step-title">Il Preventivo Ricevuto</h2>
+        <p class="step-desc">Inserisci l'importo del preventivo che ti è stato consegnato dall'artigiano</p>
+      </div>
+
+      <!-- Riepilogo mercato -->
+      <div class="market-preview-card" id="marketPreviewCard">
+        <div class="market-preview-label">Prezzo di mercato calcolato per il tuo lavoro</div>
+        <div class="market-preview-range">
+          <div class="mp-item">
+            <span class="mp-label">Minimo</span>
+            <span class="mp-value" id="mp_min">—</span>
+          </div>
+          <div class="mp-divider"></div>
+          <div class="mp-item mp-mid">
+            <span class="mp-label">Media</span>
+            <span class="mp-value accent" id="mp_mid">—</span>
+          </div>
+          <div class="mp-divider"></div>
+          <div class="mp-item">
+            <span class="mp-label">Massimo</span>
+            <span class="mp-value" id="mp_max">—</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input preventivo ricevuto -->
+      <div class="received-input-wrap">
+        <label class="received-label">
+          <i class="fas fa-file-invoice-dollar"></i>
+          Quanto ti ha chiesto l'artigiano?
+        </label>
+        <div class="received-input-inner">
+          <span class="received-currency">€</span>
+          <input type="number" id="receivedPriceInput" placeholder="es. 2500" min="1" step="10" class="received-input">
+        </div>
+        <p class="received-hint">Inserisci il totale del preventivo (IVA inclusa se indicata)</p>
+      </div>
+
+      <!-- Dati cliente opzionali -->
+      <div class="optional-section">
+        <div class="optional-toggle" id="optionalToggle">
+          <i class="fas fa-user-tie"></i>
+          Aggiungi dati cliente (per il PDF professionale)
+          <i class="fas fa-chevron-down" id="optionalChevron" style="margin-left:auto;"></i>
+        </div>
+        <div class="optional-body" id="optionalBody" style="display:none;">
+          <div class="form-grid" style="margin-top:1rem;">
+            <div class="form-group">
+              <label><i class="fas fa-user"></i> Nome Cliente</label>
+              <input type="text" id="clientName" placeholder="Mario Rossi">
+            </div>
+            <div class="form-group">
+              <label><i class="fas fa-map-marker-alt"></i> Indirizzo Cantiere</label>
+              <input type="text" id="clientAddress" placeholder="Via Roma 1, Milano">
+            </div>
+            <div class="form-group form-group-full">
+              <label><i class="fas fa-sticky-note"></i> Note aggiuntive</label>
+              <input type="text" id="clientNotes" placeholder="es. Lavori da completare entro giugno 2025">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-calculate" id="analyzeBtn">
+        <i class="fas fa-brain"></i>
+        Analizza con AI
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       STEP 5: RISULTATI + ANALISI AI
+       ============================================================ -->
+  <div class="step-section" id="step5" style="display:none;">
+    <div class="results-container">
+
+      <!-- Header trade -->
+      <div class="result-header-card">
+        <div class="result-trade-icon" id="resultTradeIcon"></div>
+        <div class="result-trade-info">
+          <h3 id="quoteTrade">Mestiere</h3>
+          <p id="quoteDetails">Dettagli lavoro</p>
+        </div>
+        <div class="result-quality-badge" id="resultQualityBadge">Standard</div>
+      </div>
+
+      <!-- VERDETTO AI — CARD PRINCIPALE -->
+      <div class="verdict-card" id="verdictCard">
+        <div class="verdict-icon-wrap" id="verdictIcon">
+          <i class="fas fa-bullseye"></i>
+        </div>
+        <div class="verdict-body">
+          <div class="verdict-label" id="verdictLabel">Analisi in corso...</div>
+          <div class="verdict-sublabel" id="verdictSublabel"></div>
+        </div>
+        <div class="verdict-score-wrap">
+          <div class="verdict-score" id="verdictScore">—</div>
+          <div class="verdict-score-label">Affidabilità</div>
+        </div>
+      </div>
+
+      <!-- CONFRONTO PREZZI -->
+      <div class="price-comparison-card">
+        <div class="price-comp-row">
+          <div class="price-comp-item">
+            <div class="price-comp-label">Preventivo Ricevuto</div>
+            <div class="price-comp-value accent" id="receivedPriceDisplay">—</div>
+          </div>
+          <div class="price-comp-vs">vs</div>
+          <div class="price-comp-item">
+            <div class="price-comp-label">Media di Mercato</div>
+            <div class="price-comp-value" id="marketMidDisplay">—</div>
+          </div>
+        </div>
+        <div class="price-diff-row" id="priceDiffRow">
+          <span id="priceDiffBadge" class="price-diff-badge">—</span>
+          <span id="priceDiffText" class="price-diff-text"></span>
+        </div>
+        <!-- Barra visiva -->
+        <div class="price-bar-wrap">
+          <div class="price-bar-track">
+            <div class="price-bar-fill" id="priceBarFill"></div>
+            <div class="price-bar-marker" id="priceBarMarker"></div>
+          </div>
+          <div class="price-bar-labels">
+            <span id="barLabelMin">Min</span>
+            <span>Media</span>
+            <span id="barLabelMax">Max</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- GRAFICI -->
+      <div class="charts-row">
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-chart-pie"></i> Composizione Costi</div>
+          <div class="chart-wrap"><canvas id="breakdownChart"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><i class="fas fa-chart-bar"></i> Confronto Prezzi</div>
+          <div class="chart-wrap"><canvas id="rangeChart"></canvas></div>
+        </div>
+      </div>
+
+      <!-- CONSIGLI AI -->
+      <div class="ai-advice-card" id="aiAdviceCard">
+        <div class="ai-advice-header">
+          <i class="fas fa-brain"></i>
+          Analisi e Consigli AI
+        </div>
+        <div class="ai-advice-list" id="aiAdviceList"></div>
+      </div>
+
+      <!-- RED FLAGS -->
+      <div class="red-flags-card" id="redFlagsCard" style="display:none;">
+        <div class="red-flags-header">
+          <i class="fas fa-triangle-exclamation"></i>
+          Segnali di Attenzione
+        </div>
+        <div class="red-flags-list" id="redFlagsList"></div>
+      </div>
+
+      <!-- DOMANDE DA FARE -->
+      <div class="questions-card" id="questionsCard">
+        <div class="questions-header">
+          <i class="fas fa-circle-question"></i>
+          Domande da Fare all'Artigiano
+        </div>
+        <ol class="questions-list" id="questionsList"></ol>
+      </div>
+
+      <!-- BREAKDOWN COSTI -->
+      <div class="breakdown-card">
+        <div class="breakdown-title">
+          <i class="fas fa-list-check"></i> Dettaglio Costi di Mercato
+        </div>
+        <div id="quoteBreakdown"></div>
+      </div>
+
+      <!-- COEFFICIENTI -->
+      <div class="coefficients-card">
+        <div class="coeff-title">
+          <i class="fas fa-sliders"></i> Coefficienti Applicati
+        </div>
+        <div class="coeff-grid" id="coeffGrid"></div>
+      </div>
+
+      <!-- AZIONI -->
+      <div class="result-actions">
+        <button class="btn-save" id="saveQuoteBtn" style="display:none;">
+          <i class="fas fa-cloud-arrow-up"></i> Salva nel Cloud
+        </button>
+        <button class="btn-pdf" id="exportPdfBtn">
+          <i class="fas fa-file-pdf"></i> Scarica Report PDF
+        </button>
+      </div>
+      <button class="btn-new-quote" id="newQuoteBtn">
+        <i class="fas fa-plus"></i> Analizza un Altro Preventivo
+      </button>
+
+    </div>
+  </div>
+
+  <!-- ============================================================
+       DASHBOARD STORICO
+       ============================================================ -->
+  <div class="step-section" id="stepDashboard" style="display:none;">
+    <div class="step-header-block">
+      <h2 class="step-title">La Tua Dashboard</h2>
+      <p class="step-desc">Storico preventivi analizzati e andamento nel tempo</p>
+    </div>
+
+    <!-- Stats row -->
+    <div class="dash-stats-row" id="dashStatsRow">
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon" style="background:rgba(14,165,233,0.1);color:#0ea5e9;">
+          <i class="fas fa-file-invoice-dollar"></i>
+        </div>
+        <div class="dash-stat-body">
+          <div class="dash-stat-value" id="dashTotalCount">0</div>
+          <div class="dash-stat-label">Preventivi Analizzati</div>
+        </div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon" style="background:rgba(5,150,105,0.1);color:#059669;">
+          <i class="fas fa-piggy-bank"></i>
+        </div>
+        <div class="dash-stat-body">
+          <div class="dash-stat-value" id="dashTotalSavings">€0</div>
+          <div class="dash-stat-label">Risparmio Potenziale</div>
+        </div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon" style="background:rgba(217,119,6,0.1);color:#d97706;">
+          <i class="fas fa-chart-line"></i>
+        </div>
+        <div class="dash-stat-body">
+          <div class="dash-stat-value" id="dashAvgScore">—</div>
+          <div class="dash-stat-label">Score Medio Affidabilità</div>
+        </div>
+      </div>
+      <div class="dash-stat-card">
+        <div class="dash-stat-icon" style="background:rgba(220,38,38,0.1);color:#dc2626;">
+          <i class="fas fa-triangle-exclamation"></i>
+        </div>
+        <div class="dash-stat-body">
+          <div class="dash-stat-value" id="dashAlertCount">0</div>
+          <div class="dash-stat-label">Alert Rilevati</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Grafici dashboard -->
+    <div class="charts-row" style="margin-bottom:1.5rem;">
+      <div class="chart-card">
+        <div class="chart-title"><i class="fas fa-chart-line"></i> Andamento Prezzi nel Tempo</div>
+        <div class="chart-wrap"><canvas id="dashTrendChart"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title"><i class="fas fa-chart-pie"></i> Preventivi per Mestiere</div>
+        <div class="chart-wrap"><canvas id="dashTradeChart"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Lista storico -->
+    <div class="breakdown-card">
+      <div class="breakdown-title">
+        <i class="fas fa-clock-rotate-left"></i> Tutti i Preventivi
+      </div>
+      <div id="dashHistoryList"></div>
+    </div>
+
+    <button class="btn-new-quote" id="dashNewQuoteBtn" style="margin-top:1rem;">
+      <i class="fas fa-plus"></i> Analizza Nuovo Preventivo
+    </button>
+  </div>
+
+</div><!-- /app-container -->
+
+<!-- ============================================================
+     MODAL STORICO (quick view)
+     ============================================================ -->
+<div class="modal-overlay" id="historyModal" style="display:none;">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-head-title">
+        <i class="fas fa-clock-rotate-left"></i>
+        <h3>Storico Preventivi</h3>
+      </div>
+      <button class="modal-close" id="closeHistoryBtn"><i class="fas fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" id="historyList"></div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- APP SCRIPT -->
+<script type="module" src="app-v3.js"></script>
 </body>
 </html>

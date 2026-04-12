@@ -1,6 +1,6 @@
 /**
- * Modulo Autenticazione Email/Password
- * Integrazione Firebase con UI semplificata
+ * Preventivi-Smart Pro — Autenticazione v6.0
+ * Firebase Auth: Email/Password + Google Sign-In
  */
 
 import { auth } from "../firebase.js";
@@ -9,21 +9,19 @@ import {
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
-  updateProfile
+  updateProfile,
+  GoogleAuthProvider,
+  signInWithPopup
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 
-// ===== STATE =====
 let currentUser = null;
 let authCallbacks = [];
 
-// ===== LISTENER GLOBALE =====
 onAuthStateChanged(auth, (user) => {
   currentUser = user;
   notifyAuthCallbacks(user);
-  
   if (user) {
-    // Salva sessione locale
-    localStorage.setItem('preventivi_user', JSON.stringify({
+    localStorage.setItem("preventivi_user", JSON.stringify({
       uid: user.uid,
       email: user.email,
       displayName: user.displayName,
@@ -31,68 +29,44 @@ onAuthStateChanged(auth, (user) => {
       loginTime: new Date().toISOString()
     }));
   } else {
-    localStorage.removeItem('preventivi_user');
+    localStorage.removeItem("preventivi_user");
   }
 });
 
 // ===== REGISTRAZIONE =====
 export async function registerUser(email, password, displayName) {
   try {
-    // Validazione
-    if (!email || !password || !displayName) {
-      throw new Error('Tutti i campi sono obbligatori');
-    }
-    
-    if (password.length < 6) {
-      throw new Error('La password deve avere almeno 6 caratteri');
-    }
-    
-    if (!isValidEmail(email)) {
-      throw new Error('Email non valida');
-    }
-
-    // Creazione account
+    if (!email || !password || !displayName) throw new Error("Tutti i campi sono obbligatori");
+    if (password.length < 6) throw new Error("La password deve avere almeno 6 caratteri");
+    if (!isValidEmail(email)) throw new Error("Email non valida");
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-    
-    // Aggiornamento profilo
-    await updateProfile(userCredential.user, {
-      displayName: displayName
-    });
-
-    return {
-      success: true,
-      user: userCredential.user,
-      message: 'Registrazione completata con successo!'
-    };
+    await updateProfile(userCredential.user, { displayName });
+    return { success: true, user: userCredential.user };
   } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-      code: error.code
-    };
+    return { success: false, error: translateError(error) };
   }
 }
 
-// ===== LOGIN =====
+// ===== LOGIN EMAIL =====
 export async function loginUser(email, password) {
   try {
-    if (!email || !password) {
-      throw new Error('Email e password sono obbligatori');
-    }
-
+    if (!email || !password) throw new Error("Email e password sono obbligatori");
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
-    
-    return {
-      success: true,
-      user: userCredential.user,
-      message: 'Login effettuato con successo!'
-    };
+    return { success: true, user: userCredential.user };
   } catch (error) {
-    return {
-      success: false,
-      error: error.message,
-      code: error.code
-    };
+    return { success: false, error: translateError(error) };
+  }
+}
+
+// ===== LOGIN GOOGLE =====
+export async function loginWithGoogle() {
+  try {
+    const provider = new GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: "select_account" });
+    const result = await signInWithPopup(auth, provider);
+    return { success: true, user: result.user };
+  } catch (error) {
+    return { success: false, error: translateError(error) };
   }
 }
 
@@ -100,75 +74,49 @@ export async function loginUser(email, password) {
 export async function logoutUser() {
   try {
     await signOut(auth);
-    return {
-      success: true,
-      message: 'Logout effettuato'
-    };
+    return { success: true };
   } catch (error) {
-    return {
-      success: false,
-      error: error.message
-    };
+    return { success: false, error: error.message };
   }
 }
 
-// ===== GETTER UTENTE CORRENTE =====
-export function getCurrentUser() {
-  return currentUser;
-}
+export function getCurrentUser() { return currentUser; }
+export function isUserLoggedIn() { return currentUser !== null; }
 
-export function isUserLoggedIn() {
-  return currentUser !== null;
-}
-
-// ===== SUBSCRIBE ALLE MODIFICHE =====
 export function onAuthStateChange(callback) {
   authCallbacks.push(callback);
-  
-  // Chiama subito con lo stato corrente
   callback(currentUser);
-  
-  // Ritorna funzione di unsubscribe
-  return () => {
-    authCallbacks = authCallbacks.filter(cb => cb !== callback);
-  };
+  return () => { authCallbacks = authCallbacks.filter(cb => cb !== callback); };
 }
 
 function notifyAuthCallbacks(user) {
-  authCallbacks.forEach(callback => callback(user));
+  authCallbacks.forEach(cb => cb(user));
 }
 
-// ===== VALIDAZIONE =====
 function isValidEmail(email) {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-export function validatePassword(password) {
-  const errors = [];
-  
-  if (password.length < 6) {
-    errors.push('Minimo 6 caratteri');
-  }
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Almeno una maiuscola');
-  }
-  if (!/[0-9]/.test(password)) {
-    errors.push('Almeno un numero');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
+function translateError(error) {
+  const map = {
+    "auth/user-not-found":         "Nessun account trovato con questa email.",
+    "auth/wrong-password":         "Password errata. Riprova.",
+    "auth/email-already-in-use":   "Email già registrata. Prova ad accedere.",
+    "auth/weak-password":          "Password troppo debole (min. 6 caratteri).",
+    "auth/invalid-email":          "Formato email non valido.",
+    "auth/too-many-requests":      "Troppi tentativi. Attendi qualche minuto.",
+    "auth/popup-closed-by-user":   "Finestra Google chiusa. Riprova.",
+    "auth/network-request-failed": "Errore di rete. Controlla la connessione.",
+    "auth/invalid-credential":     "Credenziali non valide. Controlla email e password."
   };
+  return map[error.code] || error.message;
 }
 
-// ===== RECUPERO SESSIONE =====
 export function getStoredSession() {
-  const stored = localStorage.getItem('preventivi_user');
+  const stored = localStorage.getItem("preventivi_user");
   return stored ? JSON.parse(stored) : null;
 }
 
 export function clearStoredSession() {
-  localStorage.removeItem('preventivi_user');
+  localStorage.removeItem("preventivi_user");
 }
