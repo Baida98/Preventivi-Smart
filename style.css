@@ -104,27 +104,15 @@ body {
     padding: 0 24px;
 }
 
-.hero-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    background: #fffbeb;
-    border: 1px solid #fef3c7;
-    color: #b45309;
-    padding: 6px 16px;
-    border-radius: 100px;
-    font-size: 0.75rem;
-    font-weight: 700;
-    margin-bottom: 24px;
-}
+
 
 .hero-title {
-    font-size: 3.5rem;
-    font-weight: 800;
-    line-height: 1.1;
+    font-size: 3rem;
+    font-weight: 700;
+    line-height: 1.2;
     color: var(--gray-900);
-    margin-bottom: 24px;
-    letter-spacing: -0.03em;
+    margin-bottom: 16px;
+    letter-spacing: -0.02em;
 }
 
 .highlight {
@@ -132,10 +120,10 @@ body {
 }
 
 .hero-subtitle {
-    font-size: 1.125rem;
-    color: var(--gray-500);
-    margin-bottom: 48px;
-    line-height: 1.6;
+    font-size: 1rem;
+    color: var(--gray-600);
+    margin-bottom: 40px;
+    line-height: 1.5;
 }
 
 .hero-actions-grid {
@@ -147,12 +135,11 @@ body {
 
 .action-card {
     background: var(--white);
-    padding: 32px;
-    border-radius: 24px;
+    padding: 28px 24px;
+    border-radius: 16px;
     border: 1px solid var(--gray-100);
-    text-align: left;
+    text-align: center;
     transition: all 0.3s;
-    position: relative;
     cursor: pointer;
 }
 
@@ -166,50 +153,29 @@ body {
     background: linear-gradient(to bottom right, #ffffff, #f0f9ff);
 }
 
-.card-tag {
-    position: absolute;
-    top: 16px;
-    right: 16px;
-    background: var(--primary);
-    color: white;
-    font-size: 0.65rem;
-    font-weight: 800;
-    padding: 4px 10px;
-    border-radius: 100px;
-}
+
 
 .card-icon {
-    font-size: 2rem;
+    font-size: 2.5rem;
     color: var(--primary);
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .card-title {
-    font-size: 1.25rem;
-    font-weight: 700;
-    margin-bottom: 8px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--gray-900);
 }
 
 .card-desc {
-    font-size: 0.875rem;
+    font-size: 0.8rem;
     color: var(--gray-500);
-    margin-bottom: 24px;
+    margin-bottom: 16px;
+    line-height: 1.4;
 }
 
-.hero-trust-bar {
-    display: flex;
-    justify-content: center;
-    gap: 32px;
-    color: var(--gray-400);
-    font-size: 0.875rem;
-    font-weight: 500;
-}
 
-.hero-trust-bar span {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
 
 /* BUTTONS */
 .btn {

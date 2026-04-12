@@ -100,14 +100,7 @@ function startWizard(quick) {
         appRoot.style.display = 'block';
         appRoot.classList.remove('hidden');
         
-        const wizardIntro = document.querySelector('#step1 .step-header');
-        if (wizardIntro && !document.getElementById('wizardBanner')) {
-            const bannerDiv = document.createElement('div');
-            bannerDiv.id = 'wizardBanner';
-            bannerDiv.style.cssText = "width: 100%; height: 140px; margin-bottom: 24px; border-radius: 16px; overflow: hidden; background: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 100%); display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 1.5rem; text-transform: uppercase; letter-spacing: 2px;";
-            bannerDiv.innerHTML = `<span>Preventivi Smart Pro</span>`;
-            wizardIntro.prepend(bannerDiv);
-        }
+
     }
     
     currentStep = 1;
@@ -126,27 +119,14 @@ function renderMacroCategories() {
     if (!tradesGrid) return;
     const cats = database.getAllCategories();
     
-    const iconMapping = {
-        'idraulico': 'idraulica',
-        'elettricista': 'elettrico',
-        'muratore': 'muratore',
-        'pittore': 'imbiancatura',
-        'serramenti': 'serramenti',
-        'servizi': 'giardiniere'
-    };
-
-    tradesGrid.innerHTML = cats.map(cat => {
-        const iconName = iconMapping[cat.id] || cat.id;
-        const iconPath = `assets/icon_${iconName}.png`;
-        return `
+    tradesGrid.innerHTML = cats.map(cat => `
         <div class="trade-card" onclick="selectMacro('${cat.id}')">
-            <div class="icon-container" style="height: 64px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-                <img src="${iconPath}" alt="${cat.name}" style="max-width: 56px; max-height: 56px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                <i class="${cat.icon}" style="display:none; font-size: 2.5rem; color: var(--primary);"></i>
+            <div class="icon-container" style="height: 56px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
+                <i class="fa-solid ${cat.icon}" style="font-size: 2.2rem; color: var(--primary);"></i>
             </div>
             <h4>${cat.name}</h4>
         </div>
-    `}).join('');
+    `).join('');
     
     const backBtn = document.querySelector('.wizard-nav button[onclick="goBackSelection()"]');
     if (backBtn) backBtn.classList.add('hidden');
@@ -163,8 +143,8 @@ function renderSubCategories(macroId) {
     
     tradesGrid.innerHTML = subs.map(sub => `
         <div class="trade-card" onclick="selectSub('${sub.id}')">
-            <div class="icon-container" style="height: 56px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-                <i class="fa-solid ${sub.icon}" style="font-size: 2rem; color: var(--primary);"></i>
+            <div class="icon-container" style="height: 48px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                <i class="fa-solid ${sub.icon}" style="font-size: 1.8rem; color: var(--primary);"></i>
             </div>
             <h4>${sub.name}</h4>
         </div>
@@ -185,12 +165,13 @@ function renderTrades(macroId, subId) {
     
     tradesGrid.innerHTML = trades.map(trade => `
         <div class="trade-card" onclick="selectTrade('${trade.id}')">
-            <div class="icon-container" style="height: 56px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-                <i class="fa-solid ${trade.icon}" style="font-size: 1.8rem; color: var(--primary);"></i>
+            <div class="icon-container" style="height: 48px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
+                <i class="fa-solid ${trade.icon}" style="font-size: 1.6rem; color: var(--primary);"></i>
             </div>
             <h4>${trade.name}</h4>
         </div>
     `).join('');
+
 }
 
 function selectTrade(id) {
