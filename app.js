@@ -1,82 +1,97 @@
-import { db, auth } from "./firebase.js";
+import { auth, db, provider } from "./firebase.js";
+import {
+  signInWithPopup,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 import {
   collection,
   addDoc,
-  getDocs,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { wizard } from "./engine/wizard.js";
-import { calculate } from "./engine/core.js";
-import { buildStats } from "./engine/analytics.js";
+let currentUser = null;
 
-let user = null;
-let i = 0;
-let data = {};
-let stats = {};
-
+/* =========================
+   LOGIN GOOGLE
+========================= */
 window.login = async () => {
-  const { signInWithPopup, GoogleAuthProvider } =
-    await import("https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js");
-
-  await signInWithPopup(auth, new GoogleAuthProvider());
+  try {
+    await signInWithPopup(auth, provider);
+  } catch (e) {
+    console.error(e);
+  }
 };
 
-window.logout = () => auth.signOut();
+/* LOGOUT */
+window.logout = async () => {
+  await signOut(auth);
+};
 
-auth.onAuthStateChanged(async u => {
-  user = u;
-  document.getElementById("user").innerText = u ? u.email : "non loggato";
+/* =========================
+   STATO UTENTE
+========================= */
+onAuthStateChanged(auth, async (user) => {
+  currentUser = user;
 
-  if(u){
-    const snap = await getDocs(collection(db,"preventivi"));
-    const arr = snap.docs.map(d=>d.data());
-    stats = await buildStats(arr);
-    render();
+  if (user) {
+    document.getElementById("loginBox").style.display = "none";
+    document.getElementById("app").style.display = "block";
+
+    document.getElementById("userEmail").innerText = user.email;
+
+    loadPreventivi();
+  } else {
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("app").style.display = "none";
   }
 });
 
-function render(){
+/* =========================
+   CREA PREVENTIVO
+========================= */
+window.creaPreventivo = async () => {
+  const cliente = document.getElementById("cliente").value;
+  const servizio = document.getElementById("servizio").value;
+  const prezzo = parseFloat(document.getElementById("prezzo").value);
 
-  const step = wizard[i];
+  if (!cliente || !servizio || !prezzo) return;
 
-  document.getElementById("wizard").innerHTML = `
-    <p>${step.label}</p>
-    ${
-      step.type==="select"
-      ? `<select id="inp">${step.options.map(o=>`<option>${o}</option>`).join("")}</select>`
-      : step.type==="number"
-      ? `<input id="inp" type="number">`
-      : `<select id="inp"><option>no</option><option>si</option></select>`
-    }
-  `;
-}
-
-render();
-
-document.getElementById("next").onclick = async () => {
-
-  const step = wizard[i];
-  const val = document.getElementById("inp").value;
-
-  data[step.key] = step.type==="number" ? Number(val) : val;
-
-  i++;
-
-  if(i < wizard.length){
-    render();
-    return;
-  }
-
-  const res = calculate(data, stats);
-
-  document.getElementById("result").innerText =
-    `€ ${res.min.toFixed(0)} - ${res.mid.toFixed(0)} - ${res.max.toFixed(0)}`;
-
-  await addDoc(collection(db,"preventivi"),{
-    ...data,
-    prezzo: res.mid,
-    uid: user?.uid || null,
-    createdAt: serverTimestamp()
+  await addDoc(collection(db, "preventivi"), {
+    uid: currentUser.uid,
+    cliente,
+    servizio,
+    prezzo,
+    data: new Date().toISOString()
   });
+
+  loadPreventivi();
 };
+
+/* =========================
+   CARICA PREVENTIVI
+========================= */
+async function loadPreventivi() {
+  const q = query(
+    collection(db, "preventivi"),
+    where("uid", "==", currentUser.uid)
+  );
+
+  const snap = await getDocs(q);
+
+  let html = "";
+
+  snap.forEach(doc => {
+    const d = doc.data();
+    html += `
+      <div>
+        <b>${d.cliente}</b> - ${d.servizio} - ${d.prezzo}€
+      </div>
+    `;
+  });
+
+  document.getElementById("lista").innerHTML = html;
+}
