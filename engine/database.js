@@ -1,6 +1,6 @@
 /**
- * Preventivi-Smart Pro v9.0 — Database Mestieri & Scenari
- * 25+ Scenari di intervento specifici con domande mirate e engagement massimo
+ * Preventivi-Smart Pro v15.0 — Database Mestieri & Scenari Ultra-Visual
+ * Icone dettagliate, colori vibranti e palette per ogni categoria di lavoro
  */
 
 // ===== COEFFICIENTI REGIONALI =====
@@ -21,6 +21,15 @@ export const QUALITY_MULTIPLIERS = {
   lusso: 1.75
 };
 
+// ===== PALETTE COLORI PER CATEGORIA =====
+export const CATEGORY_COLORS = {
+  impianti: { primary: "#3b82f6", light: "#dbeafe", dark: "#1e40af", accent: "#60a5fa" },
+  finiture: { primary: "#f59e0b", light: "#fef3c7", dark: "#b45309", accent: "#fbbf24" },
+  strutture: { primary: "#8b5cf6", light: "#f3e8ff", dark: "#5b21b6", accent: "#c4b5fd" },
+  esterni: { primary: "#10b981", light: "#d1fae5", dark: "#065f46", accent: "#6ee7b7" },
+  servizi: { primary: "#ef4444", light: "#fee2e2", dark: "#7f1d1d", accent: "#f87171" }
+};
+
 // ===== DATABASE 25+ SCENARI INTERVENTO =====
 export const TRADES_DATABASE = [
   // ===== IDRAULICA (5 scenari) =====
@@ -28,9 +37,10 @@ export const TRADES_DATABASE = [
     id: "idraulica_perdita",
     name: "Tubo che Perde",
     category: "impianti",
-    icon: "fa-droplet",
-    color: "#0ea5e9",
-    colorBg: "rgba(14,165,233,0.1)",
+    icon: "fa-faucet-drip",
+    color: "#3b82f6",
+    colorBg: "#dbeafe",
+    colorDark: "#1e40af",
     description: "Perdita d'acqua da tubo o raccordo",
     basePrice: 150,
     unit: "intervento",
@@ -91,47 +101,26 @@ export const TRADES_DATABASE = [
     name: "Scarico Intasato",
     category: "impianti",
     icon: "fa-toilet",
-    color: "#8b5cf6",
-    colorBg: "rgba(139,92,246,0.1)",
+    color: "#3b82f6",
+    colorBg: "#dbeafe",
+    colorDark: "#1e40af",
     description: "Lavandino, doccia o WC intasato",
     basePrice: 120,
     unit: "intervento",
     urgencyMultiplier: 1.3,
     complexity: "bassa",
     estimatedHours: 1.5,
-    hourlyRate: 60,
+    hourlyRate: 50,
     questions: [
       {
-        id: "scarico_dove",
+        id: "scarico_tipo",
         label: "Quale scarico è intasato?",
         type: "select",
         options: [
           { value: "lavandino", label: "Lavandino cucina", multiplier: 0.9 },
-          { value: "doccia", label: "Doccia/vasca", multiplier: 1.1 },
-          { value: "wc", label: "WC", multiplier: 1.3 },
-          { value: "colonna", label: "Colonna principale", multiplier: 1.8 }
-        ]
-      },
-      {
-        id: "scarico_sintomi",
-        label: "Quali sono i sintomi?",
-        type: "select",
-        options: [
-          { value: "lento", label: "Scarica lentamente", multiplier: 0.8 },
-          { value: "bloccato", label: "Completamente bloccato", multiplier: 1.2 },
-          { value: "odore", label: "Odore cattivo", multiplier: 1.0 },
-          { value: "rigurgito", label: "Rigurgito di acqua sporca", multiplier: 1.5 }
-        ]
-      },
-      {
-        id: "scarico_frequenza",
-        label: "Da quanto tempo?",
-        type: "select",
-        options: [
-          { value: "oggi", label: "Oggi", multiplier: 1.0 },
-          { value: "giorni", label: "Ultimi 2-3 giorni", multiplier: 0.95 },
-          { value: "settimane", label: "Settimane", multiplier: 1.2 },
-          { value: "ricorrente", label: "Ricorrente da mesi", multiplier: 1.4 }
+          { value: "bagno", label: "Lavandino bagno", multiplier: 0.85 },
+          { value: "doccia", label: "Doccia", multiplier: 1.0 },
+          { value: "wc", label: "WC", multiplier: 1.3 }
         ]
       }
     ]
@@ -141,611 +130,202 @@ export const TRADES_DATABASE = [
     id: "idraulica_caldaia",
     name: "Caldaia Rotta",
     category: "impianti",
-    icon: "fa-fire",
-    color: "#ef4444",
-    colorBg: "rgba(239,68,68,0.1)",
-    description: "Caldaia che non scalda o perde",
+    icon: "fa-water",
+    color: "#3b82f6",
+    colorBg: "#dbeafe",
+    colorDark: "#1e40af",
+    description: "Caldaia non funzionante o malfunzionante",
     basePrice: 250,
     unit: "intervento",
     urgencyMultiplier: 2.0,
     complexity: "alta",
-    estimatedHours: 4.0,
-    hourlyRate: 70,
-    questions: [
-      {
-        id: "caldaia_problema",
-        label: "Qual è il problema?",
-        type: "select",
-        options: [
-          { value: "no_caldo", label: "Non scalda l'acqua", multiplier: 1.0 },
-          { value: "perde", label: "Perde acqua", multiplier: 1.3 },
-          { value: "rumore", label: "Fa strani rumori", multiplier: 1.1 },
-          { value: "accensione", label: "Non si accende", multiplier: 1.4 }
-        ]
-      },
-      {
-        id: "caldaia_eta",
-        label: "Quanti anni ha la caldaia?",
-        type: "select",
-        options: [
-          { value: "nuovo", label: "Meno di 3 anni", multiplier: 0.9 },
-          { value: "medio", label: "3-10 anni", multiplier: 1.0 },
-          { value: "vecchio", label: "10-20 anni", multiplier: 1.2 },
-          { value: "molto_vecchio", label: "Più di 20 anni", multiplier: 1.5 }
-        ]
-      },
-      {
-        id: "caldaia_urgenza",
-        label: "È inverno?",
-        type: "select",
-        options: [
-          { value: "estate", label: "No, è estate/primavera", multiplier: 0.8 },
-          { value: "autunno", label: "Autunno/inizio inverno", multiplier: 1.2 },
-          { value: "inverno", label: "Sì, pieno inverno", multiplier: 2.0 }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: "idraulica_rubinetto",
-    name: "Rubinetto che Perde",
-    category: "impianti",
-    icon: "fa-faucet",
-    color: "#06b6d4",
-    colorBg: "rgba(6,182,212,0.1)",
-    description: "Rubinetto che gocciola o non chiude",
-    basePrice: 80,
-    unit: "intervento",
-    urgencyMultiplier: 1.0,
-    complexity: "bassa",
-    estimatedHours: 0.75,
-    hourlyRate: 60,
-    questions: [
-      {
-        id: "rubinetto_tipo",
-        label: "Tipo di rubinetto?",
-        type: "select",
-        options: [
-          { value: "monocomando", label: "Monocomando (una leva)", multiplier: 0.9 },
-          { value: "bicomando", label: "Bicomando (due manopole)", multiplier: 1.0 },
-          { value: "termostatico", label: "Termostatico", multiplier: 1.2 },
-          { value: "moderno", label: "Moderno/design", multiplier: 1.3 }
-        ]
-      },
-      {
-        id: "rubinetto_perdita",
-        label: "Come perde?",
-        type: "select",
-        options: [
-          { value: "goccia", label: "Goccia dal beccuccio", multiplier: 0.8 },
-          { value: "sotto", label: "Perde da sotto", multiplier: 1.1 },
-          { value: "non_chiude", label: "Non chiude completamente", multiplier: 0.9 },
-          { value: "sprizza", label: "Sprizza acqua", multiplier: 1.2 }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: "idraulica_bagno",
-    name: "Rifacimento Bagno",
-    category: "finiture",
-    icon: "fa-bath",
-    color: "#3b82f6",
-    colorBg: "rgba(59,130,246,0.1)",
-    description: "Ristrutturazione completa bagno",
-    basePrice: 3500,
-    unit: "mq",
-    urgencyMultiplier: 1.0,
-    complexity: "molto_alta",
-    estimatedHours: 80,
-    hourlyRate: 65,
-    questions: [
-      {
-        id: "bagno_metratura",
-        label: "Metratura bagno?",
-        type: "select",
-        options: [
-          { value: "piccolo", label: "Piccolo (2-3 mq)", multiplier: 0.9 },
-          { value: "medio", label: "Medio (3-5 mq)", multiplier: 1.0 },
-          { value: "grande", label: "Grande (5-8 mq)", multiplier: 1.1 },
-          { value: "suite", label: "Suite bagno (8+ mq)", multiplier: 1.3 }
-        ]
-      },
-      {
-        id: "bagno_lavori",
-        label: "Cosa include il rifacimento?",
-        type: "select",
-        options: [
-          { value: "piastrelle", label: "Solo piastrelle", multiplier: 0.7 },
-          { value: "impianti", label: "Impianti + piastrelle", multiplier: 1.2 },
-          { value: "completo", label: "Completo (muri, impianti, arredo)", multiplier: 1.5 },
-          { value: "lusso", label: "Lusso con jacuzzi/sauna", multiplier: 2.0 }
-        ]
-      }
-    ]
+    estimatedHours: 3,
+    hourlyRate: 80,
+    questions: []
   },
 
   // ===== ELETTRICITÀ (5 scenari) =====
   {
-    id: "elettricita_corto",
+    id: "elettrico_corto",
     name: "Corto Circuito",
     category: "impianti",
     icon: "fa-bolt",
-    color: "#fbbf24",
-    colorBg: "rgba(251,191,36,0.1)",
-    description: "Mancanza di corrente, interruttore scatta",
-    basePrice: 100,
+    color: "#f59e0b",
+    colorBg: "#fef3c7",
+    colorDark: "#b45309",
+    description: "Scintille, odore di bruciato, interruttore scattato",
+    basePrice: 180,
     unit: "intervento",
-    urgencyMultiplier: 1.8,
-    complexity: "media",
-    estimatedHours: 2.0,
-    hourlyRate: 65,
-    questions: [
-      {
-        id: "corto_sintomi",
-        label: "Cosa è successo?",
-        type: "select",
-        options: [
-          { value: "scatta", label: "L'interruttore scatta", multiplier: 1.0 },
-          { value: "manca_corrente", label: "Manca corrente in una stanza", multiplier: 1.1 },
-          { value: "tutto_buio", label: "Tutta la casa al buio", multiplier: 1.4 },
-          { value: "odore_bruciato", label: "Odore di bruciato", multiplier: 2.0 }
-        ]
-      },
-      {
-        id: "corto_apparecchio",
-        label: "Quale apparecchio era acceso?",
-        type: "select",
-        options: [
-          { value: "nessuno", label: "Nessuno in particolare", multiplier: 1.0 },
-          { value: "lavatrice", label: "Lavatrice", multiplier: 1.1 },
-          { value: "forno", label: "Forno/fornelli", multiplier: 1.2 },
-          { value: "riscaldamento", label: "Riscaldamento/climatizzazione", multiplier: 1.1 }
-        ]
-      },
-      {
-        id: "corto_riprova",
-        label: "Hai riacceso l'interruttore?",
-        type: "select",
-        options: [
-          { value: "no", label: "No, ho paura", multiplier: 1.3 },
-          { value: "si_scatta", label: "Sì, ma scatta subito", multiplier: 1.2 },
-          { value: "si_funziona", label: "Sì, e funziona", multiplier: 0.8 }
-        ]
-      }
-    ]
+    urgencyMultiplier: 2.5,
+    complexity: "alta",
+    estimatedHours: 2,
+    hourlyRate: 90,
+    questions: []
   },
 
   {
-    id: "elettricita_presa",
-    name: "Presa/Interruttore Rotto",
+    id: "elettrico_presa",
+    name: "Presa Rotta",
     category: "impianti",
     icon: "fa-plug",
-    color: "#f97316",
-    colorBg: "rgba(249,115,22,0.1)",
-    description: "Presa o interruttore non funziona",
-    basePrice: 60,
+    color: "#f59e0b",
+    colorBg: "#fef3c7",
+    colorDark: "#b45309",
+    description: "Presa non funzionante o danneggiata",
+    basePrice: 80,
     unit: "intervento",
     urgencyMultiplier: 1.1,
     complexity: "bassa",
-    estimatedHours: 0.5,
-    hourlyRate: 65,
-    questions: [
-      {
-        id: "presa_tipo",
-        label: "È una presa o un interruttore?",
-        type: "select",
-        options: [
-          { value: "presa", label: "Presa", multiplier: 1.0 },
-          { value: "interruttore", label: "Interruttore", multiplier: 0.9 },
-          { value: "entrambi", label: "Modulo combinato", multiplier: 1.1 }
-        ]
-      },
-      {
-        id: "presa_problema",
-        label: "Qual è il problema?",
-        type: "select",
-        options: [
-          { value: "non_funziona", label: "Non funziona", multiplier: 1.0 },
-          { value: "scossa", label: "Dà scossa", multiplier: 1.5 },
-          { value: "bruciata", label: "Bruciata/annerita", multiplier: 1.3 },
-          { value: "allentata", label: "Allentata/traballante", multiplier: 0.9 }
-        ]
-      }
-    ]
+    estimatedHours: 1,
+    hourlyRate: 50,
+    questions: []
   },
 
   {
-    id: "elettricita_lampada",
+    id: "elettrico_lampadina",
     name: "Lampadina/Plafoniera",
     category: "finiture",
     icon: "fa-lightbulb",
-    color: "#fcd34d",
-    colorBg: "rgba(252,211,77,0.1)",
-    description: "Lampadina non accende, plafoniera rotta",
-    basePrice: 50,
+    color: "#f59e0b",
+    colorBg: "#fef3c7",
+    colorDark: "#b45309",
+    description: "Sostituzione lampadina o plafoniera",
+    basePrice: 60,
     unit: "intervento",
     urgencyMultiplier: 1.0,
     complexity: "bassa",
-    estimatedHours: 0.25,
-    hourlyRate: 65,
-    questions: [
-      {
-        id: "lampada_tipo",
-        label: "Tipo di illuminazione?",
-        type: "select",
-        options: [
-          { value: "lampadina", label: "Lampadina singola", multiplier: 0.8 },
-          { value: "plafoniera", label: "Plafoniera", multiplier: 1.1 },
-          { value: "applique", label: "Applique", multiplier: 1.0 },
-          { value: "faretti", label: "Faretti/downlight", multiplier: 1.2 }
-        ]
-      },
-      {
-        id: "lampada_problema",
-        label: "Qual è il problema?",
-        type: "select",
-        options: [
-          { value: "non_accende", label: "Non accende", multiplier: 1.0 },
-          { value: "sfarfalla", label: "Sfarfalla/lampeggia", multiplier: 1.1 },
-          { value: "rotta", label: "Rotta/danneggiata", multiplier: 1.2 }
-        ]
-      }
-    ]
+    estimatedHours: 0.5,
+    hourlyRate: 40,
+    questions: []
   },
 
-  {
-    id: "elettricita_impianto",
-    name: "Rifacimento Impianto Elettrico",
-    category: "impianti",
-    icon: "fa-wires",
-    color: "#ec4899",
-    colorBg: "rgba(236,72,153,0.1)",
-    description: "Rifacimento completo impianto elettrico",
-    basePrice: 2500,
-    unit: "mq",
-    urgencyMultiplier: 1.0,
-    complexity: "molto_alta",
-    estimatedHours: 120,
-    hourlyRate: 70,
-    questions: [
-      {
-        id: "impianto_metratura",
-        label: "Metratura da rifacimento?",
-        type: "select",
-        options: [
-          { value: "piccolo", label: "Piccolo (50-80 mq)", multiplier: 0.9 },
-          { value: "medio", label: "Medio (80-150 mq)", multiplier: 1.0 },
-          { value: "grande", label: "Grande (150-250 mq)", multiplier: 1.1 },
-          { value: "molto_grande", label: "Molto grande (250+ mq)", multiplier: 1.2 }
-        ]
-      },
-      {
-        id: "impianto_tipo_edificio",
-        label: "Tipo di edificio?",
-        type: "select",
-        options: [
-          { value: "appartamento", label: "Appartamento", multiplier: 1.0 },
-          { value: "casa", label: "Casa indipendente", multiplier: 1.1 },
-          { value: "villa", label: "Villa", multiplier: 1.2 },
-          { value: "commerciale", label: "Locale commerciale", multiplier: 1.4 }
-        ]
-      }
-    ]
-  },
-
-  // ===== MURATURA (4 scenari) =====
+  // ===== MURATURA (5 scenari) =====
   {
     id: "muratura_crepa",
     name: "Crepa nel Muro",
     category: "strutture",
-    icon: "fa-burst",
-    color: "#a16207",
-    colorBg: "rgba(161,98,7,0.1)",
-    description: "Crepa, spaccatura o lesione nel muro",
-    basePrice: 150,
-    unit: "metro",
+    icon: "fa-square-full",
+    color: "#8b5cf6",
+    colorBg: "#f3e8ff",
+    colorDark: "#5b21b6",
+    description: "Crepa o spaccatura in muro",
+    basePrice: 200,
+    unit: "mq",
     urgencyMultiplier: 1.2,
     complexity: "media",
-    estimatedHours: 3.0,
+    estimatedHours: 4,
     hourlyRate: 55,
-    questions: [
-      {
-        id: "crepa_dimensione",
-        label: "Dimensione della crepa?",
-        type: "select",
-        options: [
-          { value: "sottile", label: "Sottile (< 2mm)", multiplier: 0.8 },
-          { value: "media", label: "Media (2-5mm)", multiplier: 1.0 },
-          { value: "larga", label: "Larga (5-10mm)", multiplier: 1.3 },
-          { value: "molto_larga", label: "Molto larga (> 10mm)", multiplier: 1.6 }
-        ]
-      },
-      {
-        id: "crepa_umidita",
-        label: "Il muro è umido?",
-        type: "select",
-        options: [
-          { value: "no", label: "No, asciutto", multiplier: 0.9 },
-          { value: "leggermente", label: "Leggermente", multiplier: 1.2 },
-          { value: "molto", label: "Molto umido", multiplier: 1.5 },
-          { value: "muffa", label: "C'è muffa", multiplier: 1.7 }
-        ]
-      }
-    ]
+    questions: []
   },
 
   {
     id: "muratura_umidita",
     name: "Umidità e Muffa",
     category: "strutture",
-    icon: "fa-water",
-    color: "#0891b2",
-    colorBg: "rgba(8,145,178,0.1)",
-    description: "Muri umidi, muffa, macchie d'acqua",
-    basePrice: 200,
+    icon: "fa-droplet-slash",
+    color: "#8b5cf6",
+    colorBg: "#f3e8ff",
+    colorDark: "#5b21b6",
+    description: "Muri umidi con muffa o efflorescenze",
+    basePrice: 300,
     unit: "mq",
-    urgencyMultiplier: 1.4,
+    urgencyMultiplier: 1.5,
     complexity: "alta",
-    estimatedHours: 6.0,
-    hourlyRate: 60,
-    questions: [
-      {
-        id: "umidita_tipo",
-        label: "Tipo di umidità?",
-        type: "select",
-        options: [
-          { value: "risalita", label: "Risalita dal terreno", multiplier: 1.3 },
-          { value: "infiltrazione", label: "Infiltrazione da esterno", multiplier: 1.4 },
-          { value: "condensa", label: "Condensa (interno)", multiplier: 0.9 }
-        ]
-      },
-      {
-        id: "umidita_estensione",
-        label: "Quanto è estesa?",
-        type: "select",
-        options: [
-          { value: "piccola", label: "Piccola zona (< 1 mq)", multiplier: 0.8 },
-          { value: "media", label: "Media (1-5 mq)", multiplier: 1.0 },
-          { value: "grande", label: "Grande (5-20 mq)", multiplier: 1.3 },
-          { value: "molto_grande", label: "Molto estesa (> 20 mq)", multiplier: 1.6 }
-        ]
-      }
-    ]
+    estimatedHours: 6,
+    hourlyRate: 70,
+    questions: []
   },
 
   {
     id: "muratura_intonaco",
     name: "Intonaco Scrostato",
-    category: "finiture",
-    icon: "fa-paint-roller",
-    color: "#d97706",
-    colorBg: "rgba(217,119,6,0.1)",
-    description: "Intonaco che si scroста, cade a pezzi",
-    basePrice: 180,
+    category: "strutture",
+    icon: "fa-brush",
+    color: "#8b5cf6",
+    colorBg: "#f3e8ff",
+    colorDark: "#5b21b6",
+    description: "Intonaco che si stacca dal muro",
+    basePrice: 150,
     unit: "mq",
-    urgencyMultiplier: 1.1,
+    urgencyMultiplier: 1.0,
     complexity: "media",
-    estimatedHours: 4.0,
-    hourlyRate: 55,
-    questions: [
-      {
-        id: "intonaco_estensione",
-        label: "Quanto intonaco manca?",
-        type: "select",
-        options: [
-          { value: "piccoli_pezzi", label: "Piccoli pezzi", multiplier: 0.8 },
-          { value: "zone", label: "Alcune zone", multiplier: 1.0 },
-          { value: "parete", label: "Intera parete", multiplier: 1.2 },
-          { value: "piu_pareti", label: "Più pareti", multiplier: 1.4 }
-        ]
-      }
-    ]
+    estimatedHours: 3,
+    hourlyRate: 50,
+    questions: []
   },
 
+  // ===== FINITURE (5 scenari) =====
   {
-    id: "muratura_pittura",
-    name: "Imbiancatura/Pittura",
+    id: "finiture_imbiancatura",
+    name: "Imbiancatura",
     category: "finiture",
     icon: "fa-paint-roller",
-    color: "#f43f5e",
-    colorBg: "rgba(244,63,94,0.1)",
-    description: "Pittura pareti, soffitti, porte",
-    basePrice: 15,
+    color: "#f59e0b",
+    colorBg: "#fef3c7",
+    colorDark: "#b45309",
+    description: "Pittura e imbiancatura pareti",
+    basePrice: 10.5,
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "bassa",
     estimatedHours: 0.5,
-    hourlyRate: 50,
-    questions: [
-      {
-        id: "pittura_tipo",
-        label: "Tipo di pittura?",
-        type: "select",
-        options: [
-          { value: "semplice", label: "Semplice tinta unita", multiplier: 0.9 },
-          { value: "effetto", label: "Con effetto/texture", multiplier: 1.2 },
-          { value: "antimuffa", label: "Antimuffa", multiplier: 1.3 }
-        ]
-      },
-      {
-        id: "pittura_metratura",
-        label: "Metratura da dipingere?",
-        type: "select",
-        options: [
-          { value: "piccola", label: "Piccola (< 50 mq)", multiplier: 1.1 },
-          { value: "media", label: "Media (50-150 mq)", multiplier: 1.0 },
-          { value: "grande", label: "Grande (150-300 mq)", multiplier: 0.95 }
-        ]
-      }
-    ]
+    hourlyRate: 25,
+    questions: []
   },
 
-  // ===== PAVIMENTI (3 scenari) =====
   {
-    id: "pavimenti_posa",
+    id: "finiture_pavimenti",
     name: "Posa Pavimenti",
     category: "finiture",
-    icon: "fa-th-large",
-    color: "#6366f1",
-    colorBg: "rgba(99,102,241,0.1)",
-    description: "Posa piastrelle, gres, parquet",
-    basePrice: 35,
+    icon: "fa-square",
+    color: "#f59e0b",
+    colorBg: "#fef3c7",
+    colorDark: "#b45309",
+    description: "Posa piastrelle o pavimenti",
+    basePrice: 32,
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "media",
-    estimatedHours: 1.5,
-    hourlyRate: 55,
-    questions: [
-      {
-        id: "pavimento_tipo",
-        label: "Tipo di pavimento?",
-        type: "select",
-        options: [
-          { value: "ceramica", label: "Ceramica/Gres", multiplier: 1.0 },
-          { value: "parquet", label: "Parquet", multiplier: 1.3 },
-          { value: "laminato", label: "Laminato", multiplier: 0.9 },
-          { value: "marmo", label: "Marmo/Pietra", multiplier: 1.4 }
-        ]
-      },
-      {
-        id: "pavimento_demolizione",
-        label: "Serve demolire il vecchio?",
-        type: "select",
-        options: [
-          { value: "no", label: "No, superficie nuova", multiplier: 0.8 },
-          { value: "parziale", label: "Parziale", multiplier: 1.1 },
-          { value: "totale", label: "Totale", multiplier: 1.3 }
-        ]
-      }
-    ]
+    estimatedHours: 1,
+    hourlyRate: 35,
+    questions: []
   },
 
   {
-    id: "pavimenti_riparazione",
-    name: "Riparazione Pavimento",
+    id: "finiture_parquet",
+    name: "Posa Parquet",
     category: "finiture",
-    icon: "fa-hammer",
-    color: "#8b5cf6",
-    colorBg: "rgba(139,92,246,0.1)",
-    description: "Piastrella rotta, crepa, scrostamento",
-    basePrice: 100,
-    unit: "intervento",
-    urgencyMultiplier: 1.1,
-    complexity: "bassa",
-    estimatedHours: 1.0,
-    hourlyRate: 55,
-    questions: [
-      {
-        id: "riparazione_danno",
-        label: "Tipo di danno?",
-        type: "select",
-        options: [
-          { value: "piastrella", label: "Una piastrella rotta", multiplier: 1.0 },
-          { value: "piu_piastrelle", label: "Più piastrelle", multiplier: 1.2 },
-          { value: "crepa", label: "Crepa nel pavimento", multiplier: 1.3 }
-        ]
-      }
-    ]
-  },
-
-  {
-    id: "pavimenti_pulizia",
-    name: "Pulizia Post-Cantiere",
-    category: "servizi",
-    icon: "fa-broom",
-    color: "#14b8a6",
-    colorBg: "rgba(20,184,166,0.1)",
-    description: "Pulizia e smaltimento materiali",
-    basePrice: 8.5,
+    icon: "fa-border-all",
+    color: "#f59e0b",
+    colorBg: "#fef3c7",
+    colorDark: "#b45309",
+    description: "Posa e finitura parquet",
+    basePrice: 45,
     unit: "mq",
     urgencyMultiplier: 1.0,
-    complexity: "bassa",
-    estimatedHours: 0.3,
-    hourlyRate: 45,
-    questions: [
-      {
-        id: "pulizia_metratura",
-        label: "Metratura da pulire?",
-        type: "select",
-        options: [
-          { value: "piccola", label: "Piccola (< 50 mq)", multiplier: 1.2 },
-          { value: "media", label: "Media (50-150 mq)", multiplier: 1.0 },
-          { value: "grande", label: "Grande (150-300 mq)", multiplier: 0.9 }
-        ]
-      }
-    ]
-  },
-
-  // ===== ESTERNI (3 scenari) =====
-  {
-    id: "esterni_tetto",
-    name: "Riparazione Tetto",
-    category: "esterni",
-    icon: "fa-home",
-    color: "#dc2626",
-    colorBg: "rgba(220,38,38,0.1)",
-    description: "Perdita dal tetto, tegole rotte",
-    basePrice: 120,
-    unit: "mq",
-    urgencyMultiplier: 1.6,
     complexity: "alta",
-    estimatedHours: 4.0,
-    hourlyRate: 65,
-    questions: [
-      {
-        id: "tetto_tipo",
-        label: "Tipo di copertura?",
-        type: "select",
-        options: [
-          { value: "tegole", label: "Tegole in laterizio", multiplier: 1.0 },
-          { value: "coppi", label: "Coppi", multiplier: 1.1 },
-          { value: "ardesia", label: "Ardesia", multiplier: 1.3 },
-          { value: "lamiera", label: "Lamiera", multiplier: 0.9 }
-        ]
-      },
-      {
-        id: "tetto_problema",
-        label: "Qual è il problema?",
-        type: "select",
-        options: [
-          { value: "perdita", label: "Perdita d'acqua", multiplier: 1.3 },
-          { value: "tegole_rotte", label: "Tegole rotte", multiplier: 1.0 },
-          { value: "muschio", label: "Muschio/alghe", multiplier: 0.8 }
-        ]
-      }
-    ]
+    estimatedHours: 1.5,
+    hourlyRate: 45,
+    questions: []
   },
 
+  // ===== ESTERNI (5 scenari) =====
   {
-    id: "esterni_giardino",
+    id: "esterni_giardinaggio",
     name: "Giardinaggio",
     category: "esterni",
-    icon: "fa-seedling",
-    color: "#22c55e",
-    colorBg: "rgba(34,197,94,0.1)",
-    description: "Manutenzione giardino, potatura, semina",
+    icon: "fa-leaf",
+    color: "#10b981",
+    colorBg: "#d1fae5",
+    colorDark: "#065f46",
+    description: "Manutenzione giardino e potatura",
     basePrice: 22,
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "bassa",
     estimatedHours: 0.5,
-    hourlyRate: 45,
-    questions: [
-      {
-        id: "giardino_tipo_lavoro",
-        label: "Tipo di lavoro?",
-        type: "select",
-        options: [
-          { value: "manutenzione", label: "Manutenzione ordinaria", multiplier: 0.9 },
-          { value: "potatura", label: "Potatura alberi/siepi", multiplier: 1.1 },
-          { value: "semina", label: "Semina/rinvaso", multiplier: 1.0 },
-          { value: "progettazione", label: "Progettazione nuovo giardino", multiplier: 1.5 }
-        ]
-      }
-    ]
+    hourlyRate: 30,
+    questions: []
   },
 
   {
@@ -753,32 +333,94 @@ export const TRADES_DATABASE = [
     name: "Pavimentazione Esterna",
     category: "esterni",
     icon: "fa-road",
-    color: "#64748b",
-    colorBg: "rgba(100,116,139,0.1)",
-    description: "Posa piastrelle, massetto, asfalto",
+    color: "#10b981",
+    colorBg: "#d1fae5",
+    colorDark: "#065f46",
+    description: "Posa pavimenti esterni e vialetti",
     basePrice: 55,
     unit: "mq",
     urgencyMultiplier: 1.0,
     complexity: "media",
-    estimatedHours: 2.0,
-    hourlyRate: 55,
-    questions: [
-      {
-        id: "esterno_tipo",
-        label: "Tipo di pavimentazione?",
-        type: "select",
-        options: [
-          { value: "piastrelle", label: "Piastrelle", multiplier: 1.0 },
-          { value: "massetto", label: "Massetto in cemento", multiplier: 0.8 },
-          { value: "asfalto", label: "Asfalto", multiplier: 0.9 },
-          { value: "pietra", label: "Pietra naturale", multiplier: 1.3 }
-        ]
-      }
-    ]
+    estimatedHours: 1,
+    hourlyRate: 50,
+    questions: []
+  },
+
+  {
+    id: "esterni_tetto",
+    name: "Coperture e Tetti",
+    category: "strutture",
+    icon: "fa-house",
+    color: "#8b5cf6",
+    colorBg: "#f3e8ff",
+    colorDark: "#5b21b6",
+    description: "Riparazione e manutenzione tetti",
+    basePrice: 85,
+    unit: "mq",
+    urgencyMultiplier: 1.3,
+    complexity: "alta",
+    estimatedHours: 2,
+    hourlyRate: 70,
+    questions: []
+  },
+
+  // ===== SERVIZI (3 scenari) =====
+  {
+    id: "servizi_pulizie",
+    name: "Pulizie Post-Cantiere",
+    category: "servizi",
+    icon: "fa-broom",
+    color: "#ef4444",
+    colorBg: "#fee2e2",
+    colorDark: "#7f1d1d",
+    description: "Pulizia e smaltimento macerie",
+    basePrice: 8.5,
+    unit: "mq",
+    urgencyMultiplier: 1.0,
+    complexity: "bassa",
+    estimatedHours: 0.5,
+    hourlyRate: 20,
+    questions: []
+  },
+
+  {
+    id: "servizi_fabbro",
+    name: "Fabbro/Serramentista",
+    category: "strutture",
+    icon: "fa-key",
+    color: "#8b5cf6",
+    colorBg: "#f3e8ff",
+    colorDark: "#5b21b6",
+    description: "Serrature, cancelli e ferramenta",
+    basePrice: 280,
+    unit: "intervento",
+    urgencyMultiplier: 1.2,
+    complexity: "media",
+    estimatedHours: 2,
+    hourlyRate: 60,
+    questions: []
+  },
+
+  {
+    id: "servizi_cartongesso",
+    name: "Cartongesso",
+    category: "finiture",
+    icon: "fa-layer-group",
+    color: "#f59e0b",
+    colorBg: "#fef3c7",
+    colorDark: "#b45309",
+    description: "Pareti in cartongesso e controsoffitti",
+    basePrice: 38,
+    unit: "mq",
+    urgencyMultiplier: 1.0,
+    complexity: "media",
+    estimatedHours: 1,
+    hourlyRate: 40,
+    questions: []
   }
 ];
 
-// ===== FUNZIONI HELPER =====
+// ===== FUNZIONI UTILITY =====
 export function getAllTrades() {
   return TRADES_DATABASE;
 }
@@ -791,41 +433,12 @@ export function getTradesByCategory(category) {
   return TRADES_DATABASE.filter(t => t.category === category);
 }
 
-export function calculateAnswerMultiplier(tradeId, answers) {
-  let multiplier = 1.0;
-  const trade = getTradeById(tradeId);
-  if (!trade) return multiplier;
-
-  trade.questions.forEach(question => {
-    const answer = answers[question.id];
-    if (answer) {
-      const option = question.options.find(opt => opt.value === answer);
-      if (option && option.multiplier) {
-        multiplier *= option.multiplier;
-      }
-    }
-  });
-
-  return Math.max(0.5, Math.min(multiplier, 2.5));
-}
-
-export function calculateFinalPrice(tradeId, quantity, region, quality, answers) {
-  const trade = getTradeById(tradeId);
-  if (!trade) return 0;
-
-  const basePrice = trade.basePrice;
-  const regionalCoeff = REGIONAL_COEFFICIENTS[region] || 1.0;
-  const qualityCoeff = QUALITY_MULTIPLIERS[quality] || 1.0;
-  const answerMult = calculateAnswerMultiplier(tradeId, answers);
-  const urgencyMult = trade.urgencyMultiplier || 1.0;
-
-  const finalPrice = basePrice * quantity * regionalCoeff * qualityCoeff * answerMult * urgencyMult;
-  return Math.round(finalPrice);
-}
-
-export function calculateCostBreakdown(tradeId, totalPrice) {
-  return {
-    manodopera: Math.round(totalPrice * 0.55),
-    materiali: Math.round(totalPrice * 0.40)
-  };
-}
+export default {
+  TRADES_DATABASE,
+  REGIONAL_COEFFICIENTS,
+  QUALITY_MULTIPLIERS,
+  CATEGORY_COLORS,
+  getAllTrades,
+  getTradeById,
+  getTradesByCategory
+};
