@@ -32,16 +32,18 @@
                 <i class="fa-solid fa-shield-halved"></i>
                 <span>PREVENTIVI-SMART <small>PRO</small></span>
             </div>
-                <div class="user-nav" id="userNav">
-                <button class="btn btn-ghost animate-slide-right" onclick="location.reload()"><i class="fa-solid fa-house"></i> Home</button>
+            <div class="user-nav" id="userNav">
+                <button class="btn btn-google-login" id="googleLoginBtn">
+                    <i class="fa-brands fa-google"></i> Accedi per salvare
+                </button>
             </div>
         </div>
     </header>
 
-    <!-- HERO SECTION: SIMPLIFIED & PREMIUM -->
+    <!-- HERO SECTION -->
     <section class="hero" id="hero-section">
         <div class="hero-content">
-                <div class="hero-badge animate-pulse-soft" style="cursor: default;">
+            <div class="hero-badge animate-pulse-soft">
                 <i class="fa-solid fa-sparkles" style="color: var(--amber);"></i> AI-POWERED BENCHMARK 2026
             </div>
             
@@ -54,7 +56,6 @@
             </p>
             
             <div class="hero-actions-grid">
-                <!-- ANALISI PROFESSIONALE -->
                 <div class="action-card premium-card" id="startAnalysisBtn">
                     <div class="card-tag">CONSIGLIATO</div>
                     <div class="card-icon animate-float">
@@ -65,7 +66,6 @@
                     <button class="btn btn-primary btn-full">Verifica Ora <i class="fa-solid fa-chevron-right"></i></button>
                 </div>
                 
-                <!-- STIMA RAPIDA -->
                 <div class="action-card free-card" id="startQuickBtn">
                     <div class="card-icon">
                         <i class="fa-solid fa-calculator"></i>
@@ -76,7 +76,6 @@
                 </div>
             </div>
 
-            <!-- TRUST STATS MINIMAL -->
             <div class="hero-trust-bar">
                 <span><i class="fa-solid fa-database"></i> 12.5k Dati</span>
                 <span><i class="fa-solid fa-bolt"></i> Analisi in 30s</span>
@@ -108,18 +107,21 @@
                 </div>
             </div>
 
-            <!-- STEP 1: SELEZIONE MESTIERE -->
+            <!-- STEP 1: SELEZIONE MESTIERE (GERARCHICO) -->
             <div class="step-content" id="step1">
                 <div class="step-header">
                     <h2 class="step-title">Cosa dobbiamo analizzare?</h2>
                     <p class="step-subtitle">Seleziona la categoria del lavoro</p>
                 </div>
                 <div class="trades-grid" id="tradesGrid">
-                    <!-- Dinamicamente popolato -->
+                    <!-- Popolato gerarchicamente via JS -->
+                </div>
+                <div class="wizard-nav" style="margin-top: 24px; justify-content: center;">
+                    <button class="btn btn-ghost" onclick="renderCategories()"><i class="fa-solid fa-arrow-rotate-left"></i> Torna alle Categorie</button>
                 </div>
             </div>
 
-            <!-- STEP 2: DETTAGLI LAVORO -->
+            <!-- STEP 2: DETTAGLI LAVORO (VISUAL FEEDBACK) -->
             <div class="step-content hidden" id="step2">
                 <div class="step-header">
                     <h2 class="step-title">Configura i dettagli</h2>
@@ -128,11 +130,17 @@
                 
                 <div class="form-grid">
                     <div class="form-group">
-                        <label class="form-label">Regione</label>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <label class="form-label">Regione</label>
+                            <span id="feedback-region" class="visual-feedback-icon"></span>
+                        </div>
                         <select class="form-select" id="regionSelect"></select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Quantità (<span id="unitLabel">mq</span>)</label>
+                        <div style="display: flex; align-items: center; justify-content: space-between;">
+                            <label class="form-label">Quantità (<span id="unitLabel">mq</span>)</label>
+                            <span id="feedback-quantity" class="visual-feedback-icon"></span>
+                        </div>
                         <input type="number" id="quantityInput" class="form-input" placeholder="Es. 50">
                     </div>
                 </div>
@@ -150,7 +158,7 @@
                 </div>
             </div>
 
-            <!-- STEP 3: PREZZO (SOLO PER PROFESSIONAL) -->
+            <!-- STEP 3: PREZZO -->
             <div class="step-content hidden" id="step3">
                 <div class="step-header">
                     <h2 class="step-title">Prezzo Ricevuto</h2>
@@ -160,6 +168,7 @@
                 <div class="price-input-wrapper">
                     <span class="currency-symbol">€</span>
                     <input type="number" id="receivedPriceInput" class="massive-price-input" placeholder="0">
+                    <span id="feedback-price" class="visual-feedback-icon" style="font-size: 2rem; position: absolute; right: 20%;"></span>
                 </div>
 
                 <div class="wizard-nav">
@@ -184,18 +193,6 @@
             </div>
         </div>
     </main>
-
-    <!-- DASHBOARD (HISTORICAL) -->
-    <section id="dashboard" class="dashboard-section hidden">
-        <div class="container">
-            <div class="dash-header">
-                <h2>Il tuo Storico</h2>
-                <button class="btn btn-primary btn-sm" id="dashNewAnalysisBtn"><i class="fa-solid fa-plus"></i></button>
-            </div>
-            <div class="dash-stats-grid" id="dashStats"></div>
-            <div class="history-list card" id="historyList"></div>
-        </div>
-    </section>
 
     <footer class="main-footer">
         <p>&copy; 2026 Preventivi-Smart Pro. AI Security Layer Active.</p>

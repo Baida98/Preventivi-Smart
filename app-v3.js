@@ -1,11 +1,10 @@
 /**
- * Preventivi-Smart Pro v13.0 — Core Application (Logic & UX Refactoring)
- * Gestione flussi differenziati: Analisi Professionale vs Stima Rapida.
+ * Preventivi-Smart Pro v17.0 — Hierarchical Flow & Google Auth
  */
 
 import { initSecurityShield } from "./engine/security-shield.js";
 import { initUIProtection } from "./engine/ui-protection.js";
-import { getAllTrades, getTradeById, REGIONAL_COEFFICIENTS } from "./engine/database.js";
+import { getAllCategories, getTradesByCategory, getTradeById, REGIONAL_COEFFICIENTS } from "./engine/database.js";
 import { analyzeQuote, computeStats, analyzeTrend } from "./engine/ai-analyzer.js";
 import { renderDashboard } from "./engine/dashboard-ui.js";
 
@@ -19,42 +18,86 @@ try {
 
 // ===== STATO GLOBALE =====
 let currentStep = 1;
+let currentCategory = null;
 let currentTrade = null;
 let userHistory = [];
-let wizardMode = 'professional'; // 'professional' (con prezzo) o 'quick' (senza prezzo)
+let wizardMode = 'professional';
+let userProfile = null; // Per Google Login
 
-// currentQuote esposto per PDF
 window._psQuote = null;
-const getQuote = () => window._psQuote;
 const setQuote = (v) => { window._psQuote = v; };
 
 // ===== INIZIALIZZAZIONE APP =====
 document.addEventListener("DOMContentLoaded", () => {
   setupEventListeners();
-  renderTrades();
+  renderCategories();
   renderRegions();
+  checkAuth();
 });
+
+// ===== AUTH CHECK (MOCK) =====
+function checkAuth() {
+  const savedUser = localStorage.getItem("ps_user");
+  if (savedUser) {
+    userProfile = JSON.parse(savedUser);
+    updateUserUI();
+  }
+}
+
+function handleGoogleLogin() {
+  // Mock Google Login
+  userProfile = { name: "Utente Demo", email: "demo@gmail.com", picture: "fa-user-circle" };
+  localStorage.setItem("ps_user", JSON.stringify(userProfile));
+  updateUserUI();
+  showToast("Accesso effettuato con Google", "success");
+}
+
+function updateUserUI() {
+  const nav = document.getElementById("userNav");
+  if (nav && userProfile) {
+    nav.innerHTML = `
+      <div class="user-profile-badge animate-scale-in">
+        <i class="fa-solid fa-circle-user"></i>
+        <span>${userProfile.name}</span>
+        <button class="btn-logout" onclick="localStorage.removeItem('ps_user'); location.reload();"><i class="fa-solid fa-right-from-bracket"></i></button>
+      </div>
+    `;
+  }
+}
 
 // ===== EVENT LISTENERS =====
 function setupEventListeners() {
-  // Hero Buttons - Flussi differenziati
   document.getElementById("startAnalysisBtn")?.addEventListener("click", () => startWizard("professional"));
   document.getElementById("startQuickBtn")?.addEventListener("click", () => startWizard("quick"));
-
-  // Wizard Nav
+  document.getElementById("googleLoginBtn")?.addEventListener("click", handleGoogleLogin);
   document.getElementById("prevStepBtn")?.addEventListener("click", prevStep);
   document.getElementById("nextStepBtn")?.addEventListener("click", nextStep);
   document.getElementById("prevStep3Btn")?.addEventListener("click", prevStep);
   document.getElementById("runAnalysisBtn")?.addEventListener("click", runAnalysis);
-
-  // PDF Download
   document.getElementById("btnDownloadPDF")?.addEventListener("click", downloadPDF);
-
-  // Dashboard
-  document.getElementById("dashNewAnalysisBtn")?.addEventListener("click", () => {
-    document.getElementById("dashboard")?.classList.add("hidden");
-    startWizard("professional");
+  
+  // Visual Feedback: Update icons on input
+  document.getElementById("regionSelect")?.addEventListener("change", (e) => {
+    updateVisualFeedback('region', e.target.value);
   });
+  document.getElementById("quantityInput")?.addEventListener("input", (e) => {
+    updateVisualFeedback('quantity', e.target.value);
+  });
+  document.getElementById("receivedPriceInput")?.addEventListener("input", (e) => {
+    updateVisualFeedback('price', e.target.value);
+  });
+}
+
+function updateVisualFeedback(type, value) {
+  const iconMap = {
+    region: 'fa-location-dot',
+    quantity: 'fa-ruler-combined',
+    price: 'fa-coins'
+  };
+  const feedbackEl = document.getElementById(`feedback-${type}`);
+  if (feedbackEl) {
+    feedbackEl.innerHTML = value ? `<i class="fa-solid ${iconMap[type]} animate-pulse-soft"></i>` : '';
+  }
 }
 
 // ===== WIZARD FLOW =====
@@ -69,24 +112,19 @@ function startWizard(mode) {
     appRoot.classList.remove("hidden");
   }
 
-  // Personalizza Step 3 Label in base al modo
   const step3Label = document.getElementById("step3Label");
-  if (step3Label) {
-    step3Label.textContent = (mode === 'professional') ? "Prezzo" : "Analisi";
-  }
+  if (step3Label) step3Label.textContent = (mode === 'professional') ? "Prezzo" : "Analisi";
 
   currentStep = 1;
   goToStep(1);
 }
 
 function goToStep(step) {
-  // Nascondi tutti i contenuti degli step
   for (let i = 1; i <= 4; i++) {
     const s = document.getElementById(`step${i}`);
     if (s) s.classList.add("hidden");
   }
   
-  // Mostra lo step corrente
   const currentStepEl = document.getElementById(`step${step}`);
   if (currentStepEl) {
     currentStepEl.classList.remove("hidden");
@@ -97,9 +135,15 @@ function goToStep(step) {
 }
 
 function nextStep() {
-  if (currentStep === 1 && !currentTrade) {
-    showToast("Seleziona prima un tipo di lavoro", "info");
-    return;
+  if (currentStep === 1) {
+    if (!currentCategory) {
+      showToast("Seleziona una categoria", "info");
+      return;
+    }
+    // Se abbiamo selezionato la categoria, mostriamo le sottocategorie nello stesso step o avanziamo?
+    // Facciamo uno step intermedio 1.5 per le sottocategorie
+    renderSubTrades(currentCategory.id);
+    return; 
   }
   
   if (currentStep === 2) {
@@ -108,11 +152,9 @@ function nextStep() {
       showToast("Inserisci una quantità valida", "info");
       return;
     }
-    
-    // LOGICA DIFFERENZIATA: Se siamo in 'quick', saltiamo lo step 3 (prezzo) e andiamo direttamente all'analisi
     if (wizardMode === 'quick') {
       currentStep = 4;
-      runAnalysis(); // Avvia l'analisi direttamente
+      runAnalysis();
       return;
     }
   }
@@ -122,12 +164,12 @@ function nextStep() {
 }
 
 function prevStep() {
-  // Se siamo allo step 4 e veniamo da 'quick', torniamo allo step 2
-  if (currentStep === 4 && wizardMode === 'quick') {
-    currentStep = 2;
-  } else {
-    currentStep--;
+  if (currentStep === 1 && document.getElementById("tradesGrid").dataset.view === "sub") {
+    renderCategories();
+    return;
   }
+  if (currentStep === 4 && wizardMode === 'quick') currentStep = 2;
+  else currentStep--;
   goToStep(currentStep);
 }
 
@@ -140,71 +182,78 @@ function updateProgress(step) {
       else if (i === step) node.classList.add("active");
     }
   }
-  
   const progressBar = document.getElementById("progress-bar");
   if (progressBar) {
-    const totalSteps = 4;
-    const progress = ((step - 1) / (totalSteps - 1)) * 100;
+    const progress = ((step - 1) / 3) * 100;
     progressBar.style.setProperty("--progress", `${progress}%`);
   }
 }
 
-// ===== RENDER TRADES =====
-function renderTrades(category = "all") {
+// ===== RENDERING CATEGORIES & TRADES =====
+function renderCategories() {
   const grid = document.getElementById("tradesGrid");
   if (!grid) return;
+  grid.dataset.view = "main";
+  const cats = getAllCategories();
+  grid.innerHTML = cats.map(c => `
+    <div class="trade-card animate-slide-up" onclick="selectCategory('${c.id}')">
+      <div class="trade-icon" style="background: ${c.color}15; color: ${c.color}">
+        <i class="fa-solid ${c.icon}"></i>
+      </div>
+      <h3 class="trade-name">${c.name}</h3>
+      <p class="trade-desc">${c.desc}</p>
+    </div>
+  `).join("");
+  
+  // Update Header
+  document.querySelector("#step1 .step-title").textContent = "Cosa dobbiamo analizzare?";
+  document.querySelector("#step1 .step-subtitle").textContent = "Seleziona il tipo di professionista";
+}
 
-  const trades = getAllTrades();
+window.selectCategory = (id) => {
+  const cats = getAllCategories();
+  currentCategory = cats.find(c => c.id === id);
+  renderSubTrades(id);
+};
+
+function renderSubTrades(catId) {
+  const grid = document.getElementById("tradesGrid");
+  grid.dataset.view = "sub";
+  const trades = getTradesByCategory(catId);
   grid.innerHTML = trades.map(t => `
-    <div class="trade-card ${currentTrade?.id === t.id ? 'selected' : ''}" onclick="selectTrade('${t.id}')">
-      <div class="trade-icon" style="background: ${t.color}15; color: ${t.color}">
+    <div class="trade-card animate-scale-in" onclick="selectTrade('${t.id}')">
+      <div class="trade-icon" style="background: ${currentCategory.color}15; color: ${currentCategory.color}">
         <i class="fa-solid ${t.icon}"></i>
       </div>
       <h3 class="trade-name">${t.name}</h3>
       <p class="trade-desc">${t.description}</p>
     </div>
   `).join("");
+  
+  // Update Header
+  document.querySelector("#step1 .step-title").textContent = currentCategory.name;
+  document.querySelector("#step1 .step-subtitle").textContent = "Qual è il problema specifico?";
 }
 
 window.selectTrade = (id) => {
   currentTrade = getTradeById(id);
-  renderTrades();
   const unitLabel = document.getElementById("unitLabel");
   if (unitLabel) unitLabel.textContent = currentTrade.unit;
-  renderDynamicQuestions(currentTrade);
-  nextStep();
+  currentStep = 2;
+  goToStep(2);
 };
-
-// ===== RENDER DOMANDE DINAMICHE =====
-function renderDynamicQuestions(trade) {
-  const container = document.getElementById("dynamicQuestions");
-  if (!container) return;
-  if (!trade.questions || trade.questions.length === 0) {
-    container.innerHTML = "";
-    return;
-  }
-  container.innerHTML = trade.questions.map(q => `
-    <div class="form-group animate-slide-up" style="animation-delay: 0.1s">
-      <label class="form-label">${q.label}</label>
-      <select class="form-select" name="${q.id}" id="q_${q.id}">
-        <option value="">-- Seleziona --</option>
-        ${q.options.map(o => `<option value="${o.value}" data-multiplier="${o.multiplier}">${o.label}</option>`).join("")}
-      </select>
-    </div>
-  `).join("");
-}
 
 // ===== RENDER REGIONS =====
 function renderRegions() {
   const select = document.getElementById("regionSelect");
   if (!select) return;
-  select.innerHTML = Object.keys(REGIONAL_COEFFICIENTS).map(r => `<option value="${r}">${r}</option>`).join("");
+  select.innerHTML = `<option value="">-- Seleziona Regione --</option>` + 
+    Object.keys(REGIONAL_COEFFICIENTS).map(r => `<option value="${r}">${r}</option>`).join("");
 }
 
-// ===== RUN ANALYSIS (LEVA 1, 2, 5) =====
+// ===== RUN ANALYSIS =====
 async function runAnalysis() {
   let receivedPrice = 0;
-  
   if (wizardMode === 'professional') {
     receivedPrice = parseFloat(document.getElementById("receivedPriceInput").value);
     if (!receivedPrice || receivedPrice <= 0) {
@@ -213,11 +262,8 @@ async function runAnalysis() {
     }
   }
 
-  // Assicura che siamo allo step 4
-  if (currentStep !== 4) {
-    currentStep = 4;
-    goToStep(4);
-  }
+  currentStep = 4;
+  goToStep(4);
 
   const loading = document.getElementById("analysisLoading");
   const results = document.getElementById("analysisResults");
@@ -227,44 +273,29 @@ async function runAnalysis() {
   results.classList.add("hidden");
   nav.classList.add("hidden");
 
-  // Simula calcolo AI (Effetto "Scansione")
   await new Promise(r => setTimeout(r, 2500));
 
   const qty = parseFloat(document.getElementById("quantityInput").value);
   const region = document.getElementById("regionSelect").value;
   const coeff = REGIONAL_COEFFICIENTS[region] || 1.0;
-  
   const marketMid = currentTrade.basePrice * qty * coeff;
-  const marketMin = marketMid * 0.85;
-  const marketMax = marketMid * 1.25;
-
-  // Se siamo in 'quick', usiamo il marketMid come receivedPrice per mostrare i dati senza verdetto negativo
   const finalReceivedPrice = (wizardMode === 'quick') ? marketMid : receivedPrice;
 
   const analysis = analyzeQuote({
     receivedPrice: finalReceivedPrice,
-    marketMin, marketMid, marketMax,
-    tradeId: currentTrade.id,
-    region,
-    mode: wizardMode // Passiamo il modo all'analyzer
-  }, { marketMin, marketMid, marketMax });
+    marketMin: marketMid * 0.85, marketMid, marketMax: marketMid * 1.25,
+    tradeId: currentTrade.id, region, mode: wizardMode
+  }, { marketMin: marketMid * 0.85, marketMid, marketMax: marketMid * 1.25 });
 
   renderAnalysisResults(analysis);
-
   loading.classList.add("hidden");
   results.classList.remove("hidden");
   nav.classList.remove("hidden");
 
   const historyItem = {
     id: Date.now().toString(),
-    tradeId: currentTrade.id,
     tradeName: currentTrade.name,
-    region,
-    receivedPrice: finalReceivedPrice,
-    marketMid,
-    analysis,
-    mode: wizardMode,
-    createdAt: new Date().toISOString()
+    region, receivedPrice: finalReceivedPrice, marketMid, analysis, createdAt: new Date().toISOString()
   };
   setQuote(historyItem);
   saveToHistory(historyItem);
@@ -274,22 +305,14 @@ function renderAnalysisResults(analysis) {
   const container = document.getElementById("analysisResults");
   const v = analysis.verdict;
   const isQuick = wizardMode === 'quick';
-
   container.innerHTML = `
     <div class="result-header animate-scale-in">
-      ${!isQuick ? `
-        <div class="verdict-badge" style="background: ${v.color}20; color: ${v.color}; border: 1px solid ${v.color}">
-          ${v.label}
-        </div>
-      ` : `
-        <div class="verdict-badge" style="background: var(--sapphire-light); color: var(--sapphire); border: 1px solid var(--sapphire)">
-          STIMA DI MERCATO
-        </div>
-      `}
+      <div class="verdict-badge" style="background: ${isQuick ? 'var(--sapphire-light)' : v.color + '20'}; color: ${isQuick ? 'var(--sapphire)' : v.color}; border: 1px solid ${isQuick ? 'var(--sapphire)' : v.color}">
+        ${isQuick ? 'STIMA DI MERCATO' : v.label}
+      </div>
       <h2 class="result-score">Precisione AI: ${analysis.trustLevel}%</h2>
-      <p class="psychology-text">${isQuick ? "Ecco il valore stimato basato sui dati correnti per la tua regione." : v.psychology}</p>
+      <p class="psychology-text">${isQuick ? "Valore stimato basato sui dati regionali correnti." : v.psychology}</p>
     </div>
-
     <div class="benchmark-grid">
       <div class="benchmark-item">
         <span class="b-label">${isQuick ? 'Valore Stimato' : 'Differenza vs Mercato'}</span>
@@ -298,18 +321,13 @@ function renderAnalysisResults(analysis) {
         </span>
       </div>
       <div class="benchmark-item">
-        <span class="b-label">Range Prezzi (${analysis.benchmark.region})</span>
-        <span class="b-value" style="font-size: 1rem;">
-          €${Math.round(analysis.benchmark.marketMin).toLocaleString()} - €${Math.round(analysis.benchmark.marketMax).toLocaleString()}
-        </span>
+        <span class="b-label">Range (${analysis.benchmark.region})</span>
+        <span class="b-value" style="font-size: 1rem;">€${Math.round(analysis.benchmark.marketMin).toLocaleString()} - €${Math.round(analysis.benchmark.marketMax).toLocaleString()}</span>
       </div>
     </div>
-
     <div class="advice-section">
-      <h3><i class="fa-solid fa-lightbulb text-primary"></i> ${isQuick ? 'Note per il Preventivo' : 'Consigli d\'Azione'}</h3>
-      <ul class="advice-list">
-        ${analysis.advice.map(a => `<li><i class="fa-solid fa-circle-check"></i> ${a}</li>`).join("")}
-      </ul>
+      <h3><i class="fa-solid fa-lightbulb text-primary"></i> Consigli</h3>
+      <ul class="advice-list">${analysis.advice.map(a => `<li><i class="fa-solid fa-circle-check"></i> ${a}</li>`).join("")}</ul>
     </div>
   `;
 }
@@ -317,33 +335,20 @@ function renderAnalysisResults(analysis) {
 function saveToHistory(item) {
   userHistory.unshift(item);
   localStorage.setItem("quote_history", JSON.stringify(userHistory));
-  // Render dashboard solo se esiste
-  if (document.getElementById("dashboard")) {
-    renderDashboard(userHistory);
-  }
+  if (document.getElementById("dashboard")) renderDashboard(userHistory);
 }
 
 function downloadPDF() {
-  const quote = getQuote();
-  if (!quote) return;
-  
-  if (window._buildPDF) {
-    window._buildPDF(quote);
-  } else {
-    showToast("Generatore PDF non pronto", "error");
-  }
+  if (window._buildPDF) window._buildPDF(window._psQuote);
+  else showToast("Generatore PDF non pronto", "error");
 }
 
 function showToast(message, type = "info") {
   const container = document.getElementById("toastContainer");
   if (!container) return;
-  
   const toast = document.createElement("div");
   toast.className = `toast toast-${type} animate-slide-right`;
   toast.innerHTML = `<i class="fa-solid fa-info-circle"></i> ${message}`;
   container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    setTimeout(() => toast.remove(), 500);
-  }, 3000);
+  setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 500); }, 3000);
 }
