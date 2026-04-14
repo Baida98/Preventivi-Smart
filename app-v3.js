@@ -23,7 +23,6 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 import { performProfessionalAnalysis } from './engine/professional-analyzer.js';
 import { generateProfessionalPDF } from './engine/professional-pdf.js';
-import chartRenderer from './engine/chart-renderer.js';
 
 // ===== STATE MANAGEMENT =====
 let state = {
@@ -215,37 +214,11 @@ function renderDynamicQuestions(questions) {
     });
 }
 
-// ===== LOADING ANIMATIONS =====
-function showLoadingOverlay(message = 'Elaborazione in corso...') {
-    const overlay = document.createElement('div');
-    overlay.className = 'loading-overlay';
-    overlay.id = 'loadingOverlay';
-    overlay.innerHTML = `
-        <div class="loading-box">
-            <div class="spinner"></div>
-            <p>${message}</p>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-}
-
-function hideLoadingOverlay() {
-    const overlay = getEl('loadingOverlay');
-    if (overlay) overlay.remove();
-}
-
-function showSkeletonLoader(containerId, count = 3) {
-    const container = getEl(containerId);
-    if (!container) return;
-    container.innerHTML = Array(count).fill(`
-        <div class="skeleton" style="height: 100px; margin-bottom: 16px; border-radius: 12px;"></div>
-    `).join('');
-}
-
 // ===== CORE ACTIONS =====
 async function runAnalysis() {
     const region = getEl('regionSelect')?.value;
     const qty = parseFloat(getEl('quantityInput')?.value);
+    // Leggi il prezzo da Step 3 se disponibile, altrimenti da Step 2
     const price = parseFloat(getEl('receivedPriceInputStep3')?.value) || parseFloat(getEl('receivedPriceInput')?.value);
     
     if (!region || isNaN(qty) || (!state.isQuickMode && isNaN(price))) {
@@ -253,12 +226,9 @@ async function runAnalysis() {
         return;
     }
     
-    showLoadingOverlay('Analizzando il preventivo...');
+    const tradeData = database.TRADES_DATABASE.find(t => t.id === state.selectedTrade);
     
-    setTimeout(() => {
-        const tradeData = database.TRADES_DATABASE.find(t => t.id === state.selectedTrade);
-        
-        const analysis = performProfessionalAnalysis({
+    const analysis = performProfessionalAnalysis({
         tradeId: state.selectedTrade,
         tradeName: tradeData.name,
         quantity: qty,
@@ -268,25 +238,15 @@ async function runAnalysis() {
         answers: state.questionAnswers
     });
 
-        if (!analysis.success) {
-            hideLoadingOverlay();
-            showToast(analysis.error, "error");
-            return;
-        }
+    if (!analysis.success) {
+        showToast(analysis.error, "error");
+        return;
+    }
 
-        state.lastAnalysis = analysis;
-        hideLoadingOverlay();
-        displayResults(analysis);
-        
-        // Mostra e renderizza i grafici
-        const chartsContainer = getEl('analysisCharts');
-        if (chartsContainer) {
-            chartsContainer.classList.remove('hidden');
-            chartRenderer.renderPriceComparisonChart('priceChartContainer', analysis);
-        }
-        
-        if (state.user) saveQuoteToCloud(analysis);
-    }, 500);
+    state.lastAnalysis = analysis;
+    displayResults(analysis);
+    
+    if (state.user) saveQuoteToCloud(analysis);
 }
 
 function displayResults(analysis) {
@@ -311,31 +271,24 @@ function displayResults(analysis) {
         }
         
         results.innerHTML = `
-            <div class="result-card">
-                <div class="result-card-header">
-                    <div class="result-card-icon ${verdictClass === 'success' ? 'success' : verdictClass === 'warning' ? 'warning' : 'info'}">
-                        <i class="fa-solid ${verdictClass === 'success' ? 'fa-circle-check' : verdictClass === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info'}"></i>
+            <div class="result-card result-${verdictClass}" style="background: white; padding: 24px; border-radius: 16px; border-left: 4px solid ${verdictClass === 'success' ? '#10b981' : verdictClass === 'warning' ? '#f59e0b' : '#3b82f6'}; margin-bottom: 20px;">
+                <h3 style="margin-top: 0; color: var(--gray-900);">${verdict}</h3>
+                <p style="color: var(--gray-600); margin-bottom: 16px;">${analysis.trade.name} - ${analysis.input.region}</p>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                    <div style="padding: 12px; background: var(--gray-50); border-radius: 8px;">
+                        <p style="font-size: 0.85rem; color: var(--gray-500); margin: 0 0 4px 0;">Prezzo Stimato</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--primary); margin: 0;">€${analysis.marketAnalysis.marketMid.toFixed(2)}</p>
                     </div>
-                    <h3 class="result-card-title">${verdict}</h3>
+                    ${!state.isQuickMode ? `<div style="padding: 12px; background: var(--gray-50); border-radius: 8px;">
+                        <p style="font-size: 0.85rem; color: var(--gray-500); margin: 0 0 4px 0;">Prezzo Ricevuto</p>
+                        <p style="font-size: 1.5rem; font-weight: 700; color: var(--gray-900); margin: 0;">€${analysis.input.receivedPrice.toFixed(2)}</p>
+                    </div>` : ''}
                 </div>
-                <div class="result-card-value">€${analysis.marketAnalysis.marketMid.toFixed(2)}</div>
-                <div class="result-card-label">Prezzo di Mercato Stimato</div>
-                <p class="result-card-description">Basato su dati ISTAT 2026 per la regione ${analysis.input.region}.</p>
-            </div>
-            
-            ${!state.isQuickMode ? `
-            <div class="result-card">
-                <div class="result-card-header">
-                    <div class="result-card-icon info">
-                        <i class="fa-solid fa-file-invoice-dollar"></i>
-                    </div>
-                    <h3 class="result-card-title">Il Tuo Preventivo</h3>
+                <div style="background: var(--gray-50); padding: 12px; border-radius: 8px; font-size: 0.85rem; color: var(--gray-700);">
+                    <p style="margin: 4px 0;"><strong>Quantità:</strong> ${analysis.input.quantity}</p>
+                    <p style="margin: 4px 0;"><strong>Score Affidabilità:</strong> ${analysis.reliabilityScore}/100</p>
                 </div>
-                <div class="result-card-value">€${analysis.input.receivedPrice.toFixed(2)}</div>
-                <div class="result-card-label">Prezzo Ricevuto</div>
-                <p class="result-card-description">Analisi di congruità completata con score di affidabilità ${analysis.reliabilityScore}/100.</p>
             </div>
-            ` : ''}
         `;
     }
     if (nav) nav.classList.remove('hidden');
@@ -472,10 +425,6 @@ function resetApp() {
     if (appRoot) appRoot.style.display = 'none';
     
     // Ripristina il primo step
-    getEl('analysisResults')?.classList.add('hidden');
-    getEl('analysisCharts')?.classList.add('hidden');
-    getEl('resultsNav')?.classList.add('hidden');
-    
     goToStep(1);
     renderMacroCategories();
     
