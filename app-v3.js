@@ -1,6 +1,6 @@
 /**
- * Preventivi-Smart Pro v12.3 — Final Robust Edition
- * Risolto definitivamente il problema dell'interazione pulsanti.
+ * Preventivi-Smart Pro v27.0 — Versione Finale Professionale
+ * Implementa le 5 regole base per stabilità e usabilità
  */
 
 import database from './engine/database.js';
@@ -11,19 +11,11 @@ import {
     signInWithPopup, 
     signOut 
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
-import { 
-    collection, 
-    addDoc, 
-    getDocs, 
-    query, 
-    where, 
-    orderBy, 
-    deleteDoc, 
-    doc 
-} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 import { performProfessionalAnalysis } from './engine/professional-analyzer.js';
 import { generateProfessionalPDF } from './engine/professional-pdf.js';
 import chartRenderer from './engine/chart-renderer.js';
+import QuoteManager from './engine/quote-manager.js';
+import uiFeedback from './engine/ui-feedback.js';
 
 // ===== STATE MANAGEMENT =====
 let state = {
@@ -34,37 +26,23 @@ let state = {
     isQuickMode: false,
     user: null,
     questionAnswers: {},
-    lastAnalysis: null
+    lastAnalysis: null,
+    quoteManager: null
 };
 
 // ===== UTILITIES =====
 const getEl = (id) => document.getElementById(id);
 
-function showToast(msg, type) {
-    const container = getEl('toastContainer');
-    if (!container) return;
-    const toast = document.createElement('div');
-    toast.className = `toast toast-${type}`;
-    toast.style.cssText = `
-        background: white; 
-        padding: 12px 24px; 
-        border-radius: 12px; 
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-        border-left: 4px solid ${type === 'error' ? '#ef4444' : '#10b981'}; 
-        margin-bottom: 12px; 
-        font-size: 0.9rem; 
-        font-weight: 500; 
-        transition: opacity 0.3s;
-    `;
-    toast.textContent = msg;
-    container.appendChild(toast);
-    setTimeout(() => {
-        toast.style.opacity = '0';
-        setTimeout(() => toast.remove(), 300);
-    }, 3000);
-}
-
 // ===== AUTH LOGIC =====
+onAuthStateChanged(auth, (user) => {
+    state.user = user;
+    if (user) {
+        state.quoteManager = new QuoteManager(db, user.uid);
+        loadSavedQuotes();
+    }
+    updateUserUI();
+});
+
 function updateUserUI() {
     const userNav = getEl('userNav');
     const loginModal = getEl('loginModal');
@@ -73,21 +51,20 @@ function updateUserUI() {
     if (state.user) {
         userNav.innerHTML = `
             <div class="user-profile-nav" style="display: flex; align-items: center; gap: 12px;">
-                <span class="user-name" style="font-weight: 600; font-size: 0.875rem;">${state.user.displayName || state.user.email.split('@')[0]}</span>
-                <button class="btn btn-login-trigger" id="logoutBtn">Esci</button>
+                <span class="user-name" style="font-weight: 600; font-size: 0.875rem; color: var(--gray-100);">${state.user.displayName || state.user.email.split('@')[0]}</span>
+                <button class="btn btn-secondary btn-sm" id="logoutBtn">Esci</button>
             </div>
         `;
         getEl('logoutBtn')?.addEventListener('click', () => signOut(auth));
         loginModal?.classList.add('hidden');
     } else {
-        userNav.innerHTML = `<button class="btn btn-login-trigger" id="loginTriggerBtn">Accedi</button>`;
+        userNav.innerHTML = `<button class="btn btn-primary btn-sm" id="loginTriggerBtn">Accedi</button>`;
         getEl('loginTriggerBtn')?.addEventListener('click', () => loginModal?.classList.remove('hidden'));
     }
 }
 
 // ===== WIZARD NAVIGATION =====
 function goToStep(step) {
-    console.log("Navigating to step:", step);
     document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
     const targetStep = getEl(`step${step}`);
     if (targetStep) targetStep.classList.remove('hidden');
@@ -103,105 +80,77 @@ function goToStep(step) {
 
 // ===== RENDER LOGIC =====
 function renderMacroCategories() {
-    const tradesGrid = getEl('tradesGrid');
-    if (!tradesGrid) return;
-    
-    tradesGrid.innerHTML = database.MACRO_CATEGORIES.map(cat => `
-        <div class="trade-card" data-id="${cat.id}">
-            <div class="icon-container" style="height: 56px; display: flex; align-items: center; justify-content: center; margin-bottom: 12px;">
-                <i class="fa-solid ${cat.icon}" style="font-size: 2.2rem; color: var(--primary);"></i>
-            </div>
-            <h4>${cat.name}</h4>
-            <p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 4px;">${cat.desc}</p>
-        </div>
-    `).join('');
-
-    tradesGrid.querySelectorAll('.trade-card').forEach(card => {
-        card.addEventListener('click', () => {
-            state.selectedMacro = card.dataset.id;
-            renderSubCategories(state.selectedMacro);
-        });
-    });
-    
-    const backBtn = getEl('backSelectionBtn');
-    if (backBtn) backBtn.style.display = 'none';
-}
-
-function renderSubCategories(macroId) {
-    const tradesGrid = getEl('tradesGrid');
-    if (!tradesGrid) return;
-    
-    const subs = database.SUB_CATEGORIES.filter(s => s.parent === macroId);
-    tradesGrid.innerHTML = subs.map(sub => `
-        <div class="trade-card" data-id="${sub.id}">
-            <div class="icon-container" style="height: 48px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-                <i class="fa-solid ${sub.icon}" style="font-size: 1.8rem; color: var(--primary);"></i>
-            </div>
-            <h4>${sub.name}</h4>
-        </div>
-    `).join('');
-
-    tradesGrid.querySelectorAll('.trade-card').forEach(card => {
-        card.addEventListener('click', () => {
-            state.selectedSub = card.dataset.id;
-            renderTrades(state.selectedSub);
-        });
-    });
-    
-    const backBtn = getEl('backSelectionBtn');
-    if (backBtn) backBtn.style.display = 'inline-flex';
-}
-
-function renderTrades(subId) {
-    const tradesGrid = getEl('tradesGrid');
-    if (!tradesGrid) return;
-    
-    const trades = database.TRADES_DATABASE.filter(t => t.parent === subId);
-    tradesGrid.innerHTML = trades.map(trade => `
-        <div class="trade-card" data-id="${trade.id}">
-            <div class="icon-container" style="height: 48px; display: flex; align-items: center; justify-content: center; margin-bottom: 10px;">
-                <i class="fa-solid ${trade.icon}" style="font-size: 1.6rem; color: var(--primary);"></i>
-            </div>
-            <h4>${trade.name}</h4>
-            <p style="font-size: 0.75rem; color: var(--gray-500); margin-top: 4px;">€${trade.basePrice}/${trade.unit}</p>
-        </div>
-    `).join('');
-
-    tradesGrid.querySelectorAll('.trade-card').forEach(card => {
-        card.addEventListener('click', () => selectTrade(card.dataset.id));
-    });
-}
-
-function selectTrade(id) {
-    state.selectedTrade = id;
-    const tradeData = database.TRADES_DATABASE.find(t => t.id === id);
-    
-    getEl('unitLabel').textContent = tradeData.unit;
-    getEl('tradeNameDisplay').textContent = tradeData.name;
-    getEl('basePriceDisplay').textContent = `€${tradeData.basePrice}`;
-    
-    renderDynamicQuestions(tradeData.questions || []);
-    goToStep(2);
-}
-
-function goBackSelection() {
-    if (state.selectedSub) {
-        state.selectedSub = null;
-        renderSubCategories(state.selectedMacro);
-    } else if (state.selectedMacro) {
-        state.selectedMacro = null;
-        renderMacroCategories();
-    }
-}
-
-function renderDynamicQuestions(questions) {
-    const container = getEl('dynamicQuestions');
+    const container = getEl('macro-grid');
     if (!container) return;
     
-    container.innerHTML = questions.map((q, idx) => `
-        <div class="form-group" style="margin-bottom: 20px;">
-            <label class="form-label" style="display: block; font-weight: 600; margin-bottom: 8px; color: var(--gray-900);">${q.label}</label>
-            <select class="form-select dynamic-q" data-idx="${idx}" style="width: 100%; padding: 10px 12px; border: 1px solid var(--gray-200); border-radius: 8px; font-size: 0.95rem;">
+    container.innerHTML = database.MACRO_CATEGORIES.map(macro => `
+        <div class="trade-card" onclick="selectMacro('${macro.id}')">
+            <i class="fa-solid ${macro.icon}"></i>
+            <h4>${macro.name}</h4>
+            <p>${macro.description}</p>
+        </div>
+    `).join('');
+}
+
+window.selectMacro = (macroId) => {
+    state.selectedMacro = macroId;
+    const macro = database.MACRO_CATEGORIES.find(m => m.id === macroId);
+    getEl('step1-title').textContent = macro.name;
+    getEl('step1-subtitle').textContent = "Seleziona il tipo di intervento";
+    
+    const container = getEl('macro-grid');
+    container.innerHTML = macro.subs.map(sub => `
+        <div class="trade-card" onclick="selectSub('${sub.id}')">
+            <i class="fa-solid ${sub.icon}"></i>
+            <h4>${sub.name}</h4>
+            <p>${sub.description}</p>
+        </div>
+    `).join('');
+    
+    getEl('homeFromStep1Btn').classList.add('hidden');
+    getEl('backToMacroBtn').classList.remove('hidden');
+};
+
+window.selectSub = (subId) => {
+    state.selectedSub = subId;
+    const trades = database.TRADES_DATABASE.filter(t => t.subId === subId);
+    
+    getEl('step1-title').textContent = "Intervento Specifico";
+    getEl('step1-subtitle').textContent = "Qual è il lavoro da svolgere?";
+    
+    const container = getEl('macro-grid');
+    container.innerHTML = trades.map(trade => `
+        <div class="trade-card" onclick="selectTrade('${trade.id}')">
+            <i class="fa-solid ${trade.icon || 'fa-screwdriver-wrench'}"></i>
+            <h4>${trade.name}</h4>
+            <p>${trade.description}</p>
+        </div>
+    `).join('');
+    
+    getEl('backToMacroBtn').classList.add('hidden');
+    getEl('backToSubBtn').classList.remove('hidden');
+};
+
+window.selectTrade = (tradeId) => {
+    state.selectedTrade = tradeId;
+    const trade = database.TRADES_DATABASE.find(t => t.id === tradeId);
+    
+    getEl('trade-unit-label').textContent = trade.unit;
+    getEl('quantityInput').placeholder = `Es: 10 ${trade.unit}`;
+    
+    renderQuestions(trade);
+    goToStep(2);
+};
+
+function renderQuestions(trade) {
+    const container = getEl('dynamicQuestions');
+    if (!container || !trade.questions) return;
+    
+    state.questionAnswers = {};
+    container.innerHTML = trade.questions.map((q, idx) => `
+        <div class="form-group">
+            <label class="form-label">${q.label}</label>
+            <select class="form-select dynamic-q" data-idx="${idx}">
                 <option value="" disabled selected>Seleziona un'opzione</option>
                 ${q.options.map(opt => `<option value="${opt.multiplier}">${opt.text}</option>`).join('')}
             </select>
@@ -215,33 +164,6 @@ function renderDynamicQuestions(questions) {
     });
 }
 
-// ===== LOADING ANIMATIONS =====
-function showLoadingOverlay(message = 'Elaborazione in corso...') {
-    const overlay = document.createElement('div');
-    overlay.className = 'loading-overlay';
-    overlay.id = 'loadingOverlay';
-    overlay.innerHTML = `
-        <div class="loading-box">
-            <div class="spinner"></div>
-            <p>${message}</p>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-}
-
-function hideLoadingOverlay() {
-    const overlay = getEl('loadingOverlay');
-    if (overlay) overlay.remove();
-}
-
-function showSkeletonLoader(containerId, count = 3) {
-    const container = getEl(containerId);
-    if (!container) return;
-    container.innerHTML = Array(count).fill(`
-        <div class="skeleton" style="height: 100px; margin-bottom: 16px; border-radius: 12px;"></div>
-    `).join('');
-}
-
 // ===== CORE ACTIONS =====
 async function runAnalysis() {
     const region = getEl('regionSelect')?.value;
@@ -249,44 +171,53 @@ async function runAnalysis() {
     const price = parseFloat(getEl('receivedPriceInputStep3')?.value) || parseFloat(getEl('receivedPriceInput')?.value);
     
     if (!region || isNaN(qty) || (!state.isQuickMode && isNaN(price))) {
-        showToast("Completa tutti i campi obbligatori.", "error");
+        uiFeedback.showFeedback("Completa tutti i campi obbligatori.", "error");
         return;
     }
     
-    showLoadingOverlay('Analizzando il preventivo...');
+    const runBtn = getEl('runAnalysisBtn');
+    uiFeedback.setButtonLoading(runBtn, true);
     
-    setTimeout(() => {
+    setTimeout(async () => {
         const tradeData = database.TRADES_DATABASE.find(t => t.id === state.selectedTrade);
         
         const analysis = performProfessionalAnalysis({
-        tradeId: state.selectedTrade,
-        tradeName: tradeData.name,
-        quantity: qty,
-        region: region,
-        quality: 'standard', 
-        receivedPrice: state.isQuickMode ? 0 : price,
-        answers: state.questionAnswers
-    });
+            tradeId: state.selectedTrade,
+            tradeName: tradeData.name,
+            quantity: qty,
+            region: region,
+            quality: 'standard', 
+            receivedPrice: state.isQuickMode ? 0 : price,
+            answers: state.questionAnswers
+        });
 
         if (!analysis.success) {
-            hideLoadingOverlay();
-            showToast(analysis.error, "error");
+            uiFeedback.setButtonLoading(runBtn, false);
+            uiFeedback.showFeedback(analysis.error, "error");
             return;
         }
 
         state.lastAnalysis = analysis;
-        hideLoadingOverlay();
+        uiFeedback.setButtonLoading(runBtn, false);
         displayResults(analysis);
         
-        // Mostra e renderizza i grafici
-        const chartsContainer = getEl('analysisCharts');
-        if (chartsContainer) {
-            chartsContainer.classList.remove('hidden');
-            chartRenderer.renderPriceComparisonChart('priceChartContainer', analysis);
+        // REGOLA 1 & 2: Salvataggio strutturato e protetto
+        if (state.user && state.quoteManager) {
+            uiFeedback.showSaveState('saving');
+            try {
+                await state.quoteManager.saveQuote({
+                    cliente: state.user.displayName || "Mio Preventivo",
+                    servizi: [`${analysis.trade.name} (${analysis.input.quantity} ${analysis.trade.unit})`],
+                    totale: analysis.input.receivedPrice || analysis.marketAnalysis.marketMid,
+                    note: `Analisi effettuata per regione ${analysis.input.region}`
+                });
+                uiFeedback.showSaveState('saved');
+                loadSavedQuotes();
+            } catch (e) {
+                uiFeedback.showSaveState('error');
+            }
         }
-        
-        if (state.user) saveQuoteToCloud(analysis);
-    }, 500);
+    }, 800);
 }
 
 function displayResults(analysis) {
@@ -300,31 +231,31 @@ function displayResults(analysis) {
         let verdict = '';
         let verdictClass = '';
         
+        const diff = analysis.congruityAnalysis.diffPercent;
         if (state.isQuickMode) {
-            verdict = `Prezzo di Mercato Stimato`;
+            verdict = `Stima di Mercato`;
             verdictClass = 'info';
         } else {
-            const diff = analysis.congruityAnalysis.diffPercent;
-            if (diff < -10) { verdict = `✅ Prezzo CONVENIENTE (${diff}%)`; verdictClass = 'success'; }
-            else if (diff > 20) { verdict = `⚠️ Prezzo ALTO (+${diff}%)`; verdictClass = 'warning'; }
-            else { verdict = `ℹ️ Prezzo NELLA MEDIA (${diff > 0 ? '+' : ''}${diff}%)`; verdictClass = 'info'; }
+            if (diff < -10) { verdict = `✅ Prezzo Conveniente (${diff}%)`; verdictClass = 'success'; }
+            else if (diff > 20) { verdict = `⚠️ Prezzo Alto (+${diff}%)`; verdictClass = 'warning'; }
+            else { verdict = `ℹ️ Prezzo Equo (${diff > 0 ? '+' : ''}${diff}%)`; verdictClass = 'info'; }
         }
         
         results.innerHTML = `
-            <div class="result-card">
+            <div class="result-card ${verdictClass}">
                 <div class="result-card-header">
-                    <div class="result-card-icon ${verdictClass === 'success' ? 'success' : verdictClass === 'warning' ? 'warning' : 'info'}">
+                    <div class="result-card-icon ${verdictClass}">
                         <i class="fa-solid ${verdictClass === 'success' ? 'fa-circle-check' : verdictClass === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info'}"></i>
                     </div>
                     <h3 class="result-card-title">${verdict}</h3>
                 </div>
                 <div class="result-card-value">€${analysis.marketAnalysis.marketMid.toFixed(2)}</div>
-                <div class="result-card-label">Prezzo di Mercato Stimato</div>
-                <p class="result-card-description">Basato su dati ISTAT 2026 per la regione ${analysis.input.region}.</p>
+                <div class="result-card-label">Prezzo Medio di Mercato</div>
+                <p class="result-card-description">Basato su prezzari regionali 2026 per ${analysis.input.region}.</p>
             </div>
             
             ${!state.isQuickMode ? `
-            <div class="result-card">
+            <div class="result-card info">
                 <div class="result-card-header">
                     <div class="result-card-icon info">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
@@ -333,227 +264,134 @@ function displayResults(analysis) {
                 </div>
                 <div class="result-card-value">€${analysis.input.receivedPrice.toFixed(2)}</div>
                 <div class="result-card-label">Prezzo Ricevuto</div>
-                <p class="result-card-description">Analisi di congruità completata con score di affidabilità ${analysis.reliabilityScore}/100.</p>
+                <p class="result-card-description">Analisi di congruità completata con score ${analysis.reliabilityScore}/100.</p>
             </div>
             ` : ''}
         `;
+
+        // Renderizza grafico
+        const chartsContainer = getEl('analysisCharts');
+        if (chartsContainer) {
+            chartsContainer.classList.remove('hidden');
+            chartRenderer.renderPriceComparisonChart('priceChartContainer', analysis);
+        }
     }
     if (nav) nav.classList.remove('hidden');
     goToStep(4);
 }
 
-// ===== FIREBASE SYNC =====
-async function saveQuoteToCloud(analysis) {
-    try {
-        const col = collection(db, "quotes");
-        const snap = await getDocs(query(col, where("uid", "==", state.user.uid)));
-        await addDoc(col, {
-            uid: state.user.uid,
-            numero: snap.size + 1,
-            cliente: state.user.displayName || "Cliente",
-            tradeName: analysis.trade.name,
-            totale: analysis.input.receivedPrice || analysis.marketAnalysis.marketMid,
-            analysis: analysis,
-            createdAt: Date.now()
-        });
-        showToast("Analisi salvata nel cloud", "success");
-        loadSavedQuotes();
-    } catch (e) { console.error("Save error:", e); }
-}
-
+// ===== QUOTE MANAGEMENT =====
 async function loadSavedQuotes() {
-    if (!state.user) return;
-    try {
-        const q = query(collection(db, "quotes"), where("uid", "==", state.user.uid), orderBy("createdAt", "desc"));
-        const snap = await getDocs(q);
-        renderSavedQuotes(snap);
-    } catch (e) { console.error("Load error:", e); }
+    if (!state.quoteManager) return;
+    const quotes = await state.quoteManager.getAllQuotes();
+    renderSavedQuotes(quotes);
 }
 
-function renderSavedQuotes(snap) {
+function renderSavedQuotes(quotes) {
     const list = getEl('savedQuotesList');
     if (!list) return;
-    if (snap.empty) { list.innerHTML = "<p style='color: var(--gray-500); font-size: 0.9rem;'>Nessun preventivo salvato.</p>"; return; }
+    
+    if (quotes.length === 0) {
+        list.innerHTML = "<p style='color: var(--gray-500); padding: 20px; text-align: center;'>Nessun preventivo salvato.</p>";
+        return;
+    }
 
-    list.innerHTML = "";
-    snap.forEach(d => {
-        const data = d.data();
-        const item = document.createElement('div');
-        item.className = "card";
-        item.style.cssText = "background: white; padding: 15px; border-radius: 12px; border: 1px solid var(--gray-100); margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;";
-        item.innerHTML = `
+    list.innerHTML = quotes.map(q => `
+        <div class="card" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
             <div>
-                <b style="color: var(--primary);">#${data.numero}</b> - ${data.tradeName}<br>
-                <span style="font-size: 0.85rem; color: var(--gray-500);">€ ${data.totale.toFixed(2)}</span>
+                <div style="font-weight: 700; color: var(--gray-50);">#${q.numero} - ${q.cliente}</div>
+                <div style="font-size: 0.85rem; color: var(--gray-400);">${q.data} • €${q.totale.toFixed(2)}</div>
             </div>
             <div style="display: flex; gap: 8px;">
-                <button class="btn btn-ghost btn-pdf" data-id="${d.id}"><i class="fa-solid fa-file-pdf"></i></button>
-                <button class="btn btn-ghost btn-del" data-id="${d.id}" style="color: var(--danger);"><i class="fa-solid fa-trash"></i></button>
+                <button class="btn btn-secondary btn-sm btn-pdf" data-id="${q.id}" title="Scarica PDF"><i class="fa-solid fa-file-pdf"></i></button>
+                <button class="btn btn-secondary btn-sm btn-dup" data-id="${q.id}" title="Duplica"><i class="fa-solid fa-copy"></i></button>
+                <button class="btn btn-secondary btn-sm btn-del" data-id="${q.id}" style="color: var(--danger);" title="Elimina"><i class="fa-solid fa-trash"></i></button>
             </div>
-        `;
-        item.querySelector('.btn-del').onclick = () => deleteQuote(d.id);
-        item.querySelector('.btn-pdf').onclick = () => {
-            if (data.analysis) {
-                generateProfessionalPDF(data.analysis, { name: data.cliente, email: state.user?.email });
-            } else {
-                showToast("Dati analisi non disponibili", "error");
-            }
+        </div>
+    `).join('');
+
+    // Event Listeners
+    list.querySelectorAll('.btn-pdf').forEach(btn => {
+        btn.onclick = async () => {
+            const data = await state.quoteManager.getPDFData(btn.dataset.id);
+            generateProfessionalPDF(data);
         };
-        list.appendChild(item);
+    });
+
+    list.querySelectorAll('.btn-dup').forEach(btn => {
+        btn.onclick = async () => {
+            uiFeedback.showFeedback("Duplicazione in corso...", "info");
+            await state.quoteManager.duplicateQuote(btn.dataset.id);
+            uiFeedback.showFeedback("Preventivo duplicato!", "success");
+            loadSavedQuotes();
+        };
+    });
+
+    list.querySelectorAll('.btn-del').forEach(btn => {
+        btn.onclick = () => {
+            uiFeedback.showDeleteConfirmation(
+                "Sei sicuro di voler eliminare questo preventivo? L'azione è irreversibile.",
+                async () => {
+                    await state.quoteManager.deleteQuote(btn.dataset.id);
+                    uiFeedback.showFeedback("Eliminato con successo", "success");
+                    loadSavedQuotes();
+                }
+            );
+        };
     });
 }
 
-async function deleteQuote(id) {
-    if (!confirm("Eliminare questo preventivo?")) return;
-    try {
-        await deleteDoc(doc(db, "quotes", id));
-        showToast("Eliminato", "success");
-        loadSavedQuotes();
-    } catch (e) { showToast("Errore eliminazione", "error"); }
-}
-
 // ===== INITIALIZATION =====
-function goHome() {
-    // Reset dello stato e ritorno alla Hero
-    state = {
-        currentStep: 1,
-        selectedTrade: null,
-        selectedSub: null,
-        selectedMacro: null,
-        isQuickMode: false,
-        user: state.user,
-        questionAnswers: {},
-        lastAnalysis: null
-    };
+document.addEventListener('DOMContentLoaded', () => {
+    renderMacroCategories();
     
-    // Pulisci i form
-    getEl('regionSelect').value = '';
-    getEl('quantityInput').value = '';
-    getEl('receivedPriceInput').value = '';
-    const priceStep3 = getEl('receivedPriceInputStep3');
-    if (priceStep3) priceStep3.value = '';
-    getEl('context-text').value = '';
-    getEl('dynamicQuestions').innerHTML = '';
+    getEl('startAnalysisBtn')?.addEventListener('click', () => startWizardFlow(false));
+    getEl('startQuickBtn')?.addEventListener('click', () => startWizardFlow(true));
+    getEl('runAnalysisBtn')?.addEventListener('click', runAnalysis);
+    getEl('resetAppBtn')?.addEventListener('click', resetApp);
     
-    // Nascondi app e mostra hero
-    const appRoot = getEl('app-root');
-    if (appRoot) appRoot.style.display = 'none';
-    getEl('hero-section')?.classList.remove('hidden');
-    
-    // Ripristina step 1 internamente
+    // Navigazione
+    getEl('homeFromStep1Btn')?.addEventListener('click', goHome);
+    getEl('backToMacroBtn')?.addEventListener('click', () => {
+        renderMacroCategories();
+        getEl('backToMacroBtn').classList.add('hidden');
+        getEl('homeFromStep1Btn').classList.remove('hidden');
+    });
+    getEl('backToSubBtn')?.addEventListener('click', () => {
+        window.selectMacro(state.selectedMacro);
+        getEl('backToSubBtn').classList.add('hidden');
+    });
+});
+
+function startWizardFlow(quick) {
+    state.isQuickMode = quick;
+    getEl('hero-section').classList.add('hidden');
+    getEl('app-root').style.display = 'block';
     goToStep(1);
 }
 
+function goHome() {
+    getEl('app-root').style.display = 'none';
+    getEl('hero-section').classList.remove('hidden');
+    resetApp();
+}
+
 function resetApp() {
-    // Reset dello stato senza ricaricare la pagina
-    state = {
-        currentStep: 1,
-        selectedTrade: null,
-        selectedSub: null,
-        selectedMacro: null,
-        isQuickMode: false,
-        user: state.user, // Mantieni l'utente loggato
-        questionAnswers: {},
-        lastAnalysis: null
-    };
+    state.selectedTrade = null;
+    state.selectedSub = null;
+    state.selectedMacro = null;
+    state.questionAnswers = {};
+    state.lastAnalysis = null;
     
-    // Pulisci i form
     getEl('regionSelect').value = '';
     getEl('quantityInput').value = '';
     getEl('receivedPriceInput').value = '';
-    const priceStep3 = getEl('receivedPriceInputStep3');
-    if (priceStep3) priceStep3.value = '';
-    getEl('context-text').value = '';
-    getEl('dynamicQuestions').innerHTML = '';
+    if (getEl('receivedPriceInputStep3')) getEl('receivedPriceInputStep3').value = '';
     
-    // Nascondi risultati e mostra hero
-    getEl('hero-section')?.classList.remove('hidden');
-    const appRoot = getEl('app-root');
-    if (appRoot) appRoot.style.display = 'none';
-    
-    // Ripristina il primo step
     getEl('analysisResults')?.classList.add('hidden');
     getEl('analysisCharts')?.classList.add('hidden');
     getEl('resultsNav')?.classList.add('hidden');
     
-    goToStep(1);
-    renderMacroCategories();
-    
-    showToast("Analisi azzerata. Pronto per una nuova analisi.", "success");
-}
-
-function startWizardFlow(quick) {
-    console.log("Starting wizard flow, quick:", quick);
-    state.isQuickMode = quick;
-    state.questionAnswers = {};
-    state.lastAnalysis = null;
-    
-    getEl('hero-section')?.classList.add('hidden');
-    const appRoot = getEl('app-root');
-    if (appRoot) {
-        appRoot.style.display = 'block';
-        appRoot.classList.remove('hidden');
-    }
-    
-    getEl('step3Label').textContent = quick ? "Stima" : "Verifica Prezzo";
-    getEl('receivedPriceGroup').style.display = quick ? 'none' : 'block';
-    
     renderMacroCategories();
     goToStep(1);
 }
-
-function setupEventListeners() {
-    // Hero
-    getEl('startAnalysisBtn')?.addEventListener('click', () => startWizardFlow(false));
-    getEl('startQuickBtn')?.addEventListener('click', () => startWizardFlow(true));
-    
-    // Login
-    getEl('googleLoginBtn')?.addEventListener('click', async () => {
-        try { await signInWithPopup(auth, new GoogleAuthProvider()); } 
-        catch (e) { showToast("Errore login: " + e.message, "error"); }
-    });
-    getEl('closeLoginBtn')?.addEventListener('click', () => getEl('loginModal')?.classList.add('hidden'));
-    
-    // Wizard
-    getEl('nextStepBtn')?.addEventListener('click', () => {
-        const region = getEl('regionSelect')?.value;
-        const qty = parseFloat(getEl('quantityInput')?.value);
-        if (!region || isNaN(qty) || qty <= 0) {
-            showToast("Inserisci regione e quantità valida", "error");
-            return;
-        }
-        goToStep(3);
-    });
-    getEl('prevStepBtn')?.addEventListener('click', () => goToStep(1));
-    getEl('prevStep3Btn')?.addEventListener('click', () => goToStep(2));
-    getEl('runAnalysisBtn')?.addEventListener('click', runAnalysis);
-    getEl('backSelectionBtn')?.addEventListener('click', goBackSelection);
-    getEl('homeFromStep1Btn')?.addEventListener('click', goHome);
-    getEl('resetAppBtn')?.addEventListener('click', () => resetApp());
-    
-    getEl('btnDownloadPDF')?.addEventListener('click', () => {
-        if (state.lastAnalysis) {
-            generateProfessionalPDF(state.lastAnalysis, { name: state.user?.displayName, email: state.user?.email });
-        }
-    });
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    console.log("DOM Loaded - Initializing App");
-    
-    // Init Regions
-    const regions = Object.keys(database.REGIONAL_COEFFICIENTS).sort();
-    const regionSelect = getEl('regionSelect');
-    if (regionSelect) {
-        regionSelect.innerHTML = '<option value="" disabled selected>Seleziona Regione</option>' +
-            regions.map(r => `<option value="${r}">${r}</option>`).join('');
-    }
-
-    setupEventListeners();
-    
-    onAuthStateChanged(auth, (firebaseUser) => {
-        state.user = firebaseUser;
-        updateUserUI();
-        if (state.user) loadSavedQuotes();
-    });
-});
