@@ -366,6 +366,37 @@ async function deleteQuote(id) {
 }
 
 // ===== INITIALIZATION =====
+function goHome() {
+    // Reset dello stato e ritorno alla Hero
+    state = {
+        currentStep: 1,
+        selectedTrade: null,
+        selectedSub: null,
+        selectedMacro: null,
+        isQuickMode: false,
+        user: state.user,
+        questionAnswers: {},
+        lastAnalysis: null
+    };
+    
+    // Pulisci i form
+    getEl('regionSelect').value = '';
+    getEl('quantityInput').value = '';
+    getEl('receivedPriceInput').value = '';
+    const priceStep3 = getEl('receivedPriceInputStep3');
+    if (priceStep3) priceStep3.value = '';
+    getEl('context-text').value = '';
+    getEl('dynamicQuestions').innerHTML = '';
+    
+    // Nascondi app e mostra hero
+    const appRoot = getEl('app-root');
+    if (appRoot) appRoot.style.display = 'none';
+    getEl('hero-section')?.classList.remove('hidden');
+    
+    // Ripristina step 1 internamente
+    goToStep(1);
+}
+
 function resetApp() {
     // Reset dello stato senza ricaricare la pagina
     state = {
@@ -446,6 +477,8 @@ function setupEventListeners() {
     getEl('prevStep3Btn')?.addEventListener('click', () => goToStep(2));
     getEl('runAnalysisBtn')?.addEventListener('click', runAnalysis);
     getEl('backSelectionBtn')?.addEventListener('click', goBackSelection);
+    getEl('homeFromStep1Btn')?.addEventListener('click', goHome);
+    getEl('homeFromStep2Btn')?.addEventListener('click', goHome);
     getEl('resetAppBtn')?.addEventListener('click', () => resetApp());
     
     getEl('btnDownloadPDF')?.addEventListener('click', () => {
