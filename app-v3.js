@@ -1,6 +1,6 @@
 /**
- * Preventivi-Smart Pro v12.0 — Complete Professional Edition
- * Database Completo + Firebase Cloud Sync + Professional PDF + UX Improved
+ * Preventivi-Smart Pro v12.1 — Bug Fix Edition
+ * Risolto problema inizializzazione e interazione pulsanti
  */
 
 import database from './engine/database.js';
@@ -34,19 +34,12 @@ let user = null;
 let questionAnswers = {};
 let lastAnalysis = null;
 
-// ===== DOM ELEMENTS =====
-const heroSection = document.getElementById('hero-section');
-const appRoot = document.getElementById('app-root');
-const tradesGrid = document.getElementById('tradesGrid');
-const regionSelect = document.getElementById('regionSelect');
-const quantityInput = document.getElementById('quantityInput');
-const receivedPriceInput = document.getElementById('receivedPriceInput');
-const dynamicQuestions = document.getElementById('dynamicQuestions');
-const loginModal = document.getElementById('loginModal');
-const userNav = document.getElementById('userNav');
+// ===== DOM ELEMENTS (Lazy access) =====
+const getEl = (id) => document.getElementById(id);
 
 // ===== INITIALIZATION =====
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("App initialized");
     initRegions();
     setupEventListeners();
     
@@ -73,6 +66,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initRegions() {
     const regions = Object.keys(database.REGIONAL_COEFFICIENTS).sort();
+    const regionSelect = getEl('regionSelect');
     if (regionSelect) {
         regionSelect.innerHTML = '<option value="" disabled selected>Seleziona Regione</option>' +
             regions.map(r => `<option value="${r}">${r}</option>`).join('');
@@ -80,6 +74,8 @@ function initRegions() {
 }
 
 function updateUserUI() {
+    const userNav = getEl('userNav');
+    const loginModal = getEl('loginModal');
     if (!userNav) return;
     if (user) {
         userNav.innerHTML = `
@@ -88,18 +84,21 @@ function updateUserUI() {
                 <button class="btn btn-login-trigger" id="logoutBtn">Esci</button>
             </div>
         `;
-        document.getElementById('logoutBtn')?.addEventListener('click', () => signOut(auth));
-        loginModal.classList.add('hidden');
+        getEl('logoutBtn')?.addEventListener('click', () => signOut(auth));
+        loginModal?.classList.add('hidden');
     } else {
         userNav.innerHTML = `<button class="btn btn-login-trigger" id="loginTriggerBtn">Accedi</button>`;
-        document.getElementById('loginTriggerBtn')?.addEventListener('click', () => loginModal.classList.remove('hidden'));
+        getEl('loginTriggerBtn')?.addEventListener('click', () => loginModal?.classList.remove('hidden'));
     }
 }
 
 function setupEventListeners() {
-    document.getElementById('startAnalysisBtn')?.addEventListener('click', () => startWizard(false));
-    document.getElementById('startQuickBtn')?.addEventListener('click', () => startWizard(true));
-    document.getElementById('googleLoginBtn')?.addEventListener('click', async () => {
+    // Hero buttons
+    getEl('startAnalysisBtn')?.addEventListener('click', () => startWizard(false));
+    getEl('startQuickBtn')?.addEventListener('click', () => startWizard(true));
+    
+    // Login buttons
+    getEl('googleLoginBtn')?.addEventListener('click', async () => {
         try {
             const provider = new GoogleAuthProvider();
             await signInWithPopup(auth, provider);
@@ -107,24 +106,30 @@ function setupEventListeners() {
             showToast("Errore login: " + e.message, "error");
         }
     });
-    
-    document.getElementById('nextStepBtn')?.addEventListener('click', () => {
+    getEl('closeLoginBtn')?.addEventListener('click', () => getEl('loginModal')?.classList.add('hidden'));
+    getEl('loginTriggerBtn')?.addEventListener('click', () => getEl('loginModal')?.classList.remove('hidden'));
+
+    // Wizard navigation
+    getEl('nextStepBtn')?.addEventListener('click', () => {
         if (validateStep2()) goToStep(3);
     });
-    document.getElementById('prevStepBtn')?.addEventListener('click', () => goToStep(1));
-    document.getElementById('prevStep3Btn')?.addEventListener('click', () => goToStep(2));
-    document.getElementById('runAnalysisBtn')?.addEventListener('click', runAnalysis);
-    document.getElementById('closeLoginBtn')?.addEventListener('click', () => loginModal.classList.add('hidden'));
-    document.getElementById('btnDownloadPDF')?.addEventListener('click', () => {
+    getEl('prevStepBtn')?.addEventListener('click', () => goToStep(1));
+    getEl('prevStep3Btn')?.addEventListener('click', () => goToStep(2));
+    getEl('runAnalysisBtn')?.addEventListener('click', runAnalysis);
+    
+    // Results
+    getEl('btnDownloadPDF')?.addEventListener('click', () => {
         if (lastAnalysis) {
             generateProfessionalPDF(lastAnalysis, { name: user?.displayName, email: user?.email });
+        } else {
+            showToast("Esegui prima un'analisi", "error");
         }
     });
 }
 
 function validateStep2() {
-    const region = regionSelect.value;
-    const qty = parseFloat(quantityInput.value);
+    const region = getEl('regionSelect')?.value;
+    const qty = parseFloat(getEl('quantityInput')?.value);
     if (!region) { showToast("Seleziona la tua regione", "error"); return false; }
     if (isNaN(qty) || qty <= 0) { showToast("Inserisci una quantità valida", "error"); return false; }
     return true;
@@ -132,9 +137,13 @@ function validateStep2() {
 
 // ===== WIZARD LOGIC =====
 function startWizard(quick) {
+    console.log("Starting wizard, quick mode:", quick);
     isQuickMode = quick;
     questionAnswers = {};
     lastAnalysis = null;
+    
+    const heroSection = getEl('hero-section');
+    const appRoot = getEl('app-root');
     
     if (heroSection) heroSection.classList.add('hidden');
     if (appRoot) {
@@ -147,10 +156,10 @@ function startWizard(quick) {
     selectedSub = null;
     selectedTrade = null;
     
-    const step3Label = document.getElementById('step3Label');
+    const step3Label = getEl('step3Label');
     if (step3Label) step3Label.textContent = isQuickMode ? "Stima" : "Verifica Prezzo";
     
-    const receivedPriceGroup = document.getElementById('receivedPriceGroup');
+    const receivedPriceGroup = getEl('receivedPriceGroup');
     if (receivedPriceGroup) {
         receivedPriceGroup.style.display = isQuickMode ? 'none' : 'block';
     }
@@ -160,6 +169,7 @@ function startWizard(quick) {
 }
 
 function renderMacroCategories() {
+    const tradesGrid = getEl('tradesGrid');
     if (!tradesGrid) return;
     const cats = database.MACRO_CATEGORIES;
     
@@ -183,6 +193,7 @@ function selectMacro(id) {
 }
 
 function renderSubCategories(macroId) {
+    const tradesGrid = getEl('tradesGrid');
     if (!tradesGrid) return;
     const subs = database.SUB_CATEGORIES.filter(s => s.parent === macroId);
     
@@ -205,6 +216,7 @@ function selectSub(id) {
 }
 
 function renderTrades(macroId, subId) {
+    const tradesGrid = getEl('tradesGrid');
     if (!tradesGrid) return;
     const trades = database.TRADES_DATABASE.filter(t => t.parent === subId);
     
@@ -223,13 +235,13 @@ function selectTrade(id) {
     selectedTrade = id;
     const tradeData = database.TRADES_DATABASE.find(t => t.id === id);
     
-    const unitLabel = document.getElementById('unitLabel');
+    const unitLabel = getEl('unitLabel');
     if (unitLabel) unitLabel.textContent = tradeData.unit;
     
-    const tradeNameDisplay = document.getElementById('tradeNameDisplay');
+    const tradeNameDisplay = getEl('tradeNameDisplay');
     if (tradeNameDisplay) tradeNameDisplay.textContent = tradeData.name;
     
-    const basePriceDisplay = document.getElementById('basePriceDisplay');
+    const basePriceDisplay = getEl('basePriceDisplay');
     if (basePriceDisplay) basePriceDisplay.textContent = `€${tradeData.basePrice}`;
     
     renderDynamicQuestions(tradeData.questions || []);
@@ -247,6 +259,7 @@ function goBackSelection() {
 }
 
 function renderDynamicQuestions(questions) {
+    const dynamicQuestions = getEl('dynamicQuestions');
     if (!dynamicQuestions) return;
     
     dynamicQuestions.innerHTML = questions.map((q, idx) => `
@@ -266,7 +279,7 @@ function updateQuestionAnswer(idx, value) {
 
 function goToStep(step) {
     document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
-    const targetStep = document.getElementById(`step${step}`);
+    const targetStep = getEl(`step${step}`);
     if (targetStep) targetStep.classList.remove('hidden');
     document.querySelectorAll('.step-item').forEach((el, idx) => {
         el.classList.remove('active', 'completed');
@@ -278,9 +291,9 @@ function goToStep(step) {
 }
 
 async function runAnalysis() {
-    const region = regionSelect.value;
-    const qty = parseFloat(quantityInput.value);
-    const price = parseFloat(receivedPriceInput.value);
+    const region = getEl('regionSelect')?.value;
+    const qty = parseFloat(getEl('quantityInput')?.value);
+    const price = parseFloat(getEl('receivedPriceInput')?.value);
     
     if (!region || isNaN(qty) || (!isQuickMode && isNaN(price))) {
         showToast("Completa tutti i campi obbligatori.", "error");
@@ -295,7 +308,7 @@ async function runAnalysis() {
         tradeName: tradeData.name,
         quantity: qty,
         region: region,
-        quality: 'standard', // Default for now
+        quality: 'standard', 
         receivedPrice: isQuickMode ? 0 : price,
         answers: questionAnswers
     });
@@ -352,11 +365,8 @@ async function loadSavedQuotes() {
 }
 
 function renderSavedQuotes(snap) {
-    const listContainer = document.getElementById('savedQuotesList');
-    if (!listContainer) {
-        // Create container if not exists (for dashboard)
-        return;
-    }
+    const listContainer = getEl('savedQuotesList');
+    if (!listContainer) return;
     
     if (snap.empty) {
         listContainer.innerHTML = "<p style='color: var(--gray-500); font-size: 0.9rem;'>Nessun preventivo salvato.</p>";
@@ -394,16 +404,14 @@ async function deleteQuote(id) {
 }
 
 async function downloadSavedPDF(id) {
-    // Logic to find the quote and generate PDF
-    // For simplicity, we can fetch it again or keep a local cache
     showToast("Generazione PDF...", "info");
-    // Implementation omitted for brevity, but follows generateProfessionalPDF
+    // Implementation can be added here
 }
 
 function displayResults(analysis) {
-    const results = document.getElementById('analysisResults');
-    const loading = document.getElementById('analysisLoading');
-    const nav = document.getElementById('resultsNav');
+    const results = getEl('analysisResults');
+    const loading = getEl('analysisLoading');
+    const nav = getEl('resultsNav');
     
     if (loading) loading.classList.add('hidden');
     
@@ -456,14 +464,15 @@ function displayResults(analysis) {
     }
     
     if (nav) nav.classList.remove('hidden');
+    goToStep(4);
 }
 
 function showToast(msg, type) {
-    const container = document.getElementById('toastContainer');
+    const container = getEl('toastContainer');
     if (!container) return;
     const toast = document.createElement('div');
     toast.className = `toast toast-${type}`;
-    toast.style.cssText = "background: white; padding: 12px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 4px solid " + (type==='error'?'#ef4444':'#10b981') + "; margin-bottom: 12px; font-size: 0.9rem; font-weight: 500;";
+    toast.style.cssText = "background: white; padding: 12px 24px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border-left: 4px solid " + (type==='error'?'#ef4444':'#10b981') + "; margin-bottom: 12px; font-size: 0.9rem; font-weight: 500; transition: opacity 0.3s;";
     toast.textContent = msg;
     container.appendChild(toast);
     setTimeout(() => {
