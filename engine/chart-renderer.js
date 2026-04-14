@@ -74,17 +74,17 @@ export function renderPriceComparisonChart(containerId, analysis) {
                             return '€' + value.toFixed(0);
                         },
                         font: { size: 12, weight: '600' },
-                        color: 'rgba(107, 114, 128, 0.8)'
+                        color: '#94a3b8'
                     },
                     grid: {
-                        color: 'rgba(229, 231, 235, 0.5)',
+                        color: 'rgba(71, 85, 107, 0.3)',
                         drawBorder: false
                     }
                 },
                 x: {
                     ticks: {
                         font: { size: 12, weight: '600' },
-                        color: 'rgba(107, 114, 128, 0.8)'
+                        color: '#94a3b8'
                     },
                     grid: {
                         display: false,
@@ -211,17 +211,17 @@ export function renderMarketTrendChart(containerId, analysis) {
                             return '€' + value.toFixed(0);
                         },
                         font: { size: 12, weight: '600' },
-                        color: 'rgba(107, 114, 128, 0.8)'
+                        color: '#94a3b8'
                     },
                     grid: {
-                        color: 'rgba(229, 231, 235, 0.5)',
+                        color: 'rgba(71, 85, 107, 0.3)',
                         drawBorder: false
                     }
                 },
                 x: {
                     ticks: {
                         font: { size: 12, weight: '600' },
-                        color: 'rgba(107, 114, 128, 0.8)'
+                        color: '#94a3b8'
                     },
                     grid: {
                         display: false,
