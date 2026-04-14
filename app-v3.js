@@ -478,7 +478,6 @@ function setupEventListeners() {
     getEl('runAnalysisBtn')?.addEventListener('click', runAnalysis);
     getEl('backSelectionBtn')?.addEventListener('click', goBackSelection);
     getEl('homeFromStep1Btn')?.addEventListener('click', goHome);
-    getEl('homeFromStep2Btn')?.addEventListener('click', goHome);
     getEl('resetAppBtn')?.addEventListener('click', () => resetApp());
     
     getEl('btnDownloadPDF')?.addEventListener('click', () => {
