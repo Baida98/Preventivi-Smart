@@ -52,7 +52,8 @@ export function performProfessionalAnalysis(params) {
     receivedPrice,
     marketAnalysis,
     congruityAnalysis,
-    riskAssessment
+    riskAssessment,
+    hourlyBenchmark
   );
 
   // Step 8: Score di affidabilità complessivo
@@ -281,7 +282,7 @@ function performRiskAssessment(tradeId, receivedPrice, marketAnalysis, answers, 
 }
 
 // ===== CONSIGLI PROFESSIONALI PERSONALIZZATI =====
-function generateProfessionalAdvice(tradeId, tradeName, receivedPrice, marketAnalysis, congruityAnalysis, riskAssessment) {
+function generateProfessionalAdvice(tradeId, tradeName, receivedPrice, marketAnalysis, congruityAnalysis, riskAssessment, hourlyBenchmark) {
   const advice = [];
 
   // Consiglio 1: Posizionamento prezzo
@@ -305,7 +306,7 @@ function generateProfessionalAdvice(tradeId, tradeName, receivedPrice, marketAna
   advice.push({
     icon: "fa-hourglass",
     title: "⏱️ Analisi Oraria",
-    text: `Stai pagando €${marketAnalysis.hourlyBenchmark.receivedHourly}/ora vs media di €${marketAnalysis.hourlyBenchmark.marketHourly}/ora. ${marketAnalysis.hourlyBenchmark.assessment === "EQUO" ? "Prezzo equo." : "Verifica la specializzazione."}`,
+    text: `Stai pagando €${hourlyBenchmark.receivedHourly}/ora vs media di €${hourlyBenchmark.marketHourly}/ora. ${hourlyBenchmark.assessment === "EQUO" ? "Prezzo equo." : "Verifica la specializzazione."}`,
     priority: "medium"
   });
 

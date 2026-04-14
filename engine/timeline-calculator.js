@@ -3,7 +3,7 @@
  * Calcolo ore di manodopera, timeline e consigli professionali
  */
 
-import { getTradeById, QUALITY_MULTIPLIERS } from "./database.js";
+import { getTradeById } from "./database.js";
 
 // ===== CALCOLO TIMELINE COMPLETO =====
 export function calculateTimeline(tradeId, quantity, answers) {

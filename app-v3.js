@@ -218,7 +218,8 @@ function renderDynamicQuestions(questions) {
 async function runAnalysis() {
     const region = getEl('regionSelect')?.value;
     const qty = parseFloat(getEl('quantityInput')?.value);
-    const price = parseFloat(getEl('receivedPriceInput')?.value);
+    // Leggi il prezzo da Step 3 se disponibile, altrimenti da Step 2
+    const price = parseFloat(getEl('receivedPriceInputStep3')?.value) || parseFloat(getEl('receivedPriceInput')?.value);
     
     if (!region || isNaN(qty) || (!state.isQuickMode && isNaN(price))) {
         showToast("Completa tutti i campi obbligatori.", "error");
@@ -344,7 +345,13 @@ function renderSavedQuotes(snap) {
             </div>
         `;
         item.querySelector('.btn-del').onclick = () => deleteQuote(d.id);
-        item.querySelector('.btn-pdf').onclick = () => showToast("Generazione PDF...", "info");
+        item.querySelector('.btn-pdf').onclick = () => {
+            if (data.analysis) {
+                generateProfessionalPDF(data.analysis, { name: data.cliente, email: state.user?.email });
+            } else {
+                showToast("Dati analisi non disponibili", "error");
+            }
+        };
         list.appendChild(item);
     });
 }
@@ -359,6 +366,40 @@ async function deleteQuote(id) {
 }
 
 // ===== INITIALIZATION =====
+function resetApp() {
+    // Reset dello stato senza ricaricare la pagina
+    state = {
+        currentStep: 1,
+        selectedTrade: null,
+        selectedSub: null,
+        selectedMacro: null,
+        isQuickMode: false,
+        user: state.user, // Mantieni l'utente loggato
+        questionAnswers: {},
+        lastAnalysis: null
+    };
+    
+    // Pulisci i form
+    getEl('regionSelect').value = '';
+    getEl('quantityInput').value = '';
+    getEl('receivedPriceInput').value = '';
+    const priceStep3 = getEl('receivedPriceInputStep3');
+    if (priceStep3) priceStep3.value = '';
+    getEl('context-text').value = '';
+    getEl('dynamicQuestions').innerHTML = '';
+    
+    // Nascondi risultati e mostra hero
+    getEl('hero-section')?.classList.remove('hidden');
+    const appRoot = getEl('app-root');
+    if (appRoot) appRoot.style.display = 'none';
+    
+    // Ripristina il primo step
+    goToStep(1);
+    renderMacroCategories();
+    
+    showToast("Analisi azzerata. Pronto per una nuova analisi.", "success");
+}
+
 function startWizardFlow(quick) {
     console.log("Starting wizard flow, quick:", quick);
     state.isQuickMode = quick;
@@ -405,7 +446,7 @@ function setupEventListeners() {
     getEl('prevStep3Btn')?.addEventListener('click', () => goToStep(2));
     getEl('runAnalysisBtn')?.addEventListener('click', runAnalysis);
     getEl('backSelectionBtn')?.addEventListener('click', goBackSelection);
-    getEl('resetAppBtn')?.addEventListener('click', () => location.reload());
+    getEl('resetAppBtn')?.addEventListener('click', () => resetApp());
     
     getEl('btnDownloadPDF')?.addEventListener('click', () => {
         if (state.lastAnalysis) {

@@ -12,6 +12,14 @@ export const REGIONAL_COEFFICIENTS = {
   "Calabria": 0.78, "Molise": 0.75
 };
 
+// ===== MOLTIPLICATORI QUALITÀ MATERIALI =====
+export const QUALITY_MULTIPLIERS = {
+  "economica": 0.85,
+  "standard": 1.00,
+  "premium": 1.35,
+  "lusso": 1.75
+};
+
 export const MACRO_CATEGORIES = [
   { id: "idraulico", name: "Idraulico", icon: "fa-faucet", color: "#3b82f6", desc: "Perdite, scarichi, caldaie e condizionatori." },
   { id: "elettricista", name: "Elettricista", icon: "fa-bolt", color: "#f59e0b", desc: "Cortocircuiti, salvavita, prese e quadri." },
@@ -554,8 +562,48 @@ export function getTradesByCategory(parentId) { return TRADES_DATABASE.filter(t 
 export function getTradeById(id) { return TRADES_DATABASE.find(t => t.id === id); }
 export function getAllTrades() { return TRADES_DATABASE; }
 
+// ===== CALCOLO PREZZO FINALE POLIMORFICO =====
+export function calculateFinalPrice(tradeId, quantity, region, quality, answers) {
+  const trade = getTradeById(tradeId);
+  if (!trade) return 0;
+  
+  const basePriceTotal = trade.basePrice * quantity;
+  const regionalCoeff = REGIONAL_COEFFICIENTS[region] || 1.0;
+  const qualityCoeff = QUALITY_MULTIPLIERS[quality] || 1.0;
+  const answerMultiplier = calculateAnswerMultiplier(tradeId, answers);
+
+  return Math.round(basePriceTotal * regionalCoeff * qualityCoeff * answerMultiplier * 100) / 100;
+}
+
+// ===== CALCOLO MOLTIPLICATORE DALLE RISPOSTE =====
+export function calculateAnswerMultiplier(tradeId, answers) {
+  const trade = getTradeById(tradeId);
+  if (!trade) return 1.0;
+
+  let multiplier = 1.0;
+  
+  // Supporto per risposte numeriche (da app-v3.js)
+  if (typeof answers === 'object' && answers !== null) {
+    Object.values(answers).forEach(answer => {
+      if (typeof answer === 'number') {
+        multiplier *= answer;
+      } else if (typeof answer === 'string') {
+        // Supporto per risposte testuali
+        if (answer.includes("difficile") || answer.includes("grande")) {
+          multiplier *= 1.2;
+        } else if (answer.includes("facile") || answer.includes("piccolo")) {
+          multiplier *= 0.9;
+        }
+      }
+    });
+  }
+
+  return multiplier;
+}
+
 export default {
   REGIONAL_COEFFICIENTS,
+  QUALITY_MULTIPLIERS,
   MACRO_CATEGORIES,
   SUB_CATEGORIES,
   TRADES_DATABASE,
@@ -563,5 +611,7 @@ export default {
   getSubCategories,
   getTradesByCategory,
   getTradeById,
-  getAllTrades
+  getAllTrades,
+  calculateFinalPrice,
+  calculateAnswerMultiplier
 };
