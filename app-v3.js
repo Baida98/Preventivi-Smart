@@ -84,13 +84,13 @@ function renderMacroCategories() {
     if (!container) return;
     
     container.innerHTML = database.MACRO_CATEGORIES.map((macro, idx) => `
-        <div class="trade-card trade-card-macro" onclick="selectMacro('${macro.id}')" style="animation: fadeInUp 0.5s ease ${idx * 0.1}s both;">
-            <div class="card-icon-wrapper" style="background: ${macro.color}20; border: 2px solid ${macro.color}40; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; height: 60px;">
+        <div class="trade-card trade-card-macro animate-fade-in-up" onclick="selectMacro('${macro.id}')" style="animation-delay: ${idx * 0.1}s;">
+            <div class="card-icon-wrapper" style="background: ${macro.color}15; border: 1px solid ${macro.color}30;">
                 <i class="fa-solid ${macro.icon}" style="font-size: 1.75rem; color: ${macro.color};"></i>
             </div>
-            <h4 style="margin-bottom: 8px; color: var(--gray-50);">${macro.name}</h4>
-            <p style="color: var(--gray-400); font-size: 0.85rem; line-height: 1.4;">${macro.description}</p>
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); color: var(--primary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Seleziona →</div>
+            <h4>${macro.name}</h4>
+            <p>${macro.description}</p>
+            <div class="card-footer-action">Seleziona →</div>
         </div>
     `).join('');
 }
@@ -104,7 +104,7 @@ window.selectMacro = (macroId) => {
     const container = getEl('macro-grid');
     const subs = database.SUB_CATEGORIES.filter(s => s.parent === macroId);
     container.innerHTML = subs.map((sub, idx) => `
-        <div class="trade-card trade-card-sub" onclick="selectSub('${sub.id}')" style="animation: fadeInUp 0.5s ease ${idx * 0.1}s both;">
+        <div class="trade-card trade-card-sub animate-fade-in-up" onclick="selectSub('${sub.id}')" style="animation-delay: ${idx * 0.1}s;">
             <div class="card-icon-wrapper" style="background: ${sub.color}20; border: 2px solid ${sub.color}40; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; height: 60px;">
                 <i class="fa-solid ${sub.icon}" style="font-size: 1.75rem; color: ${sub.color};"></i>
             </div>
@@ -126,13 +126,13 @@ window.selectSub = (subId) => {
     
     const container = getEl('macro-grid');
     container.innerHTML = trades.map((trade, idx) => `
-        <div class="trade-card trade-card-trade" onclick="selectTrade('${trade.id}')" style="animation: fadeInUp 0.5s ease ${idx * 0.1}s both;">
+        <div class="trade-card trade-card-trade animate-fade-in-up" onclick="selectTrade('${trade.id}')" style="animation-delay: ${idx * 0.1}s;">
             <div class="card-icon-wrapper" style="background: linear-gradient(135deg, #3b82f620, #1e40af20); border: 2px solid #3b82f640; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; height: 60px;">
                 <i class="fa-solid ${trade.icon || 'fa-screwdriver-wrench'}" style="font-size: 1.75rem; color: #3b82f6;"></i>
             </div>
             <h4 style="margin-bottom: 8px; color: var(--gray-50);">${trade.name}</h4>
             <p style="color: var(--gray-400); font-size: 0.85rem; line-height: 1.4; margin-bottom: 12px;">${trade.unit}</p>
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); color: var(--primary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Seleziona →</div>
+            <div class="card-footer-action">Seleziona →</div>
         </div>
     `).join('');
     
