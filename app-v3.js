@@ -116,10 +116,8 @@ window.selectMacro = (macroId) => {
     getEl('homeFromStep1Btn').classList.add('hidden');
     getEl('backToMacroBtn').classList.remove('hidden');
 };
-};
 
-
- = (subId) => {
+window.selectSub = (subId) => {
     state.selectedSub = subId;
     const trades = database.TRADES_DATABASE.filter(t => t.subId === subId);
     
