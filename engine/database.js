@@ -25,43 +25,43 @@ export const MACRO_CATEGORIES = [
   { 
     id: "idraulico", 
     name: "Idraulico", 
-    icon: "fa-faucet", 
-    color: "#3b82f6", 
+    icon: "fa-water", 
+    color: "#0ea5e9", 
     description: "Perdite, scarichi, caldaia, sanitari" 
   },
   { 
     id: "elettricista", 
     name: "Elettricista", 
-    icon: "fa-bolt", 
-    color: "#f59e0b", 
+    icon: "fa-plug", 
+    color: "#fbbf24", 
     description: "Blackout, prese, quadro, domotica" 
   },
   { 
     id: "climatizzazione", 
     name: "Climatizzazione", 
-    icon: "fa-snowflake", 
-    color: "#60a5fa", 
+    icon: "fa-wind", 
+    color: "#06b6d4", 
     description: "Condizionatori, pompe di calore" 
   },
   { 
     id: "muratore_interni", 
     name: "Muratore & Interni", 
-    icon: "fa-hammer", 
-    color: "#8b5cf6", 
+    icon: "fa-hammer-and-wrench", 
+    color: "#a855f7", 
     description: "Muratura, cartongesso, pittura, pavimenti" 
   },
   { 
     id: "serramenti", 
     name: "Serramenti & Sicurezza", 
-    icon: "fa-key", 
-    color: "#0ea5e9", 
+    icon: "fa-lock", 
+    color: "#10b981", 
     description: "Serrature, infissi, porte, tapparelle" 
   },
   { 
     id: "servizi", 
     name: "Servizi Professionali", 
     icon: "fa-briefcase", 
-    color: "#06b6d4", 
+    color: "#ec4899", 
     description: "Pulizie, traslochi, certificazioni" 
   }
 ];
@@ -69,24 +69,24 @@ export const MACRO_CATEGORIES = [
 // ===== SOTTO CATEGORIE (TIPO DI INTERVENTO) =====
 export const SUB_CATEGORIES = [
   // IDRAULICO
-  { id: "idr_riparazioni", parent: "idraulico", name: "Riparazioni & Emergenze", icon: "fa-wrench", color: "#1e40af" },
-  { id: "idr_installazioni", parent: "idraulico", name: "Nuove Installazioni", icon: "fa-plus", color: "#3b82f6" },
+  { id: "idr_riparazioni", parent: "idraulico", name: "Riparazioni & Emergenze", icon: "fa-hammer", color: "#0891b2" },
+  { id: "idr_installazioni", parent: "idraulico", name: "Nuove Installazioni", icon: "fa-wrench-and-screwdriver", color: "#0ea5e9" },
   
   // ELETTRICISTA
-  { id: "ele_riparazioni", parent: "elettricista", name: "Riparazioni & Emergenze", icon: "fa-bolt-lightning", color: "#d97706" },
-  { id: "ele_installazioni", parent: "elettricista", name: "Nuove Installazioni", icon: "fa-plus", color: "#f59e0b" },
+  { id: "ele_riparazioni", parent: "elettricista", name: "Riparazioni & Emergenze", icon: "fa-screwdriver", color: "#f59e0b" },
+  { id: "ele_installazioni", parent: "elettricista", name: "Nuove Installazioni", icon: "fa-lightbulb", color: "#fbbf24" },
   
   // CLIMATIZZAZIONE
-  { id: "cli_manutenzione", parent: "climatizzazione", name: "Manutenzione & Riparazione", icon: "fa-wrench", color: "#0369a1" },
-  { id: "cli_installazioni", parent: "climatizzazione", name: "Nuove Installazioni", icon: "fa-plus", color: "#60a5fa" },
+  { id: "cli_manutenzione", parent: "climatizzazione", name: "Manutenzione & Riparazione", icon: "fa-fan", color: "#0891b2" },
+  { id: "cli_installazioni", parent: "climatizzazione", name: "Nuove Installazioni", icon: "fa-snowflake", color: "#06b6d4" },
   
   // MURATORE & INTERNI
-  { id: "mur_riparazioni", parent: "muratore_interni", name: "Riparazioni & Piccole Opere", icon: "fa-wrench", color: "#6b21a8" },
-  { id: "mur_installazioni", parent: "muratore_interni", name: "Nuove Installazioni", icon: "fa-plus", color: "#8b5cf6" },
+  { id: "mur_riparazioni", parent: "muratore_interni", name: "Riparazioni & Piccole Opere", icon: "fa-hammer", color: "#9333ea" },
+  { id: "mur_installazioni", parent: "muratore_interni", name: "Nuove Installazioni", icon: "fa-paint-roller", color: "#a855f7" },
   
   // SERRAMENTI
-  { id: "ser_riparazioni", parent: "serramenti", name: "Riparazioni & Emergenze", icon: "fa-wrench", color: "#0c4a6e" },
-  { id: "ser_installazioni", parent: "serramenti", name: "Nuove Installazioni", icon: "fa-plus", color: "#0ea5e9" },
+  { id: "ser_riparazioni", parent: "serramenti", name: "Riparazioni & Emergenze", icon: "fa-screwdriver", color: "#059669" },
+  { id: "ser_installazioni", parent: "serramenti", name: "Nuove Installazioni", icon: "fa-door-open", color: "#10b981" },
   
   // SERVIZI
   { id: "srv_pulizie", parent: "servizi", name: "Pulizie", icon: "fa-broom", color: "#0891b2" },
