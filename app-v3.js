@@ -114,7 +114,6 @@ window.selectMacro = (macroId) => {
     `).join('');
     
     getEl('homeFromStep1Btn').classList.add('hidden');
-    getEl('backToMacroBtn').classList.remove('hidden');
 };
 
 window.selectSub = (subId) => {
@@ -135,9 +134,6 @@ window.selectSub = (subId) => {
             <div class="card-footer-action">Seleziona →</div>
         </div>
     `).join('');
-    
-    getEl('backToMacroBtn').classList.add('hidden');
-    getEl('backToSubBtn').classList.remove('hidden');
 };
 
 
@@ -362,14 +358,20 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Navigazione
     getEl('homeFromStep1Btn')?.addEventListener('click', goHome);
-    getEl('backToMacroBtn')?.addEventListener('click', () => {
-        renderMacroCategories();
-        getEl('backToMacroBtn').classList.add('hidden');
-        getEl('homeFromStep1Btn').classList.remove('hidden');
-    });
-    getEl('backToSubBtn')?.addEventListener('click', () => {
-        window.selectMacro(state.selectedMacro);
-        getEl('backToSubBtn').classList.add('hidden');
+    getEl('backSelectionBtn')?.addEventListener('click', () => {
+        if (state.selectedSub) {
+            // Se siamo nei lavori, torna alle sottocategorie
+            window.selectMacro(state.selectedMacro);
+            state.selectedSub = null;
+        } else if (state.selectedMacro) {
+            // Se siamo nelle sottocategorie, torna alle macro
+            renderMacroCategories();
+            state.selectedMacro = null;
+            getEl('homeFromStep1Btn').classList.remove('hidden');
+        } else {
+            // Se siamo alle macro, torna alla home
+            goHome();
+        }
     });
 });
 
