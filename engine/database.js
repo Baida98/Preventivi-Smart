@@ -741,3 +741,15 @@ export default {
   calculateFinalPrice,
   calculateAnswerMultiplier
 };
+
+export default {
+  MACRO_CATEGORIES,
+  SUB_CATEGORIES,
+  TRADES_DATABASE,
+  REGIONAL_COEFFICIENTS,
+  QUALITY_MULTIPLIERS,
+  getTradeById,
+  getAllTrades,
+  calculateFinalPrice,
+  calculateAnswerMultiplier
+};
