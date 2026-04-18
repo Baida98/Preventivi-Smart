@@ -65,9 +65,15 @@ function updateUserUI() {
 
 // ===== WIZARD NAVIGATION =====
 function goToStep(step) {
-    document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+    const steps = document.querySelectorAll('.step-content');
+    steps.forEach(s => {
+        s.classList.add('hidden');
+        s.style.animation = 'none';
+    });
+    
     const targetStep = getEl(`step${step}`);
-    if (targetStep) targetStep.classList.remove('hidden');
+    targetStep.classList.remove('hidden');
+    targetStep.style.animation = 'springBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
     
     document.querySelectorAll('.step-item').forEach((el, idx) => {
         el.classList.remove('active', 'completed');
