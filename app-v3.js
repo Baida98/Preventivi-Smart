@@ -357,12 +357,21 @@ function renderSavedQuotes(quotes) {
 document.addEventListener('DOMContentLoaded', () => {
     renderMacroCategories();
     
+    // Hero buttons
     getEl('startAnalysisBtn')?.addEventListener('click', () => startWizardFlow(false));
     getEl('startQuickBtn')?.addEventListener('click', () => startWizardFlow(true));
+    
+    // Step navigation
+    getEl('prevStepBtn')?.addEventListener('click', () => goToStep(1));
+    getEl('prevStep3Btn')?.addEventListener('click', () => goToStep(2));
+    getEl('nextStepBtn')?.addEventListener('click', () => goToStep(3));
+    
+    // Analysis & Reset
     getEl('runAnalysisBtn')?.addEventListener('click', runAnalysis);
     getEl('resetAppBtn')?.addEventListener('click', resetApp);
+    getEl('btnDownloadPDF')?.addEventListener('click', downloadPDF);
     
-    // Navigazione
+    // Step 1 Navigation
     getEl('homeFromStep1Btn')?.addEventListener('click', goHome);
     getEl('backSelectionBtn')?.addEventListener('click', () => {
         if (state.selectedSub) {
@@ -379,6 +388,13 @@ document.addEventListener('DOMContentLoaded', () => {
             goHome();
         }
     });
+    
+    // Login modal
+    getEl('closeLoginBtn')?.addEventListener('click', () => {
+        getEl('loginModal')?.classList.add('hidden');
+    });
+    getEl('googleLoginBtn')?.addEventListener('click', loginWithGoogle);
+    getEl('logoutBtn')?.addEventListener('click', () => signOut(auth));
 });
 
 function startWizardFlow(quick) {
@@ -392,6 +408,39 @@ function goHome() {
     getEl('app-root').style.display = 'none';
     getEl('hero-section').classList.remove('hidden');
     resetApp();
+}
+
+async function downloadPDF() {
+    if (!state.lastAnalysis) {
+        uiFeedback.showFeedback('Nessuna analisi disponibile', 'error');
+        return;
+    }
+    
+    const btn = getEl('btnDownloadPDF');
+    uiFeedback.setButtonLoading(btn, true);
+    
+    try {
+        const pdfData = state.quoteManager ? 
+            await state.quoteManager.getPDFData(state.lastAnalysis) : 
+            state.lastAnalysis;
+        
+        generateProfessionalPDF(pdfData);
+        uiFeedback.showFeedback('Report scaricato con successo', 'success');
+    } catch (e) {
+        uiFeedback.showFeedback('Errore nel download del report', 'error');
+    } finally {
+        uiFeedback.setButtonLoading(btn, false);
+    }
+}
+
+async function loginWithGoogle() {
+    try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        getEl('loginModal')?.classList.add('hidden');
+    } catch (e) {
+        uiFeedback.showFeedback('Errore di accesso', 'error');
+    }
 }
 
 function resetApp() {

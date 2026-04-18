@@ -1078,3 +1078,408 @@ canvas {
         padding: 24px;
     }
 }
+
+
+/* ===== ADVANCED BUTTON STYLING ===== */
+
+.btn {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    position: relative;
+    overflow: hidden;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all var(--transition-slow);
+}
+
+.btn-full {
+    width: 100%;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(0, 102, 255, 0.3);
+}
+
+.btn-primary:hover {
+    box-shadow: 0 8px 25px rgba(0, 102, 255, 0.4);
+    transform: translateY(-2px);
+}
+
+.btn-primary:active {
+    transform: translateY(0px);
+}
+
+.btn-secondary {
+    background: var(--surface-glass);
+    color: var(--text-primary);
+    border: 1.5px solid rgba(0, 102, 255, 0.3);
+    backdrop-filter: blur(20px);
+}
+
+.btn-secondary:hover {
+    background: var(--surface);
+    border-color: var(--primary);
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
+
+.btn-ghost {
+    background: transparent;
+    color: var(--text-primary);
+    border: 1.5px solid var(--border);
+}
+
+.btn-ghost:hover {
+    background: var(--surface-alt);
+    border-color: var(--primary);
+    transform: translateY(-2px);
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* ===== BUTTON LOADING STATE ===== */
+
+.btn.loading {
+    pointer-events: none;
+}
+
+.btn.loading::after {
+    content: '';
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-left: 8px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ===== MODAL STYLING ===== */
+
+.modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(10, 14, 39, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    animation: fadeIn var(--transition-slow);
+}
+
+.modal.hidden {
+    display: none;
+}
+
+.modal-content {
+    background: var(--surface-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-2xl);
+    padding: 40px;
+    max-width: 500px;
+    width: 90%;
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    animation: scaleIn var(--transition-slow) cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    background: none;
+    border: none;
+    font-size: 2rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition);
+}
+
+.modal-close:hover {
+    color: var(--text-primary);
+    transform: rotate(90deg);
+}
+
+/* ===== LOGIN BOX ===== */
+
+.login-box {
+    text-align: center;
+}
+
+.login-box h3 {
+    margin-bottom: 8px;
+    color: var(--text-primary);
+}
+
+.login-box p {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.btn-google-login {
+    background: white;
+    color: var(--text-primary);
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+}
+
+.btn-google-login:hover {
+    background: var(--background);
+    box-shadow: var(--shadow-md);
+}
+
+.login-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 24px 0;
+    color: var(--text-tertiary);
+}
+
+.login-divider::before,
+.login-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+#emailLoginForm {
+    text-align: left;
+}
+
+/* ===== SAVE STATE BANNER ===== */
+
+.save-state-container {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--surface-glass);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: var(--radius-lg);
+    padding: 16px 20px;
+    box-shadow: var(--shadow-lg);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    animation: slideInRight var(--transition-slow) cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 999;
+}
+
+.save-state-icon {
+    font-size: 1.2rem;
+}
+
+.save-state-icon.saving {
+    animation: spin 1s linear infinite;
+    color: var(--primary);
+}
+
+.save-state-icon.saved {
+    color: var(--success);
+}
+
+.save-state-icon.error {
+    color: var(--danger);
+}
+
+/* ===== CONFIRMATION MODAL ===== */
+
+.confirmation-modal {
+    text-align: center;
+}
+
+.confirmation-modal h3 {
+    margin-bottom: 12px;
+    color: var(--text-primary);
+}
+
+.confirmation-modal p {
+    color: var(--text-secondary);
+    margin-bottom: 24px;
+}
+
+.confirmation-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirmation-actions .btn {
+    flex: 1;
+}
+
+/* ===== LOADING SPINNER ===== */
+
+.premium-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid rgba(0, 102, 255, 0.2);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 16px;
+}
+
+.loading-container {
+    text-align: center;
+    padding: 40px;
+}
+
+.loading-text {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+/* ===== VISUAL FEEDBACK ICONS ===== */
+
+.visual-feedback-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    font-size: 1rem;
+    color: var(--text-tertiary);
+    transition: all var(--transition);
+}
+
+.visual-feedback-icon.success {
+    color: var(--success);
+    animation: scaleIn var(--transition);
+}
+
+.visual-feedback-icon.error {
+    color: var(--danger);
+    animation: scaleIn var(--transition);
+}
+
+.visual-feedback-icon.info {
+    color: var(--primary);
+    animation: scaleIn var(--transition);
+}
+
+/* ===== PRICE INPUT WRAPPER ===== */
+
+.price-input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-bottom: 32px;
+}
+
+.currency-symbol {
+    position: absolute;
+    left: 24px;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--primary);
+    opacity: 0.7;
+}
+
+.massive-price-input {
+    width: 100%;
+    padding: 24px 24px 24px 60px;
+    font-size: 2.5rem;
+    font-weight: 800;
+    border: 2px solid var(--border);
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--surface-glass) 0%, rgba(255, 255, 255, 0.5) 100%);
+    color: var(--primary);
+    text-align: left;
+    transition: all var(--transition-slow);
+}
+
+.massive-price-input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 
+        0 0 0 4px rgba(0, 102, 255, 0.15),
+        inset 0 1px 2px rgba(0, 0, 0, 0.05);
+    background: var(--surface);
+}
+
+/* ===== DYNAMIC QUESTIONS ===== */
+
+.dynamic-questions {
+    margin-bottom: 24px;
+}
+
+.question-group {
+    background: var(--surface-alt);
+    border-radius: var(--radius-lg);
+    padding: 16px;
+    margin-bottom: 12px;
+    border-left: 3px solid var(--primary);
+}
+
+.question-group label {
+    display: block;
+    margin-bottom: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.question-group input[type="radio"],
+.question-group input[type="checkbox"] {
+    margin-right: 8px;
+    cursor: pointer;
+}
+
+.question-group input[type="radio"] + label,
+.question-group input[type="checkbox"] + label {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 16px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    font-weight: 400;
+}
+
+/* ===== FORM TEXTAREA ===== */
+
+.form-textarea {
+    resize: vertical;
+    min-height: 100px;
+    font-family: inherit;
+}
+
+/* ===== RESPONSIVE BUTTON LAYOUT ===== */
+
+@media (max-width: 768px) {
+    .wizard-nav {
+        flex-direction: column;
+    }
+    
+    .btn-full {
+        width: 100%;
+    }
+    
+    .modal-content {
+        padding: 24px;
+    }
+    
+    .confirmation-actions {
+        flex-direction: column;
+    }
+}
