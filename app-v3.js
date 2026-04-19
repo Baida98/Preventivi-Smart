@@ -14,6 +14,7 @@ import {
 import { performProfessionalAnalysis } from './engine/professional-analyzer.js';
 import { generateProfessionalPDF } from './engine/professional-pdf.js';
 import chartRenderer from './engine/chart-renderer.js';
+import { loginUser } from './engine/auth.js';
 import QuoteManager from './engine/quote-manager.js';
 import uiFeedback from './engine/ui-feedback.js';
 
@@ -388,14 +389,62 @@ function goHome() {
 }
 
 // ===== INITIALIZATION =====
+function populateRegions() {
+    const regionSelect = getEl('regionSelect');
+    if (!regionSelect) return;
+    
+    const regions = Object.keys(database.REGIONAL_COEFFICIENTS).sort();
+    regionSelect.innerHTML = `
+        <option value="" disabled selected>Seleziona la tua regione</option>
+        ${regions.map(r => `<option value="${r}">${r}</option>`).join('')}
+    `;
+}
+
+window.downloadQuotePDF = async (quoteId) => {
+    if (!state.quoteManager) return;
+    try {
+        uiFeedback.showFeedback('Generazione PDF in corso...', 'info');
+        const pdfData = await state.quoteManager.getPDFData(quoteId);
+        generateProfessionalPDF(pdfData);
+        uiFeedback.showFeedback('PDF scaricato con successo', 'success');
+    } catch (e) {
+        console.error('Errore download PDF:', e);
+        uiFeedback.showFeedback('Errore nella generazione del PDF', 'error');
+    }
+};
+
+async function handleEmailLogin(e) {
+    e.preventDefault();
+    const email = getEl('loginEmail')?.value;
+    const password = getEl('loginPassword')?.value;
+    const btn = getEl('emailLoginBtn');
+
+    if (!email || !password) {
+        uiFeedback.showFeedback('Inserisci email e password', 'error');
+        return;
+    }
+
+    uiFeedback.setButtonLoading(btn, true);
+    const result = await loginUser(email, password);
+    uiFeedback.setButtonLoading(btn, false);
+
+    if (result.success) {
+        getEl('loginModal')?.classList.add('hidden');
+        uiFeedback.showFeedback('Accesso effettuato', 'success');
+    } else {
+        uiFeedback.showFeedback(result.error, 'error');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 Preventivi-Smart Pro: Inizializzazione in corso...');
     
     try {
         renderMacroCategories();
-        console.log('✅ Categorie caricate');
+        populateRegions();
+        console.log('✅ Categorie e Regioni caricate');
     } catch (e) {
-        console.error('❌ Errore nel caricamento categorie:', e);
+        console.error('❌ Errore nell\'inizializzazione:', e);
     }
     
     // Hero buttons
@@ -485,6 +534,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (googleLoginBtn) {
         googleLoginBtn.addEventListener('click', loginWithGoogle);
         console.log('✅ googleLoginBtn collegato');
+    }
+
+    const emailLoginForm = getEl('emailLoginForm');
+    if (emailLoginForm) {
+        emailLoginForm.addEventListener('submit', handleEmailLogin);
+        console.log('✅ emailLoginForm collegato');
     }
     
     console.log('✅ Tutti i listener inizializzati correttamente');
