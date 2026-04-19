@@ -116,15 +116,19 @@ window.selectMacro = (macroId) => {
     const container = getEl('macro-grid');
     if (!container) return;
     
-    const subs = database.SUB_CATEGORIES.filter(s => s.macroId === macroId);
-    container.innerHTML = subs.map((sub, idx) => `
-        <div class="trade-card trade-card-sub animate-fade-in-up" onclick="window.selectSub('${sub.id}')" style="animation-delay: ${idx * 0.1}s;">
-            <div class="trade-card-icon" style="background: ${sub.color};">
-                <i class="fa-solid ${sub.icon}"></i>
+    const subs = database.SUB_CATEGORIES.filter(s => s.parent === macroId);
+    if (subs.length === 0) {
+        container.innerHTML = `<p class="text-center" style="grid-column: 1/-1; padding: 40px; color: var(--gray-400);">Nessuna sottocategoria trovata.</p>`;
+    } else {
+        container.innerHTML = subs.map((sub, idx) => `
+            <div class="trade-card trade-card-sub animate-fade-in-up" onclick="window.selectSub('${sub.id}')" style="animation-delay: ${idx * 0.1}s;">
+                <div class="trade-card-icon" style="background: ${sub.color};">
+                    <i class="fa-solid ${sub.icon}"></i>
+                </div>
+                <h3 class="trade-card-title">${sub.name}</h3>
             </div>
-            <h3 class="trade-card-title">${sub.name}</h3>
-        </div>
-    `).join('');
+        `).join('');
+    }
     
     getEl('homeFromStep1Btn').classList.remove('hidden');
 };
