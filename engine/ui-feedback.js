@@ -24,26 +24,27 @@ export function showDeleteConfirmation(message, onConfirm, onCancel) {
         align-items: center;
         justify-content: center;
         z-index: 10000;
-        backdrop-filter: blur(4px);
+        backdrop-filter: blur(18px);
     `;
 
     modal.innerHTML = `
         <div style="
-            background: var(--surface);
+            background: #111827;
             border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 32px;
-            max-width: 400px;
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 450px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
         ">
             <h3 style="
-                color: var(--gray-50);
+                color: var(--text);
                 margin-bottom: 12px;
-                font-size: 1.1rem;
+                font-size: 1.5rem;
+                font-weight: 800;
             ">Conferma Eliminazione</h3>
             
             <p style="
-                color: var(--gray-400);
+                color: var(--muted);
                 margin-bottom: 24px;
                 line-height: 1.6;
             ">${message}</p>
@@ -99,15 +100,20 @@ export function showFeedback(message, type = 'info', duration = 3000) {
         position: fixed;
         bottom: 24px;
         right: 24px;
-        background: var(--surface);
-        color: var(--gray-100);
-        padding: 16px 20px;
-        border-radius: 12px;
+        background: #111827;
+        color: var(--text);
+        padding: 16px 24px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
         border-left: 4px solid ${getColorByType(type)};
-        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
-        animation: slideIn 0.3s ease;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         z-index: 10001;
         max-width: 400px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-weight: 500;
     `;
 
     const icon = getIconByType(type);
@@ -197,10 +203,10 @@ function createSaveStateContainer() {
  */
 function getColorByType(type) {
     const colors = {
-        success: '#10b981',
+        success: '#22c55e',
         error: '#ef4444',
         warning: '#f59e0b',
-        info: '#3b82f6'
+        info: '#6366f1'
     };
     return colors[type] || colors.info;
 }

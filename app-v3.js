@@ -96,7 +96,7 @@ function renderMacroCategories() {
     state.selectedTrade = null;
     
     container.innerHTML = database.MACRO_CATEGORIES.map((macro, idx) => `
-        <div class="trade-card trade-card-macro animate-fade-in-up" onclick="window.selectMacro('${macro.id}')" style="animation-delay: ${idx * 0.1}s;">
+        <div class="trade-card" onclick="window.selectMacro('${macro.id}')">
             <div class="trade-card-icon" style="background: ${macro.color};">
                 <i class="fa-solid ${macro.icon}"></i>
             </div>
@@ -118,10 +118,10 @@ window.selectMacro = (macroId) => {
     
     const subs = database.SUB_CATEGORIES.filter(s => s.parent === macroId);
     if (subs.length === 0) {
-        container.innerHTML = `<p class="text-center" style="grid-column: 1/-1; padding: 40px; color: var(--gray-400);">Nessuna sottocategoria trovata.</p>`;
+        container.innerHTML = `<p class="text-center" style="grid-column: 1/-1; padding: 40px; color: var(--muted);">Nessuna sottocategoria trovata.</p>`;
     } else {
         container.innerHTML = subs.map((sub, idx) => `
-            <div class="trade-card trade-card-sub animate-fade-in-up" onclick="window.selectSub('${sub.id}')" style="animation-delay: ${idx * 0.1}s;">
+            <div class="trade-card" onclick="window.selectSub('${sub.id}')">
                 <div class="trade-card-icon" style="background: ${sub.color};">
                     <i class="fa-solid ${sub.icon}"></i>
                 </div>
@@ -144,7 +144,7 @@ window.selectSub = (subId) => {
     
     const trades = database.TRADES_DATABASE.filter(t => t.subId === subId);
     container.innerHTML = trades.map((trade, idx) => `
-        <div class="trade-card trade-card-trade animate-fade-in-up" onclick="window.selectTrade('${trade.id}')" style="animation-delay: ${idx * 0.1}s;">
+        <div class="trade-card" onclick="window.selectTrade('${trade.id}')">
             <div class="trade-card-icon" style="background: ${trade.color};">
                 <i class="fa-solid ${trade.icon}"></i>
             </div>
@@ -506,11 +506,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (homeFromStep1Btn) {
         homeFromStep1Btn.addEventListener('click', goHome);
-        console.log('✅ homeFromStep1Btn collegato');
     }
     if (backSelectionBtn) {
         backSelectionBtn.addEventListener('click', () => {
-            if (state.selectedSub) {
+            if (state.selectedTrade) {
+                window.selectSub(state.selectedSub);
+                state.selectedTrade = null;
+            } else if (state.selectedSub) {
                 window.selectMacro(state.selectedMacro);
                 state.selectedSub = null;
             } else if (state.selectedMacro) {
@@ -521,7 +523,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 goHome();
             }
         });
-        console.log('✅ backSelectionBtn collegato');
     }
     
     // Login modal
