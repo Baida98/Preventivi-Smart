@@ -1,4 +1,4 @@
-/**
+/*
  * Preventivi-Smart Pro v27.0 — Versione Finale Professionale
  * Implementa le 5 regole base per stabilità e usabilità
  */
@@ -55,48 +55,52 @@ function updateUserUI() {
                 <button class="btn btn-secondary btn-sm" id="logoutBtn">Esci</button>
             </div>
         `;
-        getEl('logoutBtn')?.addEventListener('click', () => signOut(auth));
+        const logoutBtn = getEl('logoutBtn');
+        if (logoutBtn) logoutBtn.addEventListener('click', () => signOut(auth));
         loginModal?.classList.add('hidden');
     } else {
-        userNav.innerHTML = `<button class="btn btn-primary btn-sm" id="loginTriggerBtn">Accedi</button>`;
+        userNav.innerHTML = `<button class="btn btn-login-trigger" id="loginTriggerBtn">Accedi</button>`;
         getEl('loginTriggerBtn')?.addEventListener('click', () => loginModal?.classList.remove('hidden'));
     }
 }
 
-// ===== WIZARD NAVIGATION =====
+// ===== NAVIGATION =====
 function goToStep(step) {
-    const steps = document.querySelectorAll('.step-content');
-    steps.forEach(s => {
-        s.classList.add('hidden');
-        s.style.animation = 'none';
-    });
-    
     const targetStep = getEl(`step${step}`);
-    targetStep.classList.remove('hidden');
-    targetStep.style.animation = 'springBounce 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+    if (!targetStep) {
+        console.error(`Step ${step} non trovato`);
+        return;
+    }
     
-    document.querySelectorAll('.step-item').forEach((el, idx) => {
-        el.classList.remove('active', 'completed');
-        if (idx + 1 === step) el.classList.add('active');
-        if (idx + 1 < step) el.classList.add('completed');
+    document.querySelectorAll('.step-content').forEach(s => s.classList.add('hidden'));
+    targetStep.classList.remove('hidden');
+    
+    document.querySelectorAll('.step-item').forEach((item, idx) => {
+        idx + 1 <= step ? item.classList.add('active') : item.classList.remove('active');
     });
+    
     state.currentStep = step;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ===== RENDER LOGIC =====
+// ===== CATEGORY RENDERING =====
 function renderMacroCategories() {
     const container = getEl('macro-grid');
-    if (!container) return;
+    if (!container) {
+        console.error('macro-grid non trovato');
+        return;
+    }
+    
+    state.selectedMacro = null;
+    state.selectedSub = null;
+    state.selectedTrade = null;
     
     container.innerHTML = database.MACRO_CATEGORIES.map((macro, idx) => `
-        <div class="trade-card trade-card-macro animate-fade-in-up" onclick="selectMacro('${macro.id}')" style="animation-delay: ${idx * 0.1}s;">
-            <div class="card-icon-wrapper" style="background: ${macro.color}15; border: 1px solid ${macro.color}30;">
-                <i class="fa-solid ${macro.icon}" style="font-size: 1.75rem; color: ${macro.color};"></i>
+        <div class="trade-card trade-card-macro animate-fade-in-up" onclick="window.selectMacro('${macro.id}')" style="animation-delay: ${idx * 0.1}s;">
+            <div class="trade-card-icon" style="background: ${macro.color};">
+                <i class="fa-solid ${macro.icon}"></i>
             </div>
-            <h4>${macro.name}</h4>
-            <p>${macro.description}</p>
-            <div class="card-footer-action">Seleziona →</div>
+            <h3 class="trade-card-title">${macro.name}</h3>
+            <p class="trade-card-desc">${macro.description}</p>
         </div>
     `).join('');
 }
@@ -104,51 +108,54 @@ function renderMacroCategories() {
 window.selectMacro = (macroId) => {
     state.selectedMacro = macroId;
     const macro = database.MACRO_CATEGORIES.find(m => m.id === macroId);
+    
     getEl('step1-title').textContent = macro.name;
     getEl('step1-subtitle').textContent = "Seleziona il tipo di intervento";
     
     const container = getEl('macro-grid');
-    const subs = database.SUB_CATEGORIES.filter(s => s.parent === macroId);
+    if (!container) return;
+    
+    const subs = database.SUB_CATEGORIES.filter(s => s.macroId === macroId);
     container.innerHTML = subs.map((sub, idx) => `
-        <div class="trade-card trade-card-sub animate-fade-in-up" onclick="selectSub('${sub.id}')" style="animation-delay: ${idx * 0.1}s;">
-            <div class="card-icon-wrapper" style="background: ${sub.color}20; border: 2px solid ${sub.color}40; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; height: 60px;">
-                <i class="fa-solid ${sub.icon}" style="font-size: 1.75rem; color: ${sub.color};"></i>
+        <div class="trade-card trade-card-sub animate-fade-in-up" onclick="window.selectSub('${sub.id}')" style="animation-delay: ${idx * 0.1}s;">
+            <div class="trade-card-icon" style="background: ${sub.color};">
+                <i class="fa-solid ${sub.icon}"></i>
             </div>
-            <h4 style="margin-bottom: 8px; color: var(--gray-50);">${sub.name}</h4>
-            <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); color: var(--primary); font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Continua →</div>
+            <h3 class="trade-card-title">${sub.name}</h3>
         </div>
     `).join('');
     
-    getEl('homeFromStep1Btn').classList.add('hidden');
+    getEl('homeFromStep1Btn').classList.remove('hidden');
 };
 
 window.selectSub = (subId) => {
     state.selectedSub = subId;
-    const trades = database.TRADES_DATABASE.filter(t => t.subId === subId);
     
     getEl('step1-title').textContent = "Intervento Specifico";
     getEl('step1-subtitle').textContent = "Qual è il lavoro da svolgere?";
     
     const container = getEl('macro-grid');
+    if (!container) return;
+    
+    const trades = database.TRADES_DATABASE.filter(t => t.subId === subId);
     container.innerHTML = trades.map((trade, idx) => `
-        <div class="trade-card trade-card-trade animate-fade-in-up" onclick="selectTrade('${trade.id}')" style="animation-delay: ${idx * 0.1}s;">
-            <div class="card-icon-wrapper" style="background: linear-gradient(135deg, #3b82f620, #1e40af20); border: 2px solid #3b82f640; border-radius: 12px; padding: 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; height: 60px;">
-                <i class="fa-solid ${trade.icon || 'fa-screwdriver-wrench'}" style="font-size: 1.75rem; color: #3b82f6;"></i>
+        <div class="trade-card trade-card-trade animate-fade-in-up" onclick="window.selectTrade('${trade.id}')" style="animation-delay: ${idx * 0.1}s;">
+            <div class="trade-card-icon" style="background: ${trade.color};">
+                <i class="fa-solid ${trade.icon}"></i>
             </div>
-            <h4 style="margin-bottom: 8px; color: var(--gray-50);">${trade.name}</h4>
-            <p style="color: var(--gray-400); font-size: 0.85rem; line-height: 1.4; margin-bottom: 12px;">${trade.unit}</p>
-            <div class="card-footer-action">Seleziona →</div>
+            <h3 class="trade-card-title">${trade.name}</h3>
         </div>
     `).join('');
 };
-
 
 window.selectTrade = (tradeId) => {
     state.selectedTrade = tradeId;
     const trade = database.TRADES_DATABASE.find(t => t.id === tradeId);
     
-    getEl('trade-unit-label').textContent = trade.unit;
+    getEl('unitLabel').textContent = trade.unit;
     getEl('quantityInput').placeholder = `Es: 10 ${trade.unit}`;
+    getEl('tradeNameDisplay').textContent = trade.name;
+    getEl('basePriceDisplay').textContent = `€${trade.basePrice}`;
     
     renderQuestions(trade);
     goToStep(2);
@@ -182,22 +189,19 @@ async function runAnalysis() {
     const qty = parseFloat(getEl('quantityInput')?.value);
     const price = parseFloat(getEl('receivedPriceInputStep3')?.value) || parseFloat(getEl('receivedPriceInput')?.value);
     
-    if (!region || isNaN(qty) || (!state.isQuickMode && isNaN(price))) {
-        uiFeedback.showFeedback("Completa tutti i campi obbligatori.", "error");
+    if (!state.selectedTrade || !region || !qty) {
+        uiFeedback.showFeedback('Compila tutti i campi obbligatori', 'error');
         return;
     }
-    
+
     const runBtn = getEl('runAnalysisBtn');
     uiFeedback.setButtonLoading(runBtn, true);
     
     setTimeout(async () => {
-        const tradeData = database.TRADES_DATABASE.find(t => t.id === state.selectedTrade);
-        
-        const analysis = performProfessionalAnalysis({
+        const analysis = await performProfessionalAnalysis({
             tradeId: state.selectedTrade,
-            tradeName: tradeData.name,
-            quantity: qty,
             region: region,
+            quantity: qty,
             quality: 'standard', 
             receivedPrice: state.isQuickMode ? 0 : price,
             answers: state.questionAnswers
@@ -303,111 +307,18 @@ function renderSavedQuotes(quotes) {
     const list = getEl('savedQuotesList');
     if (!list) return;
     
-    if (quotes.length === 0) {
-        list.innerHTML = "<p style='color: var(--gray-500); padding: 20px; text-align: center;'>Nessun preventivo salvato.</p>";
+    if (!quotes || quotes.length === 0) {
+        list.innerHTML = '<p style="color: var(--text-tertiary); text-align: center;">Nessun preventivo salvato</p>';
         return;
     }
-
+    
     list.innerHTML = quotes.map(q => `
-        <div class="card" style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; padding: 16px;">
-            <div>
-                <div style="font-weight: 700; color: var(--gray-50);">#${q.numero} - ${q.cliente}</div>
-                <div style="font-size: 0.85rem; color: var(--gray-400);">${q.data} • €${q.totale.toFixed(2)}</div>
-            </div>
-            <div style="display: flex; gap: 8px;">
-                <button class="btn btn-secondary btn-sm btn-pdf" data-id="${q.id}" title="Scarica PDF"><i class="fa-solid fa-file-pdf"></i></button>
-                <button class="btn btn-secondary btn-sm btn-dup" data-id="${q.id}" title="Duplica"><i class="fa-solid fa-copy"></i></button>
-                <button class="btn btn-secondary btn-sm btn-del" data-id="${q.id}" style="color: var(--danger);" title="Elimina"><i class="fa-solid fa-trash"></i></button>
-            </div>
+        <div class="saved-quote-item">
+            <div><strong>${q.cliente}</strong> - ${new Date(q.data).toLocaleDateString()}</div>
+            <div>€${q.totale.toFixed(2)}</div>
+            <button class="btn btn-sm" onclick="downloadQuotePDF('${q.id}')">PDF</button>
         </div>
     `).join('');
-
-    // Event Listeners
-    list.querySelectorAll('.btn-pdf').forEach(btn => {
-        btn.onclick = async () => {
-            const data = await state.quoteManager.getPDFData(btn.dataset.id);
-            generateProfessionalPDF(data);
-        };
-    });
-
-    list.querySelectorAll('.btn-dup').forEach(btn => {
-        btn.onclick = async () => {
-            uiFeedback.showFeedback("Duplicazione in corso...", "info");
-            await state.quoteManager.duplicateQuote(btn.dataset.id);
-            uiFeedback.showFeedback("Preventivo duplicato!", "success");
-            loadSavedQuotes();
-        };
-    });
-
-    list.querySelectorAll('.btn-del').forEach(btn => {
-        btn.onclick = () => {
-            uiFeedback.showDeleteConfirmation(
-                "Sei sicuro di voler eliminare questo preventivo? L'azione è irreversibile.",
-                async () => {
-                    await state.quoteManager.deleteQuote(btn.dataset.id);
-                    uiFeedback.showFeedback("Eliminato con successo", "success");
-                    loadSavedQuotes();
-                }
-            );
-        };
-    });
-}
-
-// ===== INITIALIZATION =====
-document.addEventListener('DOMContentLoaded', () => {
-    renderMacroCategories();
-    
-    // Hero buttons
-    getEl('startAnalysisBtn')?.addEventListener('click', () => startWizardFlow(false));
-    getEl('startQuickBtn')?.addEventListener('click', () => startWizardFlow(true));
-    
-    // Step navigation
-    getEl('prevStepBtn')?.addEventListener('click', () => goToStep(1));
-    getEl('prevStep3Btn')?.addEventListener('click', () => goToStep(2));
-    getEl('nextStepBtn')?.addEventListener('click', () => goToStep(3));
-    
-    // Analysis & Reset
-    getEl('runAnalysisBtn')?.addEventListener('click', runAnalysis);
-    getEl('resetAppBtn')?.addEventListener('click', resetApp);
-    getEl('btnDownloadPDF')?.addEventListener('click', downloadPDF);
-    
-    // Step 1 Navigation
-    getEl('homeFromStep1Btn')?.addEventListener('click', goHome);
-    getEl('backSelectionBtn')?.addEventListener('click', () => {
-        if (state.selectedSub) {
-            // Se siamo nei lavori, torna alle sottocategorie
-            window.selectMacro(state.selectedMacro);
-            state.selectedSub = null;
-        } else if (state.selectedMacro) {
-            // Se siamo nelle sottocategorie, torna alle macro
-            renderMacroCategories();
-            state.selectedMacro = null;
-            getEl('homeFromStep1Btn').classList.remove('hidden');
-        } else {
-            // Se siamo alle macro, torna alla home
-            goHome();
-        }
-    });
-    
-    // Login modal
-    getEl('closeLoginBtn')?.addEventListener('click', () => {
-        getEl('loginModal')?.classList.add('hidden');
-    });
-    getEl('googleLoginBtn')?.addEventListener('click', loginWithGoogle);
-    getEl('logoutBtn')?.addEventListener('click', () => signOut(auth));
-});
-
-function startWizardFlow(quick) {
-    state.isQuickMode = quick;
-    getEl('hero-section').classList.add('hidden');
-    getEl('app-root').style.display = 'block';
-    goToStep(1);
-}
-
-function goHome() {
-    getEl('app-root').style.display = 'none';
-    getEl('hero-section').classList.remove('hidden');
-    resetApp();
 }
 
 async function downloadPDF() {
@@ -462,3 +373,119 @@ function resetApp() {
     renderMacroCategories();
     goToStep(1);
 }
+
+function startWizardFlow(quick) {
+    state.isQuickMode = quick;
+    getEl('hero-section').classList.add('hidden');
+    getEl('app-root').style.display = 'block';
+    goToStep(1);
+}
+
+function goHome() {
+    getEl('app-root').style.display = 'none';
+    getEl('hero-section').classList.remove('hidden');
+    resetApp();
+}
+
+// ===== INITIALIZATION =====
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 Preventivi-Smart Pro: Inizializzazione in corso...');
+    
+    try {
+        renderMacroCategories();
+        console.log('✅ Categorie caricate');
+    } catch (e) {
+        console.error('❌ Errore nel caricamento categorie:', e);
+    }
+    
+    // Hero buttons
+    const startAnalysisBtn = getEl('startAnalysisBtn');
+    const startQuickBtn = getEl('startQuickBtn');
+    
+    if (startAnalysisBtn) {
+        startAnalysisBtn.addEventListener('click', () => startWizardFlow(false));
+        console.log('✅ startAnalysisBtn collegato');
+    }
+    if (startQuickBtn) {
+        startQuickBtn.addEventListener('click', () => startWizardFlow(true));
+        console.log('✅ startQuickBtn collegato');
+    }
+    
+    // Step navigation
+    const prevStepBtn = getEl('prevStepBtn');
+    const prevStep3Btn = getEl('prevStep3Btn');
+    const nextStepBtn = getEl('nextStepBtn');
+    
+    if (prevStepBtn) {
+        prevStepBtn.addEventListener('click', () => goToStep(1));
+        console.log('✅ prevStepBtn collegato');
+    }
+    if (prevStep3Btn) {
+        prevStep3Btn.addEventListener('click', () => goToStep(2));
+        console.log('✅ prevStep3Btn collegato');
+    }
+    if (nextStepBtn) {
+        nextStepBtn.addEventListener('click', () => goToStep(3));
+        console.log('✅ nextStepBtn collegato');
+    }
+    
+    // Analysis & Reset
+    const runAnalysisBtn = getEl('runAnalysisBtn');
+    const resetAppBtn = getEl('resetAppBtn');
+    const btnDownloadPDF = getEl('btnDownloadPDF');
+    
+    if (runAnalysisBtn) {
+        runAnalysisBtn.addEventListener('click', runAnalysis);
+        console.log('✅ runAnalysisBtn collegato');
+    }
+    if (resetAppBtn) {
+        resetAppBtn.addEventListener('click', resetApp);
+        console.log('✅ resetAppBtn collegato');
+    }
+    if (btnDownloadPDF) {
+        btnDownloadPDF.addEventListener('click', downloadPDF);
+        console.log('✅ btnDownloadPDF collegato');
+    }
+    
+    // Step 1 Navigation
+    const homeFromStep1Btn = getEl('homeFromStep1Btn');
+    const backSelectionBtn = getEl('backSelectionBtn');
+    
+    if (homeFromStep1Btn) {
+        homeFromStep1Btn.addEventListener('click', goHome);
+        console.log('✅ homeFromStep1Btn collegato');
+    }
+    if (backSelectionBtn) {
+        backSelectionBtn.addEventListener('click', () => {
+            if (state.selectedSub) {
+                window.selectMacro(state.selectedMacro);
+                state.selectedSub = null;
+            } else if (state.selectedMacro) {
+                renderMacroCategories();
+                state.selectedMacro = null;
+                if (homeFromStep1Btn) homeFromStep1Btn.classList.remove('hidden');
+            } else {
+                goHome();
+            }
+        });
+        console.log('✅ backSelectionBtn collegato');
+    }
+    
+    // Login modal
+    const closeLoginBtn = getEl('closeLoginBtn');
+    const googleLoginBtn = getEl('googleLoginBtn');
+    const loginModal = getEl('loginModal');
+    
+    if (closeLoginBtn) {
+        closeLoginBtn.addEventListener('click', () => {
+            if (loginModal) loginModal.classList.add('hidden');
+        });
+        console.log('✅ closeLoginBtn collegato');
+    }
+    if (googleLoginBtn) {
+        googleLoginBtn.addEventListener('click', loginWithGoogle);
+        console.log('✅ googleLoginBtn collegato');
+    }
+    
+    console.log('✅ Tutti i listener inizializzati correttamente');
+});
