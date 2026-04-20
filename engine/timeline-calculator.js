@@ -16,12 +16,18 @@ export function calculateTimeline(tradeId, quantity, answers) {
   // Moltiplicatore per complessità dalle risposte
   let complexityMult = 1.0;
   Object.values(answers || {}).forEach(answer => {
-    if (typeof answer === "string") {
+    if (typeof answer === "object" && answer.multiplier) {
+      // Usiamo il moltiplicatore diretto se presente, ma lo scaliamo per la timeline
+      // Se il moltiplicatore è > 1, aumenta il tempo; se < 1, lo diminuisce
+      complexityMult *= (1 + (answer.multiplier - 1) * 0.8);
+    } else if (typeof answer === "string") {
       if (answer.includes("difficile") || answer.includes("muro") || answer.includes("grande")) {
         complexityMult *= 1.3;
       } else if (answer.includes("facile") || answer.includes("piccolo")) {
         complexityMult *= 0.8;
       }
+    } else if (typeof answer === "number") {
+      complexityMult *= (1 + (answer - 1) * 0.8);
     }
   });
 
@@ -61,8 +67,18 @@ export function calculateDetailedBreakdown(tradeId, totalPrice, timeline) {
     servizi: { labor: 0.60, materials: 0.30, overhead: 0.10 }
   };
 
-  const category = trade.category || "finiture";
-  const ratios = breakdownRatios[category] || breakdownRatios.finiture;
+  let category = trade.category || "finiture";
+  
+  // Mappatura categorie database -> breakdown ratios
+  const categoryMap = {
+    'impianti': trade.id.startsWith('idr') ? 'idraulica' : 'elettricita',
+    'strutture': 'muratura',
+    'finiture': 'finiture',
+    'servizi': 'servizi'
+  };
+  
+  const mappedCategory = categoryMap[category] || category;
+  const ratios = breakdownRatios[mappedCategory] || breakdownRatios.finiture;
 
   const labor = Math.round(totalPrice * ratios.labor);
   const materials = Math.round(totalPrice * ratios.materials);
@@ -199,7 +215,12 @@ export function analyzeHiddenRisks(tradeId, answers, receivedPrice, marketPrice)
   }
 
   // RISCHIO 2: Urgenza + Prezzo alto
-  if ((answers.perdita_urgenza === "oggi" || answers.caldaia_urgenza === "inverno") && priceDiff > marketPrice * 0.2) {
+  const isEmergency = Object.values(answers || {}).some(a => 
+    (typeof a === "object" && (a.text?.toLowerCase().includes("urgente") || a.text?.toLowerCase().includes("oggi"))) ||
+    (typeof a === "string" && (a.includes("urgente") || a.includes("oggi")))
+  );
+
+  if (isEmergency && priceDiff > marketPrice * 0.2) {
     risks.push({
       icon: "fa-exclamation-circle",
       title: "⚠️ Sovrapprezzo per Emergenza",
@@ -209,7 +230,12 @@ export function analyzeHiddenRisks(tradeId, answers, receivedPrice, marketPrice)
   }
 
   // RISCHIO 3: Danni strutturali non menzionati
-  if (answers.crepa_umidita === "molto" || answers.umidita_muffa === "molta") {
+  const hasStructuralRisk = Object.values(answers || {}).some(a => 
+    (typeof a === "object" && (a.text?.toLowerCase().includes("strutturale") || a.text?.toLowerCase().includes("muffa"))) ||
+    (typeof a === "string" && (a.includes("strutturale") || a.includes("muffa")))
+  );
+
+  if (hasStructuralRisk) {
     risks.push({
       icon: "fa-building-exclamation",
       title: "🏗️ Possibile Danno Strutturale",

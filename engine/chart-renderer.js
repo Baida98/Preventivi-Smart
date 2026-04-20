@@ -7,12 +7,18 @@ export function renderPriceComparisonChart(containerId, analysis) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const ctx = container.querySelector('canvas');
-    if (!ctx) {
+    let canvas = container.querySelector('canvas');
+    if (!canvas) {
         container.innerHTML = '<canvas></canvas>';
+        canvas = container.querySelector('canvas');
     }
 
-    const canvas = container.querySelector('canvas');
+    // Distruggi il grafico esistente se presente
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
     const canvasCtx = canvas.getContext('2d');
 
     // Dati per il grafico
@@ -102,12 +108,18 @@ export function renderCongruityGauge(containerId, analysis) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const ctx = container.querySelector('canvas');
-    if (!ctx) {
+    let canvas = container.querySelector('canvas');
+    if (!canvas) {
         container.innerHTML = '<canvas></canvas>';
+        canvas = container.querySelector('canvas');
     }
 
-    const canvas = container.querySelector('canvas');
+    // Distruggi il grafico esistente se presente
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
     const canvasCtx = canvas.getContext('2d');
 
     const diffPercent = analysis.congruityAnalysis.diffPercent;
@@ -145,12 +157,18 @@ export function renderMarketTrendChart(containerId, analysis) {
     const container = document.getElementById(containerId);
     if (!container) return;
 
-    const ctx = container.querySelector('canvas');
-    if (!ctx) {
+    let canvas = container.querySelector('canvas');
+    if (!canvas) {
         container.innerHTML = '<canvas></canvas>';
+        canvas = container.querySelector('canvas');
     }
 
-    const canvas = container.querySelector('canvas');
+    // Distruggi il grafico esistente se presente
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
     const canvasCtx = canvas.getContext('2d');
 
     // Simulazione di trend di mercato

@@ -176,14 +176,23 @@ function renderQuestions(trade) {
             <label class="form-label">${q.label}</label>
             <select class="form-select dynamic-q" data-idx="${idx}">
                 <option value="" disabled selected>Seleziona un'opzione</option>
-                ${q.options.map(opt => `<option value="${opt.multiplier}">${opt.text}</option>`).join('')}
+                ${q.options.map((opt, optIdx) => `<option value="${optIdx}">${opt.text}</option>`).join('')}
             </select>
         </div>
     `).join('');
 
     container.querySelectorAll('.dynamic-q').forEach(select => {
         select.addEventListener('change', (e) => {
-            state.questionAnswers[e.target.dataset.idx] = parseFloat(e.target.value);
+            const qIdx = e.target.dataset.idx;
+            const optIdx = e.target.value;
+            const question = trade.questions[qIdx];
+            const option = question.options[optIdx];
+            
+            state.questionAnswers[qIdx] = {
+                label: question.label,
+                text: option.text,
+                multiplier: option.multiplier
+            };
         });
     });
 }

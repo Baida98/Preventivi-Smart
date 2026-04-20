@@ -105,9 +105,18 @@ function calculateMarketPrice(trade, quantity, region, quality, answers) {
   // Moltiplicatori dalle risposte
   let answerMultiplier = 1.0;
   Object.values(answers).forEach(answer => {
-    if (typeof answer === "string") {
+    // Gestione nuova struttura (oggetto)
+    if (typeof answer === "object" && answer.multiplier) {
+      answerMultiplier *= answer.multiplier;
+    } 
+    // Fallback per vecchia struttura (stringa)
+    else if (typeof answer === "string") {
       if (answer.includes("difficile") || answer.includes("grande")) answerMultiplier *= 1.2;
       if (answer.includes("facile") || answer.includes("piccolo")) answerMultiplier *= 0.9;
+    }
+    // Fallback per struttura intermedia (numero diretto)
+    else if (typeof answer === "number") {
+      answerMultiplier *= answer;
     }
   });
   basePrice *= answerMultiplier;
@@ -236,7 +245,12 @@ function performRiskAssessment(tradeId, receivedPrice, marketAnalysis, answers, 
   }
 
   // RISCHIO 3: Danni strutturali potenziali
-  if (answers.umidita_muffa === "molta" || answers.crepa_umidita === "molto") {
+  const hasStructuralRisk = Object.values(answers).some(a => 
+    (typeof a === "object" && (a.text?.toLowerCase().includes("strutturale") || a.text?.toLowerCase().includes("muffa"))) ||
+    (typeof a === "string" && (a.includes("strutturale") || a.includes("muffa")))
+  );
+
+  if (hasStructuralRisk) {
     risks.push({
       id: "structural_damage",
       title: "Possibile Danno Strutturale",
@@ -247,7 +261,12 @@ function performRiskAssessment(tradeId, receivedPrice, marketAnalysis, answers, 
   }
 
   // RISCHIO 4: Emergenza + Sovrapprezzo
-  if ((answers.perdita_urgenza === "oggi" || answers.caldaia_urgenza === "inverno") && congruityAnalysis.diffPercent > 30) {
+  const isEmergency = Object.values(answers).some(a => 
+    (typeof a === "object" && (a.text?.toLowerCase().includes("urgente") || a.text?.toLowerCase().includes("oggi"))) ||
+    (typeof a === "string" && (a.includes("urgente") || a.includes("oggi")))
+  );
+
+  if (isEmergency && congruityAnalysis.diffPercent > 30) {
     warnings.push({
       id: "emergency_markup",
       title: "Sovrapprezzo per Emergenza",
