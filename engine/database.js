@@ -104,6 +104,8 @@ export const TRADES_DATABASE = [
     icon: "fa-droplet", 
     basePrice: 160, 
     unit: "intervento",
+    estimatedHours: 2,
+    hourlyRate: 65,
     category: "impianti",
     description: "Ricerca perdita e riparazione tubazione a vista o sottotraccia.",
     questions: [
@@ -120,6 +122,8 @@ export const TRADES_DATABASE = [
     icon: "fa-faucet-drip", 
     basePrice: 120, 
     unit: "intervento",
+    estimatedHours: 1.5,
+    hourlyRate: 65,
     category: "impianti",
     description: "Disostruzione meccanica o chimica di scarichi domestici.",
     questions: [
@@ -136,6 +140,8 @@ export const TRADES_DATABASE = [
     icon: "fa-fire", 
     basePrice: 150, 
     unit: "intervento",
+    estimatedHours: 1,
+    hourlyRate: 65,
     category: "impianti",
     description: "Analisi errore caldaia e ripristino funzionalità base.",
     questions: [
@@ -152,6 +158,8 @@ export const TRADES_DATABASE = [
     icon: "fa-exclamation-triangle", 
     basePrice: 200, 
     unit: "intervento",
+    estimatedHours: 1.5,
+    hourlyRate: 70,
     category: "impianti",
     description: "Messa in sicurezza e riparazione tubazione gas.",
     questions: [
@@ -168,6 +176,8 @@ export const TRADES_DATABASE = [
     icon: "fa-faucet", 
     basePrice: 280, 
     unit: "intervento",
+    estimatedHours: 1.5,
+    hourlyRate: 65,
     category: "impianti",
     description: "Sostituzione rubinetto inclusa minuteria.",
     questions: [
@@ -186,6 +196,8 @@ export const TRADES_DATABASE = [
     icon: "fa-bath", 
     basePrice: 2500, 
     unit: "intervento",
+    estimatedHours: 16,
+    hourlyRate: 65,
     category: "impianti",
     description: "Rifacimento totale tubazioni carico e scarico bagno.",
     questions: [
@@ -202,6 +214,8 @@ export const TRADES_DATABASE = [
     icon: "fa-wind", 
     basePrice: 3500, 
     unit: "intervento",
+    estimatedHours: 8,
+    hourlyRate: 70,
     category: "impianti",
     description: "Posa e collegamento nuova unità termica.",
     questions: [
@@ -220,6 +234,8 @@ export const TRADES_DATABASE = [
     icon: "fa-bolt-lightning", 
     basePrice: 180, 
     unit: "intervento",
+    estimatedHours: 2,
+    hourlyRate: 70,
     category: "impianti",
     description: "Diagnosi e ripristino corrente elettrica.",
     questions: [
@@ -236,6 +252,8 @@ export const TRADES_DATABASE = [
     icon: "fa-square-check", 
     basePrice: 140, 
     unit: "intervento",
+    estimatedHours: 1,
+    hourlyRate: 70,
     category: "impianti",
     description: "Fornitura e posa nuovo interruttore differenziale.",
     questions: [
@@ -252,6 +270,8 @@ export const TRADES_DATABASE = [
     icon: "fa-plug", 
     basePrice: 95, 
     unit: "intervento",
+    estimatedHours: 1,
+    hourlyRate: 70,
     category: "impianti",
     description: "Sostituzione frutti e placche danneggiate.",
     questions: [
@@ -268,6 +288,8 @@ export const TRADES_DATABASE = [
     icon: "fa-phone", 
     basePrice: 120, 
     unit: "intervento",
+    estimatedHours: 1.5,
+    hourlyRate: 70,
     category: "impianti",
     description: "Riparazione o sostituzione cornetta citofonica.",
     questions: [
@@ -286,6 +308,8 @@ export const TRADES_DATABASE = [
     icon: "fa-plug", 
     basePrice: 3500, 
     unit: "intervento",
+    estimatedHours: 40,
+    hourlyRate: 70,
     category: "impianti",
     description: "Nuovo impianto elettrico a norma con certificazione.",
     questions: [
@@ -303,6 +327,8 @@ export const TRADES_DATABASE = [
     icon: "fa-lightbulb", 
     basePrice: 120, 
     unit: "punto",
+    estimatedHours: 1,
+    hourlyRate: 70,
     category: "impianti",
     description: "Aggiunta nuovi punti luce o prese.",
     questions: [
@@ -319,6 +345,8 @@ export const TRADES_DATABASE = [
     icon: "fa-microchip", 
     basePrice: 2000, 
     unit: "intervento",
+    estimatedHours: 20,
+    hourlyRate: 75,
     category: "impianti",
     description: "Installazione sistema controllo luci/tapparelle smart.",
     questions: [
@@ -335,6 +363,8 @@ export const TRADES_DATABASE = [
     icon: "fa-charging-station", 
     basePrice: 800, 
     unit: "intervento",
+    estimatedHours: 6,
+    hourlyRate: 75,
     category: "impianti",
     description: "Installazione e cablaggio stazione ricarica auto.",
     questions: [
@@ -353,6 +383,8 @@ export const TRADES_DATABASE = [
     icon: "fa-snowflake", 
     basePrice: 280, 
     unit: "intervento",
+    estimatedHours: 2,
+    hourlyRate: 60,
     category: "impianti",
     description: "Ricarica gas refrigerante e controllo perdite.",
     questions: [
@@ -369,6 +401,8 @@ export const TRADES_DATABASE = [
     icon: "fa-fan", 
     basePrice: 150, 
     unit: "intervento",
+    estimatedHours: 1.5,
+    hourlyRate: 60,
     category: "impianti",
     description: "Igienizzazione split e pulizia filtri.",
     questions: [
@@ -385,6 +419,8 @@ export const TRADES_DATABASE = [
     icon: "fa-droplet", 
     basePrice: 120, 
     unit: "intervento",
+    estimatedHours: 1,
+    hourlyRate: 60,
     category: "impianti",
     description: "Sblocco scarico condensa o riparazione vaschetta.",
     questions: [
@@ -403,6 +439,8 @@ export const TRADES_DATABASE = [
     icon: "fa-snowflake", 
     basePrice: 1200, 
     unit: "intervento",
+    estimatedHours: 8,
+    hourlyRate: 65,
     category: "impianti",
     description: "Installazione unità interna ed esterna.",
     questions: [
@@ -420,6 +458,8 @@ export const TRADES_DATABASE = [
     subId: "cli_installazioni",
     basePrice: 3500, 
     unit: "intervento",
+    estimatedHours: 16,
+    hourlyRate: 65,
     category: "impianti",
     description: "Installazione sistema dual o trial split.",
     questions: [
@@ -438,6 +478,8 @@ export const TRADES_DATABASE = [
     icon: "fa-droplet-slash", 
     basePrice: 35, 
     unit: "metro",
+    estimatedHours: 0.5,
+    hourlyRate: 55,
     category: "strutture",
     description: "Chiusura crepe e ripristino intonaco ammalorato.",
     questions: [
@@ -454,6 +496,8 @@ export const TRADES_DATABASE = [
     icon: "fa-trowel", 
     basePrice: 18, 
     unit: "mq",
+    estimatedHours: 0.3,
+    hourlyRate: 55,
     category: "strutture",
     description: "Applicazione intonaco e finitura liscia.",
     questions: [
@@ -472,6 +516,8 @@ export const TRADES_DATABASE = [
     icon: "fa-wall", 
     basePrice: 45, 
     unit: "mq",
+    estimatedHours: 1,
+    hourlyRate: 55,
     category: "strutture",
     description: "Erezione nuova parete divisoria.",
     questions: [
@@ -488,6 +534,8 @@ export const TRADES_DATABASE = [
     icon: "fa-cube", 
     basePrice: 28, 
     unit: "mq",
+    estimatedHours: 0.8,
+    hourlyRate: 55,
     category: "strutture",
     description: "Realizzazione controsoffitto piano.",
     questions: [
@@ -506,6 +554,8 @@ export const TRADES_DATABASE = [
     icon: "fa-brush", 
     basePrice: 12, 
     unit: "mq",
+    estimatedHours: 0.2,
+    hourlyRate: 50,
     category: "finiture",
     description: "Pittura pareti con due mani di idropittura.",
     questions: [
@@ -522,6 +572,8 @@ export const TRADES_DATABASE = [
     icon: "fa-th-large", 
     basePrice: 32, 
     unit: "mq",
+    estimatedHours: 0.5,
+    hourlyRate: 55,
     category: "finiture",
     description: "Posa in opera nuovo pavimento (solo manodopera).",
     questions: [
@@ -540,6 +592,8 @@ export const TRADES_DATABASE = [
     icon: "fa-unlock", 
     basePrice: 150, 
     unit: "intervento",
+    estimatedHours: 1,
+    hourlyRate: 60,
     category: "finiture",
     description: "Apertura porta senza scasso o con cambio cilindro.",
     questions: [
@@ -556,6 +610,8 @@ export const TRADES_DATABASE = [
     icon: "fa-window-restore", 
     basePrice: 120, 
     unit: "intervento",
+    estimatedHours: 1,
+    hourlyRate: 60,
     category: "finiture",
     description: "Cambio corda e controllo rullino.",
     questions: [
@@ -572,6 +628,8 @@ export const TRADES_DATABASE = [
     icon: "fa-mosquito", 
     basePrice: 80, 
     unit: "intervento",
+    estimatedHours: 0.75,
+    hourlyRate: 60,
     category: "finiture",
     description: "Sostituzione rete zanzariera.",
     questions: [
@@ -590,6 +648,8 @@ export const TRADES_DATABASE = [
     icon: "fa-window", 
     basePrice: 380, 
     unit: "finestra",
+    estimatedHours: 3,
+    hourlyRate: 60,
     category: "finiture",
     description: "Smontaggio vecchio infisso e posa nuovo.",
     questions: [
@@ -606,6 +666,8 @@ export const TRADES_DATABASE = [
     icon: "fa-door-closed", 
     basePrice: 950, 
     unit: "intervento",
+    estimatedHours: 4,
+    hourlyRate: 60,
     category: "finiture",
     description: "Posa in opera porta blindata classe 3 o 4.",
     questions: [
@@ -624,6 +686,8 @@ export const TRADES_DATABASE = [
     icon: "fa-broom", 
     basePrice: 10, 
     unit: "mq",
+    estimatedHours: 0.1,
+    hourlyRate: 40,
     category: "servizi",
     description: "Pulizia profonda dopo lavori di ristrutturazione.",
     questions: [
@@ -640,6 +704,8 @@ export const TRADES_DATABASE = [
     icon: "fa-truck", 
     basePrice: 1500, 
     unit: "intervento",
+    estimatedHours: 6,
+    hourlyRate: 45,
     category: "servizi",
     description: "Carico, trasporto e scarico mobili entro 50km.",
     questions: [
@@ -656,6 +722,8 @@ export const TRADES_DATABASE = [
     icon: "fa-certificate", 
     basePrice: 150, 
     unit: "intervento",
+    estimatedHours: 2,
+    hourlyRate: 50,
     category: "servizi",
     description: "Certificazione energetica obbligatoria per affitto/vendita.",
     questions: [
@@ -672,6 +740,8 @@ export const TRADES_DATABASE = [
     icon: "fa-file-check", 
     basePrice: 200, 
     unit: "intervento",
+    estimatedHours: 1.5,
+    hourlyRate: 50,
     category: "servizi",
     description: "Rilascio certificazione impianto esistente.",
     questions: [
@@ -711,9 +781,16 @@ export function calculateAnswerMultiplier(tradeId, answers) {
   
   if (typeof answers === 'object' && answers !== null) {
     Object.values(answers).forEach(answer => {
-      if (typeof answer === 'number') {
+      // Gestione nuova struttura (oggetto con multiplier)
+      if (typeof answer === 'object' && answer.multiplier) {
+        multiplier *= answer.multiplier;
+      }
+      // Gestione numero diretto
+      else if (typeof answer === 'number') {
         multiplier *= answer;
-      } else if (typeof answer === 'string') {
+      }
+      // Gestione stringa (fallback per compatibilità)
+      else if (typeof answer === 'string') {
         if (answer.includes("difficile") || answer.includes("grande")) {
           multiplier *= 1.2;
         } else if (answer.includes("facile") || answer.includes("piccolo")) {

@@ -212,8 +212,10 @@ async function runAnalysis() {
     uiFeedback.setButtonLoading(runBtn, true);
     
     setTimeout(async () => {
+        const trade = database.TRADES_DATABASE.find(t => t.id === state.selectedTrade);
         const analysis = await performProfessionalAnalysis({
             tradeId: state.selectedTrade,
+            tradeName: trade ? trade.name : 'Lavoro',
             region: region,
             quantity: qty,
             quality: 'standard', 

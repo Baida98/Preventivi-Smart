@@ -27,6 +27,9 @@ export function performProfessionalAnalysis(params) {
     };
   }
 
+  // Usa tradeName fornito o fallback al nome dal database
+  const finalTradeName = tradeName || trade.name || 'Lavoro';
+
   // Step 1: Calcolo del prezzo di mercato
   const marketAnalysis = calculateMarketPrice(trade, quantity, region, quality, answers);
 
@@ -69,7 +72,7 @@ export function performProfessionalAnalysis(params) {
     timestamp: new Date().toISOString(),
     trade: {
       id: tradeId,
-      name: tradeName,
+      name: finalTradeName,
       category: trade.category
     },
     input: {
