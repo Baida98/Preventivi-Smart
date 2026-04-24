@@ -1,6 +1,6 @@
 /*
- * Preventivi-Smart Pro v28.0 — Versione Migliorata
- * Correzioni bug + Miglioramenti grafici + Effetto semitrasparente login
+ * Preventivi-Smart Pro v27.0 — Versione Finale Professionale
+ * Implementa le 5 regole base per stabilità e usabilità
  */
 
 import database from './engine/database.js';
@@ -14,7 +14,7 @@ import {
 import { performProfessionalAnalysis } from './engine/professional-analyzer.js';
 import { generateProfessionalPDF } from './engine/professional-pdf.js';
 import chartRenderer from './engine/chart-renderer.js';
-import { loginUser, loginWithGoogle } from './engine/auth.js';
+import { loginUser } from './engine/auth.js';
 import QuoteManager from './engine/quote-manager.js';
 import uiFeedback from './engine/ui-feedback.js';
 
@@ -247,7 +247,7 @@ async function runAnalysis() {
         uiFeedback.setButtonLoading(runBtn, false);
         displayResults(analysis);
         
-        // Salvataggio strutturato e protetto
+        // REGOLA 1 & 2: Salvataggio strutturato e protetto
         if (state.user && state.quoteManager) {
             uiFeedback.showSaveState('saving');
             try {
@@ -283,84 +283,122 @@ function displayResults(analysis) {
             verdictClass = 'info';
         } else {
             if (diff < -10) { verdict = `✅ Prezzo Conveniente (${diff}%)`; verdictClass = 'success'; }
-            else if (diff < 10) { verdict = `ℹ️ Prezzo Equo (${diff}%)`; verdictClass = 'info'; }
-            else { verdict = `⚠️ Prezzo Alto (${diff}%)`; verdictClass = 'warning'; }
+            else if (diff > 20) { verdict = `⚠️ Prezzo Alto (+${diff}%)`; verdictClass = 'warning'; }
+            else { verdict = `ℹ️ Prezzo Equo (${diff > 0 ? '+' : ''}${diff}%)`; verdictClass = 'info'; }
         }
         
         results.innerHTML = `
             <div class="result-card ${verdictClass}">
                 <div class="result-card-header">
-                    <div class="result-card-icon">
-                        ${verdictClass === 'success' ? '<i class="fa-solid fa-check"></i>' : verdictClass === 'warning' ? '<i class="fa-solid fa-exclamation"></i>' : '<i class="fa-solid fa-info"></i>'}
+                    <div class="result-card-icon ${verdictClass}">
+                        <i class="fa-solid ${verdictClass === 'success' ? 'fa-circle-check' : verdictClass === 'warning' ? 'fa-triangle-exclamation' : 'fa-circle-info'}"></i>
                     </div>
-                    <div>
-                        <div class="result-card-label">Verdetto Analisi</div>
-                        <div class="result-card-title">${verdict}</div>
+                    <h3 class="result-card-title">${verdict}</h3>
+                </div>
+                <div class="result-card-value">€${analysis.marketAnalysis.marketMid.toFixed(2)}</div>
+                <div class="result-card-label">Prezzo Medio di Mercato</div>
+                <p class="result-card-description">Basato su prezzari regionali 2026 per ${analysis.input.region}.</p>
+            </div>
+            
+            ${!state.isQuickMode ? `
+            <div class="result-card info">
+                <div class="result-card-header">
+                    <div class="result-card-icon info">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
                     </div>
+                    <h3 class="result-card-title">Il Tuo Preventivo</h3>
                 </div>
-                <div class="result-card-description">
-                    <p><strong>Prezzo Ricevuto:</strong> €${analysis.input.receivedPrice?.toFixed(2) || 'N/A'}</p>
-                    <p><strong>Prezzo di Mercato (medio):</strong> €${analysis.marketAnalysis.marketMid.toFixed(2)}</p>
-                    <p><strong>Range Mercato:</strong> €${analysis.marketAnalysis.marketMin.toFixed(2)} - €${analysis.marketAnalysis.marketMax.toFixed(2)}</p>
-                </div>
+                <div class="result-card-value">€${analysis.input.receivedPrice.toFixed(2)}</div>
+                <div class="result-card-label">Prezzo Ricevuto</div>
+                <p class="result-card-description">Analisi di congruità completata con score ${analysis.reliabilityScore}/100.</p>
+            </div>
+            ` : ''}
+        `;
+
+        // Renderizza grafico
+        const chartsContainer = getEl('analysisCharts');
+        if (chartsContainer) {
+            chartsContainer.classList.remove('hidden');
+            chartRenderer.renderPriceComparisonChart('priceChartContainer', analysis);
+        }
+    }
+    if (nav) nav.classList.remove('hidden');
+    goToStep(4);
+}
+
+// ===== QUOTE MANAGEMENT =====
+async function loadSavedQuotes() {
+    if (!state.quoteManager) return;
+    const quotes = await state.quoteManager.getAllQuotes();
+    renderSavedQuotes(quotes);
+}
+
+function renderSavedQuotes(quotes) {
+    const list = getEl('savedQuotesList');
+    if (!list) return;
+    
+    if (!quotes || quotes.length === 0) {
+        list.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--muted);">
+                <i class="fa-solid fa-inbox" style="font-size: 3rem; margin-bottom: 16px; display: block; opacity: 0.5;"></i>
+                <p>Nessun preventivo salvato</p>
+                <p style="font-size: 0.875rem; margin-top: 8px;">I tuoi preventivi analizzati appariranno qui</p>
             </div>
         `;
-        
-        if (nav) nav.classList.remove('hidden');
-        
-        // Render chart
-        setTimeout(() => {
-            const chartsDiv = getEl('analysisCharts');
-            if (chartsDiv) {
-                chartsDiv.classList.remove('hidden');
-                chartRenderer.renderPriceChart(analysis);
-            }
-        }, 100);
+        return;
     }
-}
-
-function loadSavedQuotes() {
-    if (!state.quoteManager) return;
     
-    state.quoteManager.getQuotes().then(quotes => {
-        const container = getEl('savedQuotesList');
-        if (!container) return;
-        
-        if (quotes.length === 0) {
-            container.innerHTML = '<p style="color: var(--muted); text-align: center;">Nessun preventivo salvato</p>';
-            return;
-        }
-        
-        container.innerHTML = quotes.map(quote => `
-            <div class="saved-quote-item">
-                <div class="saved-quote-info">
-                    <strong>${quote.cliente}</strong>
-                    <p>${quote.servizi.join(', ')}</p>
-                </div>
-                <div class="saved-quote-price">€${quote.totale.toFixed(2)}</div>
-                <button class="btn btn-sm btn-secondary" onclick="window.downloadQuotePDF('${quote.id}')">
-                    <i class="fa-solid fa-download"></i>
-                </button>
+    list.innerHTML = quotes.map(q => `
+        <div class="saved-quote-item">
+            <div class="saved-quote-info">
+                <strong>${q.cliente}</strong>
+                <p>${new Date(q.data).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
             </div>
-        `).join('');
-    });
+            <div class="saved-quote-price">€${q.totale.toFixed(2)}</div>
+            <div class="saved-quote-actions">
+                <button class="btn btn-sm btn-primary" onclick="downloadQuotePDF('${q.id}')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            </div>
+        </div>
+    `).join('');
 }
 
-function downloadPDF() {
+async function downloadPDF() {
     if (!state.lastAnalysis) {
         uiFeedback.showFeedback('Nessuna analisi disponibile', 'error');
         return;
     }
     
-    generateProfessionalPDF(state.lastAnalysis);
+    const btn = getEl('btnDownloadPDF');
+    uiFeedback.setButtonLoading(btn, true);
+    
+    try {
+        const pdfData = state.quoteManager ? 
+            await state.quoteManager.getPDFData(state.lastAnalysis) : 
+            state.lastAnalysis;
+        
+        generateProfessionalPDF(pdfData);
+        uiFeedback.showFeedback('Report scaricato con successo', 'success');
+    } catch (e) {
+        uiFeedback.showFeedback('Errore nel download del report', 'error');
+    } finally {
+        uiFeedback.setButtonLoading(btn, false);
+    }
+}
+
+async function loginWithGoogle() {
+    try {
+        const provider = new GoogleAuthProvider();
+        await signInWithPopup(auth, provider);
+        getEl('loginModal')?.classList.add('hidden');
+    } catch (e) {
+        uiFeedback.showFeedback('Errore di accesso', 'error');
+    }
 }
 
 function resetApp() {
-    state.currentStep = 1;
     state.selectedTrade = null;
     state.selectedSub = null;
     state.selectedMacro = null;
-    state.isQuickMode = false;
     state.questionAnswers = {};
     state.lastAnalysis = null;
     
@@ -415,7 +453,6 @@ window.downloadQuotePDF = async (quoteId) => {
     }
 };
 
-// ===== LOGIN HANDLERS =====
 async function handleEmailLogin(e) {
     e.preventDefault();
     const email = getEl('loginEmail')?.value;
@@ -433,34 +470,14 @@ async function handleEmailLogin(e) {
 
     if (result.success) {
         getEl('loginModal')?.classList.add('hidden');
-        // Pulisci i campi
-        getEl('loginEmail').value = '';
-        getEl('loginPassword').value = '';
-        uiFeedback.showFeedback('Accesso effettuato con successo', 'success');
+        uiFeedback.showFeedback('Accesso effettuato', 'success');
     } else {
         uiFeedback.showFeedback(result.error, 'error');
     }
 }
 
-async function handleGoogleLogin() {
-    const btn = getEl('googleLoginBtn');
-    if (btn) uiFeedback.setButtonLoading(btn, true);
-    
-    const result = await loginWithGoogle();
-    
-    if (btn) uiFeedback.setButtonLoading(btn, false);
-    
-    if (result.success) {
-        getEl('loginModal')?.classList.add('hidden');
-        uiFeedback.showFeedback('Accesso con Google effettuato', 'success');
-    } else {
-        uiFeedback.showFeedback(result.error, 'error');
-    }
-}
-
-// ===== DOM READY =====
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Preventivi-Smart Pro v28.0: Inizializzazione in corso...');
+    console.log('🚀 Preventivi-Smart Pro: Inizializzazione in corso...');
     
     try {
         renderMacroCategories();
@@ -507,7 +524,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('✅ nextStepBtn collegato');
     }
 
-    // Feedback visuale sul prezzo
+    // Aggiungi listener per feedback visuale immediato sul prezzo
     const priceInputStep3 = getEl('receivedPriceInputStep3');
     if (priceInputStep3) {
         priceInputStep3.addEventListener('input', (e) => {
@@ -578,7 +595,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('✅ closeLoginBtn collegato');
     }
     if (googleLoginBtn) {
-        googleLoginBtn.addEventListener('click', handleGoogleLogin);
+        googleLoginBtn.addEventListener('click', loginWithGoogle);
         console.log('✅ googleLoginBtn collegato');
     }
 
@@ -587,13 +604,6 @@ document.addEventListener('DOMContentLoaded', () => {
         emailLoginForm.addEventListener('submit', handleEmailLogin);
         console.log('✅ emailLoginForm collegato');
     }
-    
-    // Chiudi modal con ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && loginModal && !loginModal.classList.contains('hidden')) {
-            loginModal.classList.add('hidden');
-        }
-    });
     
     console.log('✅ Tutti i listener inizializzati correttamente');
 });
