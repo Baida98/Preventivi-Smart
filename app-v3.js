@@ -338,15 +338,26 @@ function renderSavedQuotes(quotes) {
     if (!list) return;
     
     if (!quotes || quotes.length === 0) {
-        list.innerHTML = '<p style="color: var(--text-tertiary); text-align: center;">Nessun preventivo salvato</p>';
+        list.innerHTML = `
+            <div style="text-align: center; padding: 40px 20px; color: var(--muted);">
+                <i class="fa-solid fa-inbox" style="font-size: 3rem; margin-bottom: 16px; display: block; opacity: 0.5;"></i>
+                <p>Nessun preventivo salvato</p>
+                <p style="font-size: 0.875rem; margin-top: 8px;">I tuoi preventivi analizzati appariranno qui</p>
+            </div>
+        `;
         return;
     }
     
     list.innerHTML = quotes.map(q => `
         <div class="saved-quote-item">
-            <div><strong>${q.cliente}</strong> - ${new Date(q.data).toLocaleDateString()}</div>
-            <div>€${q.totale.toFixed(2)}</div>
-            <button class="btn btn-sm" onclick="downloadQuotePDF('${q.id}')">PDF</button>
+            <div class="saved-quote-info">
+                <strong>${q.cliente}</strong>
+                <p>${new Date(q.data).toLocaleDateString('it-IT', { year: 'numeric', month: 'long', day: 'numeric' })}</p>
+            </div>
+            <div class="saved-quote-price">€${q.totale.toFixed(2)}</div>
+            <div class="saved-quote-actions">
+                <button class="btn btn-sm btn-primary" onclick="downloadQuotePDF('${q.id}')"><i class="fa-solid fa-file-pdf"></i> PDF</button>
+            </div>
         </div>
     `).join('');
 }
