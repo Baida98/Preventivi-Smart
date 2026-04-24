@@ -201,16 +201,30 @@ function renderQuestions(trade) {
 async function runAnalysis() {
     const region = getEl('regionSelect')?.value;
     const qty = parseFloat(getEl('quantityInput')?.value);
-    const price = parseFloat(getEl('receivedPriceInputStep3')?.value) || parseFloat(getEl('receivedPriceInput')?.value);
+    const priceInput = getEl('receivedPriceInputStep3')?.value || getEl('receivedPriceInput')?.value;
+    const price = parseFloat(priceInput) || 0;
     
     if (!state.selectedTrade || !region || !qty) {
         uiFeedback.showFeedback('Compila tutti i campi obbligatori', 'error');
         return;
     }
 
+    // Se non siamo in quick mode, il prezzo è obbligatorio
+    if (!state.isQuickMode && price <= 0) {
+        uiFeedback.showFeedback('Inserisci un prezzo valido per l\'analisi', 'error');
+        return;
+    }
+
     const runBtn = getEl('runAnalysisBtn');
-    uiFeedback.setButtonLoading(runBtn, true);
+    if (runBtn) uiFeedback.setButtonLoading(runBtn, true);
     
+    // Mostra caricamento
+    goToStep(4);
+    const results = getEl('analysisResults');
+    const loading = getEl('analysisLoading');
+    if (results) results.classList.add('hidden');
+    if (loading) loading.classList.remove('hidden');
+
     setTimeout(async () => {
         const trade = database.TRADES_DATABASE.find(t => t.id === state.selectedTrade);
         const analysis = await performProfessionalAnalysis({
@@ -489,8 +503,30 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('✅ prevStep3Btn collegato');
     }
     if (nextStepBtn) {
-        nextStepBtn.addEventListener('click', () => goToStep(3));
+        nextStepBtn.addEventListener('click', () => {
+            if (state.isQuickMode) {
+                runAnalysis();
+            } else {
+                goToStep(3);
+            }
+        });
         console.log('✅ nextStepBtn collegato');
+    }
+
+    // Aggiungi listener per feedback visuale immediato sul prezzo
+    const priceInputStep3 = getEl('receivedPriceInputStep3');
+    if (priceInputStep3) {
+        priceInputStep3.addEventListener('input', (e) => {
+            const val = parseFloat(e.target.value);
+            const feedback = getEl('feedback-price');
+            if (feedback) {
+                if (val > 0) {
+                    feedback.innerHTML = '<i class="fa-solid fa-check-circle text-success animate-bounce"></i>';
+                } else {
+                    feedback.innerHTML = '';
+                }
+            }
+        });
     }
     
     // Analysis & Reset

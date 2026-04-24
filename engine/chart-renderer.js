@@ -25,49 +25,72 @@ export function renderPriceComparisonChart(containerId, analysis) {
     const min = analysis.marketAnalysis.marketMin;
     const mid = analysis.marketAnalysis.marketMid;
     const max = analysis.marketAnalysis.marketMax;
-    const received = analysis.input.receivedPrice;
+    const received = analysis.input.receivedPrice || 0;
+
+    // Colore dinamico per il prezzo ricevuto
+    let receivedColor = 'rgba(99, 102, 241, 0.8)'; // Indigo di default
+    let receivedBorder = 'rgb(99, 102, 241)';
+
+    if (received > 0) {
+        if (received > max) {
+            receivedColor = 'rgba(239, 68, 68, 0.8)'; // Rosso
+            receivedBorder = 'rgb(239, 68, 68)';
+        } else if (received < min) {
+            receivedColor = 'rgba(34, 197, 94, 0.8)'; // Verde
+            receivedBorder = 'rgb(34, 197, 94)';
+        } else {
+            receivedColor = 'rgba(245, 158, 11, 0.8)'; // Arancione (equo)
+            receivedBorder = 'rgb(245, 158, 11)';
+        }
+    }
 
     const chart = new Chart(canvasCtx, {
         type: 'bar',
         data: {
-            labels: ['Prezzo Minimo', 'Prezzo Ricevuto', 'Prezzo Medio', 'Prezzo Massimo'],
+            labels: ['Mercato Min', 'MERCATO MEDIO', 'Mercato Max', 'TUO PREZZO'],
             datasets: [{
                 label: 'Prezzo (€)',
-                data: [min, received, mid, max],
+                data: [min, mid, max, received],
                 backgroundColor: [
-                    'rgba(5, 150, 105, 0.7)',  // Verde (minimo)
-                    received > max ? 'rgba(220, 38, 38, 0.7)' : received < min ? 'rgba(5, 150, 105, 0.7)' : 'rgba(8, 145, 178, 0.7)',  // Rosso/Verde/Ciano
-                    'rgba(30, 58, 138, 0.7)',  // Blu (medio)
-                    'rgba(212, 175, 55, 0.7)'  // Gold (massimo)
+                    'rgba(255, 255, 255, 0.1)',  // Min
+                    'rgba(255, 255, 255, 0.2)',  // Mid
+                    'rgba(255, 255, 255, 0.1)',  // Max
+                    receivedColor                 // Ricevuto (Evidenziato)
                 ],
                 borderColor: [
-                    'rgb(5, 150, 105)',
-                    received > max ? 'rgb(220, 38, 38)' : received < min ? 'rgb(5, 150, 105)' : 'rgb(8, 145, 178)',
-                    'rgb(30, 58, 138)',
-                    'rgb(212, 175, 55)'
+                    'rgba(255, 255, 255, 0.3)',
+                    'rgba(255, 255, 255, 0.5)',
+                    'rgba(255, 255, 255, 0.3)',
+                    receivedBorder
                 ],
-                borderWidth: 2,
-                borderRadius: 8
+                borderWidth: [1, 2, 1, 3],
+                borderRadius: 8,
+                hoverBackgroundColor: [
+                    'rgba(255, 255, 255, 0.2)',
+                    'rgba(255, 255, 255, 0.3)',
+                    'rgba(255, 255, 255, 0.2)',
+                    receivedColor
+                ]
             }]
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     display: false
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
                     padding: 12,
-                    titleFont: { size: 14, weight: 'bold' },
-                    bodyFont: { size: 13 },
-                    borderColor: 'rgba(212, 175, 55, 0.5)',
+                    titleFont: { size: 14, weight: 'bold', family: 'Inter' },
+                    bodyFont: { size: 13, family: 'Inter' },
+                    borderColor: 'rgba(255, 255, 255, 0.1)',
                     borderWidth: 1,
                     cornerRadius: 8,
                     callbacks: {
                         label: function(context) {
-                            return '€ ' + context.parsed.y.toFixed(2);
+                            return ' € ' + context.parsed.y.toLocaleString('it-IT', { minimumFractionDigits: 2 });
                         }
                     }
                 }
@@ -77,26 +100,39 @@ export function renderPriceComparisonChart(containerId, analysis) {
                     beginAtZero: true,
                     ticks: {
                         callback: function(value) {
-                            return '€' + value.toFixed(0);
+                            return '€' + value.toLocaleString('it-IT');
                         },
-                        font: { size: 12, weight: '600' },
+                        font: { size: 11, weight: '500' },
                         color: '#94a3b8'
                     },
                     grid: {
-                        color: 'rgba(71, 85, 107, 0.3)',
+                        color: 'rgba(255, 255, 255, 0.05)',
                         drawBorder: false
                     }
                 },
                 x: {
                     ticks: {
-                        font: { size: 12, weight: '600' },
-                        color: '#94a3b8'
+                        font: { 
+                            size: function(context) {
+                                return context.tick.label === 'TUO PREZZO' ? 12 : 10;
+                            }, 
+                            weight: function(context) {
+                                return context.tick.label === 'TUO PREZZO' ? '800' : '500';
+                            }
+                        },
+                        color: function(context) {
+                            return context.tick.label === 'TUO PREZZO' ? '#fff' : '#64748b';
+                        }
                     },
                     grid: {
                         display: false,
                         drawBorder: false
                     }
                 }
+            },
+            animation: {
+                duration: 2000,
+                easing: 'easeOutQuart'
             }
         }
     });
@@ -123,17 +159,20 @@ export function renderCongruityGauge(containerId, analysis) {
     const canvasCtx = canvas.getContext('2d');
 
     const diffPercent = analysis.congruityAnalysis.diffPercent;
-    const color = diffPercent < -10 ? 'rgb(5, 150, 105)' : diffPercent > 20 ? 'rgb(220, 38, 38)' : 'rgb(8, 145, 178)';
+    const color = diffPercent < -10 ? 'rgb(34, 197, 94)' : diffPercent > 20 ? 'rgb(239, 68, 68)' : 'rgb(99, 102, 241)';
 
     const chart = new Chart(canvasCtx, {
         type: 'doughnut',
         data: {
             labels: ['Scostamento', 'Resto'],
             datasets: [{
-                data: [Math.abs(diffPercent), 100 - Math.abs(diffPercent)],
-                backgroundColor: [color, 'rgba(229, 231, 235, 0.5)'],
-                borderColor: ['#fff', '#fff'],
-                borderWidth: 3
+                data: [Math.abs(diffPercent), Math.max(0, 100 - Math.abs(diffPercent))],
+                backgroundColor: [color, 'rgba(255, 255, 255, 0.05)'],
+                borderColor: ['transparent', 'transparent'],
+                borderWidth: 0,
+                circumference: 180,
+                rotation: 270,
+                cutout: '80%'
             }]
         },
         options: {
@@ -183,14 +222,14 @@ export function renderMarketTrendChart(containerId, analysis) {
             datasets: [{
                 label: 'Trend Prezzo di Mercato',
                 data: trend,
-                borderColor: 'rgb(30, 58, 138)',
-                backgroundColor: 'rgba(30, 58, 138, 0.1)',
+                borderColor: 'rgb(99, 102, 241)',
+                backgroundColor: 'rgba(99, 102, 241, 0.1)',
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
-                pointRadius: 5,
-                pointBackgroundColor: 'rgb(212, 175, 55)',
-                pointBorderColor: '#fff',
+                pointRadius: 4,
+                pointBackgroundColor: '#fff',
+                pointBorderColor: 'rgb(99, 102, 241)',
                 pointBorderWidth: 2
             }]
         },
@@ -199,21 +238,11 @@ export function renderMarketTrendChart(containerId, analysis) {
             maintainAspectRatio: true,
             plugins: {
                 legend: {
-                    display: true,
-                    labels: {
-                        font: { size: 12, weight: '600' },
-                        color: 'rgba(107, 114, 128, 0.8)',
-                        padding: 16
-                    }
+                    display: false
                 },
                 tooltip: {
-                    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
                     padding: 12,
-                    titleFont: { size: 14, weight: 'bold' },
-                    bodyFont: { size: 13 },
-                    borderColor: 'rgba(212, 175, 55, 0.5)',
-                    borderWidth: 1,
-                    cornerRadius: 8,
                     callbacks: {
                         label: function(context) {
                             return '€ ' + context.parsed.y.toFixed(2);
@@ -228,17 +257,15 @@ export function renderMarketTrendChart(containerId, analysis) {
                         callback: function(value) {
                             return '€' + value.toFixed(0);
                         },
-                        font: { size: 12, weight: '600' },
                         color: '#94a3b8'
                     },
                     grid: {
-                        color: 'rgba(71, 85, 107, 0.3)',
+                        color: 'rgba(255, 255, 255, 0.05)',
                         drawBorder: false
                     }
                 },
                 x: {
                     ticks: {
-                        font: { size: 12, weight: '600' },
                         color: '#94a3b8'
                     },
                     grid: {
