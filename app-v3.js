@@ -160,7 +160,7 @@ window.selectTrade = (tradeId) => {
     getEl('unitLabel').textContent = trade.unit;
     getEl('quantityInput').placeholder = `Es: 10 ${trade.unit}`;
     getEl('tradeNameDisplay').textContent = trade.name;
-    getEl('basePriceDisplay').textContent = `€${trade.basePrice}`;
+    // Rimosso: getEl('basePriceDisplay').textContent = `€${trade.basePrice}`;
     
     renderQuestions(trade);
     goToStep(2);
@@ -279,12 +279,33 @@ function displayResults(analysis) {
         
         const diff = analysis.congruityAnalysis.diffPercent;
         if (state.isQuickMode) {
-            verdict = `Stima di Mercato`;
+            verdict = `📊 Stima di Mercato`;
             verdictClass = 'info';
         } else {
-            if (diff < -10) { verdict = `✅ Prezzo Conveniente (${diff}%)`; verdictClass = 'success'; }
-            else if (diff < 10) { verdict = `ℹ️ Prezzo Equo (${diff}%)`; verdictClass = 'info'; }
-            else { verdict = `⚠️ Prezzo Alto (${diff}%)`; verdictClass = 'warning'; }
+            if (diff < -10) { 
+                verdict = `✅ Prezzo Conveniente (${diff}%)`; 
+                verdictClass = 'success'; 
+            }
+            else if (diff < 10) { 
+                verdict = `ℹ️ Prezzo Equo (${diff}%)`; 
+                verdictClass = 'info'; 
+            }
+            else { 
+                verdict = `⚠️ Prezzo Alto (${diff}%)`; 
+                verdictClass = 'warning'; 
+            }
+        }
+        
+        const receivedPrice = analysis.input.receivedPrice || 0;
+        const marketMid = analysis.marketAnalysis.marketMid;
+        const savings = marketMid - receivedPrice;
+        const savingsPercent = marketMid > 0 ? ((savings / marketMid) * 100).toFixed(1) : 0;
+        
+        let savingsText = '';
+        if (!state.isQuickMode && receivedPrice > 0) {
+            savingsText = savings > 0 ? 
+                `💰 <strong>Risparmi:</strong> €${Math.abs(savings).toFixed(2)} (${savingsPercent}%)` :
+                `⚠️ <strong>Sovrapprezzo:</strong> €${Math.abs(savings).toFixed(2)} (${Math.abs(savingsPercent)}%)`;
         }
         
         results.innerHTML = `
@@ -299,9 +320,15 @@ function displayResults(analysis) {
                     </div>
                 </div>
                 <div class="result-card-description">
-                    <p><strong>Prezzo Ricevuto:</strong> €${analysis.input.receivedPrice?.toFixed(2) || 'N/A'}</p>
-                    <p><strong>Prezzo di Mercato (medio):</strong> €${analysis.marketAnalysis.marketMid.toFixed(2)}</p>
-                    <p><strong>Range Mercato:</strong> €${analysis.marketAnalysis.marketMin.toFixed(2)} - €${analysis.marketAnalysis.marketMax.toFixed(2)}</p>
+                    <p><strong>Mestiere:</strong> ${analysis.trade.name}</p>
+                    <p><strong>Quantità:</strong> ${analysis.input.quantity} ${analysis.trade.category || 'unità'}</p>
+                    <p><strong>Regione:</strong> ${analysis.input.region}</p>
+                    ${!state.isQuickMode ? `<p><strong>Prezzo Ricevuto:</strong> €${receivedPrice.toFixed(2)}</p>` : ''}
+                    <p style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+                        <strong>Range Mercato:</strong> €${analysis.marketAnalysis.marketMin.toFixed(2)} - €${analysis.marketAnalysis.marketMax.toFixed(2)}
+                    </p>
+                    <p><strong>Prezzo Medio Mercato:</strong> €${marketMid.toFixed(2)}</p>
+                    ${savingsText ? `<p style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">${savingsText}</p>` : ''}
                 </div>
             </div>
         `;
