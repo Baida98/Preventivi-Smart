@@ -95,15 +95,22 @@ function renderMacroCategories() {
     state.selectedSub = null;
     state.selectedTrade = null;
     
-    container.innerHTML = database.MACRO_CATEGORIES.map((macro, idx) => `
-        <div class="trade-card" onclick="window.selectMacro('${macro.id}')">
-            <div class="trade-card-icon" style="background: ${macro.color};">
-                <i class="fa-solid ${macro.icon}"></i>
+    container.innerHTML = database.MACRO_CATEGORIES.map((macro, idx) => {
+        const isSpecial = macro.id === 'muratore_interni';
+        return `
+            <div class="trade-card ${isSpecial ? 'trade-card-large' : ''}" 
+                 onclick="window.selectMacro('${macro.id}')"
+                 ${isSpecial && macro.image ? `style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${macro.image}');"` : ''}>
+                <div class="trade-card-icon" style="background: ${macro.color};">
+                    <i class="fa-solid ${macro.icon}"></i>
+                </div>
+                <div class="trade-card-content">
+                    <h3 class="trade-card-title">${macro.name}</h3>
+                    <p class="trade-card-desc" style="display: block;">${macro.description}</p>
+                </div>
             </div>
-            <h3 class="trade-card-title">${macro.name}</h3>
-            <p class="trade-card-desc">${macro.description}</p>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 window.selectMacro = (macroId) => {
