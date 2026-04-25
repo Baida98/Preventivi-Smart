@@ -308,30 +308,46 @@ function displayResults(analysis) {
                 `⚠️ <strong>Sovrapprezzo:</strong> €${Math.abs(savings).toFixed(2)} (${Math.abs(savingsPercent)}%)`;
         }
         
-        results.innerHTML = `
-            <div class="result-card ${verdictClass}">
-                <div class="result-card-header">
-                    <div class="result-card-icon">
-                        ${verdictClass === 'success' ? '<i class="fa-solid fa-check"></i>' : verdictClass === 'warning' ? '<i class="fa-solid fa-exclamation"></i>' : '<i class="fa-solid fa-info"></i>'}
-                    </div>
-                    <div>
-                        <div class="result-card-label">Verdetto Analisi</div>
-                        <div class="result-card-title">${verdict}</div>
-                    </div>
-                </div>
-                <div class="result-card-description">
-                    <p><strong>Mestiere:</strong> ${analysis.trade.name}</p>
-                    <p><strong>Quantità:</strong> ${analysis.input.quantity} ${analysis.trade.category || 'unità'}</p>
-                    <p><strong>Regione:</strong> ${analysis.input.region}</p>
-                    ${!state.isQuickMode ? `<p><strong>Prezzo Ricevuto:</strong> €${receivedPrice.toFixed(2)}</p>` : ''}
-                    <p style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
-                        <strong>Range Mercato:</strong> €${analysis.marketAnalysis.marketMin.toFixed(2)} - €${analysis.marketAnalysis.marketMax.toFixed(2)}
-                    </p>
-                    <p><strong>Prezzo Medio Mercato:</strong> €${marketMid.toFixed(2)}</p>
-                    ${savingsText ? `<p style="margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border);">${savingsText}</p>` : ''}
-                </div>
-            </div>
-        `;
+results.innerHTML = `
+	            <div class="result-card ${verdictClass} animate-slide-up">
+	                <div class="result-card-header">
+	                    <div>
+	                        <div class="result-card-label" style="text-transform: uppercase; font-size: 0.75rem; font-weight: 700; color: var(--text-tertiary); letter-spacing: 0.05em; margin-bottom: 4px;">Verdetto Analisi</div>
+	                        <div class="result-card-title">${verdict}</div>
+	                    </div>
+	                </div>
+	                <div class="result-card-description" style="margin-top: 24px;">
+	                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+	                        <span style="color: var(--text-secondary); font-weight: 500;">Mestiere</span>
+	                        <span style="font-weight: 700;">${analysis.trade.name}</span>
+	                    </div>
+	                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+	                        <span style="color: var(--text-secondary); font-weight: 500;">Quantità</span>
+	                        <span style="font-weight: 700;">${analysis.input.quantity} ${analysis.trade.unit || 'unità'}</span>
+	                    </div>
+	                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+	                        <span style="color: var(--text-secondary); font-weight: 500;">Regione</span>
+	                        <span style="font-weight: 700;">${analysis.input.region}</span>
+	                    </div>
+	                    ${!state.isQuickMode ? `
+	                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
+	                        <span style="color: var(--text-secondary); font-weight: 500;">Prezzo Ricevuto</span>
+	                        <span style="font-weight: 900; color: var(--primary);">€${receivedPrice.toFixed(2)}</span>
+	                    </div>` : ''}
+	                    <div style="margin-top: 24px; padding: 20px; background: var(--surface); border-radius: var(--radius-xl); border: 1px solid var(--border);">
+	                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+	                            <span style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">Range di Mercato</span>
+	                            <span style="font-weight: 700; font-size: 0.85rem;">€${analysis.marketAnalysis.marketMin.toFixed(2)} - €${analysis.marketAnalysis.marketMax.toFixed(2)}</span>
+	                        </div>
+	                        <div style="display: flex; justify-content: space-between;">
+	                            <span style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">Prezzo Medio</span>
+	                            <span style="font-weight: 700; font-size: 0.85rem;">€${marketMid.toFixed(2)}</span>
+	                        </div>
+	                    </div>
+	                    ${savingsText ? `<div style="margin-top: 16px; font-weight: 600; text-align: center; color: ${verdictClass === 'success' ? 'var(--success)' : 'var(--danger)'};">${savingsText}</div>` : ''}
+	                </div>
+	            </div>
+	        `;
         
         if (nav) nav.classList.remove('hidden');
         
