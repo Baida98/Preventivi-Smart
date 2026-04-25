@@ -340,7 +340,7 @@ function displayResults(analysis) {
             const chartsDiv = getEl('analysisCharts');
             if (chartsDiv) {
                 chartsDiv.classList.remove('hidden');
-                chartRenderer.renderPriceChart(analysis);
+                chartRenderer.renderPriceComparisonChart('priceChartContainer', analysis);
             }
         }, 100);
     }
@@ -349,7 +349,7 @@ function displayResults(analysis) {
 function loadSavedQuotes() {
     if (!state.quoteManager) return;
     
-    state.quoteManager.getQuotes().then(quotes => {
+    state.quoteManager.getAllQuotes().then(quotes => {
         const container = getEl('savedQuotesList');
         if (!container) return;
         
