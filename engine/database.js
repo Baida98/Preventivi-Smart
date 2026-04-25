@@ -48,8 +48,7 @@ export const MACRO_CATEGORIES = [
     name: "Muratore & Interni", 
     icon: "fa-hammer-and-wrench", 
     color: "#a855f7", 
-    description: "Muratura, cartongesso, pittura, pavimenti",
-    image: "assets/muratore_interni_card.png"
+    description: "Muratura, cartongesso, pittura, pavimenti" 
   },
   { 
     id: "serramenti", 

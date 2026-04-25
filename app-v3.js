@@ -95,22 +95,15 @@ function renderMacroCategories() {
     state.selectedSub = null;
     state.selectedTrade = null;
     
-    container.innerHTML = database.MACRO_CATEGORIES.map((macro, idx) => {
-        const isSpecial = macro.id === 'muratore_interni';
-        return `
-            <div class="trade-card ${isSpecial ? 'trade-card-large' : ''}" 
-                 onclick="window.selectMacro('${macro.id}')"
-                 ${isSpecial && macro.image ? `style="background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.7)), url('${macro.image}');"` : ''}>
-                <div class="trade-card-icon" style="background: ${macro.color};">
-                    <i class="fa-solid ${macro.icon}"></i>
-                </div>
-                <div class="trade-card-content">
-                    <h3 class="trade-card-title">${macro.name}</h3>
-                    <p class="trade-card-desc" style="display: block;">${macro.description}</p>
-                </div>
+    container.innerHTML = database.MACRO_CATEGORIES.map((macro, idx) => `
+        <div class="trade-card" onclick="window.selectMacro('${macro.id}')">
+            <div class="trade-card-icon" style="background: ${macro.color};">
+                <i class="fa-solid ${macro.icon}"></i>
             </div>
-        `;
-    }).join('');
+            <h3 class="trade-card-title">${macro.name}</h3>
+            <p class="trade-card-desc">${macro.description}</p>
+        </div>
+    `).join('');
 }
 
 window.selectMacro = (macroId) => {
@@ -290,360 +283,155 @@ function displayResults(analysis) {
             verdictClass = 'info';
         } else {
             if (diff < -10) { 
-                verdict = `✅ Prezzo Conveniente (${diff}%)`; 
-                verdictClass = 'success'; 
-            }
-            else if (diff < 10) { 
-                verdict = `ℹ️ Prezzo Equo (${diff}%)`; 
-                verdictClass = 'info'; 
-            }
-            else { 
-                verdict = `⚠️ Prezzo Alto (${diff}%)`; 
-                verdictClass = 'warning'; 
+                verdict = `✅ Prezzo Conveniente (${Math.abs(diff).toFixed(1)}% sotto mercato)`;
+                verdictClass = 'success';
+            } else if (diff > 10) {
+                verdict = `⚠️ Prezzo Alto (${diff.toFixed(1)}% sopra mercato)`;
+                verdictClass = 'warning';
+            } else {
+                verdict = `ℹ️ Prezzo Allineato al Mercato`;
+                verdictClass = 'info';
             }
         }
-        
-        const receivedPrice = analysis.input.receivedPrice || 0;
-        const marketMid = analysis.marketAnalysis.marketMid;
-        const savings = marketMid - receivedPrice;
-        const savingsPercent = marketMid > 0 ? ((savings / marketMid) * 100).toFixed(1) : 0;
-        
-        let savingsText = '';
-        if (!state.isQuickMode && receivedPrice > 0) {
-            savingsText = savings > 0 ? 
-                `💰 <strong>Risparmi:</strong> €${Math.abs(savings).toFixed(2)} (${savingsPercent}%)` :
-                `⚠️ <strong>Sovrapprezzo:</strong> €${Math.abs(savings).toFixed(2)} (${Math.abs(savingsPercent)}%)`;
-        }
-        
-results.innerHTML = `
-	            <div class="result-card ${verdictClass} animate-slide-up">
-	                <div class="result-card-header">
-	                    <div>
-	                        <div class="result-card-label" style="text-transform: uppercase; font-size: 0.75rem; font-weight: 700; color: var(--text-tertiary); letter-spacing: 0.05em; margin-bottom: 4px;">Verdetto Analisi</div>
-	                        <div class="result-card-title">${verdict}</div>
-	                    </div>
-	                </div>
-	                <div class="result-card-description" style="margin-top: 24px;">
-	                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-	                        <span style="color: var(--text-secondary); font-weight: 500;">Mestiere</span>
-	                        <span style="font-weight: 700;">${analysis.trade.name}</span>
-	                    </div>
-	                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-	                        <span style="color: var(--text-secondary); font-weight: 500;">Quantità</span>
-	                        <span style="font-weight: 700;">${analysis.input.quantity} ${analysis.trade.unit || 'unità'}</span>
-	                    </div>
-	                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-	                        <span style="color: var(--text-secondary); font-weight: 500;">Regione</span>
-	                        <span style="font-weight: 700;">${analysis.input.region}</span>
-	                    </div>
-	                    ${!state.isQuickMode ? `
-	                    <div style="display: flex; justify-content: space-between; margin-bottom: 12px; padding-top: 12px; border-top: 1px solid var(--border);">
-	                        <span style="color: var(--text-secondary); font-weight: 500;">Prezzo Ricevuto</span>
-	                        <span style="font-weight: 900; color: var(--primary);">€${receivedPrice.toFixed(2)}</span>
-	                    </div>` : ''}
-	                    <div style="margin-top: 24px; padding: 20px; background: var(--surface); border-radius: var(--radius-xl); border: 1px solid var(--border);">
-	                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-	                            <span style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">Range di Mercato</span>
-	                            <span style="font-weight: 700; font-size: 0.85rem;">€${analysis.marketAnalysis.marketMin.toFixed(2)} - €${analysis.marketAnalysis.marketMax.toFixed(2)}</span>
-	                        </div>
-	                        <div style="display: flex; justify-content: space-between;">
-	                            <span style="color: var(--text-secondary); font-size: 0.85rem; font-weight: 500;">Prezzo Medio</span>
-	                            <span style="font-weight: 700; font-size: 0.85rem;">€${marketMid.toFixed(2)}</span>
-	                        </div>
-	                    </div>
-	                    ${savingsText ? `<div style="margin-top: 16px; font-weight: 600; text-align: center; color: ${verdictClass === 'success' ? 'var(--success)' : 'var(--danger)'};">${savingsText}</div>` : ''}
-	                </div>
-	            </div>
-	        `;
-        
+
+        results.innerHTML = `
+            <div class="result-card ${verdictClass}">
+                <h2 class="result-card-title">${verdict}</h2>
+                <p style="color: var(--text-secondary); margin-top: 8px;">
+                    Prezzo ricevuto: <strong>€${analysis.input.receivedPrice.toLocaleString('it-IT')}</strong><br>
+                    Prezzo medio mercato: <strong>€${analysis.marketAnalysis.marketMid.toLocaleString('it-IT')}</strong>
+                </p>
+            </div>
+        `;
+
         if (nav) nav.classList.remove('hidden');
-        
-        // Render chart
-        setTimeout(() => {
-            const chartsDiv = getEl('analysisCharts');
-            if (chartsDiv) {
-                chartsDiv.classList.remove('hidden');
-                chartRenderer.renderPriceComparisonChart('priceChartContainer', analysis);
-            }
-        }, 100);
     }
 }
 
 function loadSavedQuotes() {
-    if (!state.quoteManager) return;
-    
-    state.quoteManager.getAllQuotes().then(quotes => {
-        const container = getEl('savedQuotesList');
-        if (!container) return;
-        
-        if (quotes.length === 0) {
-            container.innerHTML = '<p style="color: var(--muted); text-align: center;">Nessun preventivo salvato</p>';
+    if (!state.user || !state.quoteManager) return;
+
+    const container = getEl('savedQuotesList');
+    if (!container) return;
+
+    state.quoteManager.getQuotes().then(quotes => {
+        if (!quotes || quotes.length === 0) {
+            container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Nessun preventivo salvato</p>';
             return;
         }
-        
-        container.innerHTML = quotes.map(quote => `
-            <div class="saved-quote-item">
-                <div class="saved-quote-info">
-                    <strong>${quote.cliente}</strong>
-                    <p>${quote.servizi.join(', ')}</p>
-                </div>
-                <div class="saved-quote-price">€${quote.totale.toFixed(2)}</div>
-                <button class="btn btn-sm btn-secondary" onclick="window.downloadQuotePDF('${quote.id}')">
-                    <i class="fa-solid fa-download"></i>
-                </button>
+
+        container.innerHTML = quotes.map(q => `
+            <div class="result-card info" style="margin-bottom: 16px;">
+                <h4 style="margin: 0 0 8px 0; font-size: 1rem;">${q.cliente}</h4>
+                <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
+                    ${q.servizi.join(', ')}<br>
+                    <strong>€${q.totale.toLocaleString('it-IT')}</strong>
+                </p>
             </div>
         `).join('');
     });
 }
 
-function downloadPDF() {
-    if (!state.lastAnalysis) {
-        uiFeedback.showFeedback('Nessuna analisi disponibile', 'error');
-        return;
-    }
-    
-    generateProfessionalPDF(state.lastAnalysis);
-}
-
-function resetApp() {
-    state.currentStep = 1;
-    state.selectedTrade = null;
-    state.selectedSub = null;
-    state.selectedMacro = null;
-    state.isQuickMode = false;
-    state.questionAnswers = {};
-    state.lastAnalysis = null;
-    
-    getEl('regionSelect').value = '';
-    getEl('quantityInput').value = '';
-    getEl('receivedPriceInput').value = '';
-    if (getEl('receivedPriceInputStep3')) getEl('receivedPriceInputStep3').value = '';
-    
-    getEl('analysisResults')?.classList.add('hidden');
-    getEl('analysisCharts')?.classList.add('hidden');
-    getEl('resultsNav')?.classList.add('hidden');
-    
-    renderMacroCategories();
-    goToStep(1);
-}
-
-function startWizardFlow(quick) {
-    state.isQuickMode = quick;
-    getEl('hero-section').classList.add('hidden');
-    getEl('app-root').style.display = 'block';
-    goToStep(1);
-}
-
-function goHome() {
-    getEl('app-root').style.display = 'none';
-    getEl('hero-section').classList.remove('hidden');
-    resetApp();
-}
-
-// ===== INITIALIZATION =====
-function populateRegions() {
-    const regionSelect = getEl('regionSelect');
-    if (!regionSelect) return;
-    
-    const regions = Object.keys(database.REGIONAL_COEFFICIENTS).sort();
-    regionSelect.innerHTML = `
-        <option value="" disabled selected>Seleziona la tua regione</option>
-        ${regions.map(r => `<option value="${r}">${r}</option>`).join('')}
-    `;
-}
-
-window.downloadQuotePDF = async (quoteId) => {
-    if (!state.quoteManager) return;
-    try {
-        uiFeedback.showFeedback('Generazione PDF in corso...', 'info');
-        const pdfData = await state.quoteManager.getPDFData(quoteId);
-        generateProfessionalPDF(pdfData);
-        uiFeedback.showFeedback('PDF scaricato con successo', 'success');
-    } catch (e) {
-        console.error('Errore download PDF:', e);
-        uiFeedback.showFeedback('Errore nella generazione del PDF', 'error');
-    }
-};
-
-// ===== LOGIN HANDLERS =====
-async function handleEmailLogin(e) {
-    e.preventDefault();
-    const email = getEl('loginEmail')?.value;
-    const password = getEl('loginPassword')?.value;
-    const btn = getEl('emailLoginBtn');
-
-    if (!email || !password) {
-        uiFeedback.showFeedback('Inserisci email e password', 'error');
-        return;
-    }
-
-    uiFeedback.setButtonLoading(btn, true);
-    const result = await loginUser(email, password);
-    uiFeedback.setButtonLoading(btn, false);
-
-    if (result.success) {
-        getEl('loginModal')?.classList.add('hidden');
-        // Pulisci i campi
-        getEl('loginEmail').value = '';
-        getEl('loginPassword').value = '';
-        uiFeedback.showFeedback('Accesso effettuato con successo', 'success');
-    } else {
-        uiFeedback.showFeedback(result.error, 'error');
-    }
-}
-
-async function handleGoogleLogin() {
-    const btn = getEl('googleLoginBtn');
-    if (btn) uiFeedback.setButtonLoading(btn, true);
-    
-    const result = await loginWithGoogle();
-    
-    if (btn) uiFeedback.setButtonLoading(btn, false);
-    
-    if (result.success) {
-        getEl('loginModal')?.classList.add('hidden');
-        uiFeedback.showFeedback('Accesso con Google effettuato', 'success');
-    } else {
-        uiFeedback.showFeedback(result.error, 'error');
-    }
-}
-
-// ===== DOM READY =====
+// ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Preventivi-Smart Pro v28.0: Inizializzazione in corso...');
+    // Mostra hero
+    const heroSection = getEl('hero-section');
+    const appRoot = getEl('app-root');
     
-    try {
+    getEl('startAnalysisBtn')?.addEventListener('click', () => {
+        state.isQuickMode = false;
+        if (heroSection) heroSection.style.display = 'none';
+        if (appRoot) appRoot.style.display = 'block';
         renderMacroCategories();
-        populateRegions();
-        console.log('✅ Categorie e Regioni caricate');
-    } catch (e) {
-        console.error('❌ Errore nell\'inizializzazione:', e);
-    }
-    
-    // Hero buttons
-    const startAnalysisBtn = getEl('startAnalysisBtn');
-    const startQuickBtn = getEl('startQuickBtn');
-    
-    if (startAnalysisBtn) {
-        startAnalysisBtn.addEventListener('click', () => startWizardFlow(false));
-        console.log('✅ startAnalysisBtn collegato');
-    }
-    if (startQuickBtn) {
-        startQuickBtn.addEventListener('click', () => startWizardFlow(true));
-        console.log('✅ startQuickBtn collegato');
-    }
-    
-    // Step navigation
-    const prevStepBtn = getEl('prevStepBtn');
-    const prevStep3Btn = getEl('prevStep3Btn');
-    const nextStepBtn = getEl('nextStepBtn');
-    
-    if (prevStepBtn) {
-        prevStepBtn.addEventListener('click', () => goToStep(1));
-        console.log('✅ prevStepBtn collegato');
-    }
-    if (prevStep3Btn) {
-        prevStep3Btn.addEventListener('click', () => goToStep(2));
-        console.log('✅ prevStep3Btn collegato');
-    }
-    if (nextStepBtn) {
-        nextStepBtn.addEventListener('click', () => {
-            if (state.isQuickMode) {
-                runAnalysis();
-            } else {
-                goToStep(3);
-            }
-        });
-        console.log('✅ nextStepBtn collegato');
-    }
+        goToStep(1);
+    });
 
-    // Feedback visuale sul prezzo
-    const priceInputStep3 = getEl('receivedPriceInputStep3');
-    if (priceInputStep3) {
-        priceInputStep3.addEventListener('input', (e) => {
-            const val = parseFloat(e.target.value);
-            const feedback = getEl('feedback-price');
-            if (feedback) {
-                if (val > 0) {
-                    feedback.innerHTML = '<i class="fa-solid fa-check-circle text-success animate-bounce"></i>';
-                } else {
-                    feedback.innerHTML = '';
-                }
-            }
-        });
-    }
-    
-    // Analysis & Reset
-    const runAnalysisBtn = getEl('runAnalysisBtn');
-    const resetAppBtn = getEl('resetAppBtn');
-    const btnDownloadPDF = getEl('btnDownloadPDF');
-    
-    if (runAnalysisBtn) {
-        runAnalysisBtn.addEventListener('click', runAnalysis);
-        console.log('✅ runAnalysisBtn collegato');
-    }
-    if (resetAppBtn) {
-        resetAppBtn.addEventListener('click', resetApp);
-        console.log('✅ resetAppBtn collegato');
-    }
-    if (btnDownloadPDF) {
-        btnDownloadPDF.addEventListener('click', downloadPDF);
-        console.log('✅ btnDownloadPDF collegato');
-    }
-    
-    // Step 1 Navigation
-    const homeFromStep1Btn = getEl('homeFromStep1Btn');
-    const backSelectionBtn = getEl('backSelectionBtn');
-    
-    if (homeFromStep1Btn) {
-        homeFromStep1Btn.addEventListener('click', goHome);
-    }
-    if (backSelectionBtn) {
-        backSelectionBtn.addEventListener('click', () => {
-            if (state.selectedTrade) {
-                window.selectSub(state.selectedSub);
-                state.selectedTrade = null;
-            } else if (state.selectedSub) {
-                window.selectMacro(state.selectedMacro);
-                state.selectedSub = null;
-            } else if (state.selectedMacro) {
-                renderMacroCategories();
-                state.selectedMacro = null;
-                if (homeFromStep1Btn) homeFromStep1Btn.classList.remove('hidden');
-            } else {
-                goHome();
-            }
-        });
-    }
-    
-    // Login modal
-    const closeLoginBtn = getEl('closeLoginBtn');
-    const googleLoginBtn = getEl('googleLoginBtn');
-    const loginModal = getEl('loginModal');
-    
-    if (closeLoginBtn) {
-        closeLoginBtn.addEventListener('click', () => {
-            if (loginModal) loginModal.classList.add('hidden');
-        });
-        console.log('✅ closeLoginBtn collegato');
-    }
-    if (googleLoginBtn) {
-        googleLoginBtn.addEventListener('click', handleGoogleLogin);
-        console.log('✅ googleLoginBtn collegato');
-    }
+    getEl('startQuickBtn')?.addEventListener('click', () => {
+        state.isQuickMode = true;
+        if (heroSection) heroSection.style.display = 'none';
+        if (appRoot) appRoot.style.display = 'block';
+        renderMacroCategories();
+        goToStep(1);
+    });
 
-    const emailLoginForm = getEl('emailLoginForm');
-    if (emailLoginForm) {
-        emailLoginForm.addEventListener('submit', handleEmailLogin);
-        console.log('✅ emailLoginForm collegato');
-    }
-    
-    // Chiudi modal con ESC
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && loginModal && !loginModal.classList.contains('hidden')) {
-            loginModal.classList.add('hidden');
+    // Pulsanti di navigazione
+    getEl('backSelectionBtn')?.addEventListener('click', renderMacroCategories);
+    getEl('homeFromStep1Btn')?.addEventListener('click', () => {
+        if (heroSection) heroSection.style.display = 'block';
+        if (appRoot) appRoot.style.display = 'none';
+    });
+
+    getEl('prevStepBtn')?.addEventListener('click', () => goToStep(state.currentStep - 1));
+    getEl('nextStepBtn')?.addEventListener('click', () => goToStep(state.currentStep + 1));
+    getEl('prevStep3Btn')?.addEventListener('click', () => goToStep(state.currentStep - 1));
+    getEl('runAnalysisBtn')?.addEventListener('click', runAnalysis);
+
+    getEl('resetAppBtn')?.addEventListener('click', () => {
+        if (heroSection) heroSection.style.display = 'block';
+        if (appRoot) appRoot.style.display = 'none';
+        state = {
+            currentStep: 1,
+            selectedTrade: null,
+            selectedSub: null,
+            selectedMacro: null,
+            isQuickMode: false,
+            user: state.user,
+            questionAnswers: {},
+            lastAnalysis: null,
+            quoteManager: state.quoteManager
+        };
+    });
+
+    getEl('btnDownloadPDF')?.addEventListener('click', async () => {
+        if (!state.lastAnalysis) return;
+        const pdf = await generateProfessionalPDF(state.lastAnalysis);
+        const link = document.createElement('a');
+        link.href = pdf;
+        link.download = 'analisi-preventivo.pdf';
+        link.click();
+    });
+
+    // Login
+    getEl('closeLoginBtn')?.addEventListener('click', () => {
+        getEl('loginModal')?.classList.add('hidden');
+    });
+
+    getEl('googleLoginBtn')?.addEventListener('click', async () => {
+        try {
+            const provider = new GoogleAuthProvider();
+            await signInWithPopup(auth, provider);
+            getEl('loginModal')?.classList.add('hidden');
+        } catch (error) {
+            console.error('Errore login Google:', error);
         }
     });
-    
-    console.log('✅ Tutti i listener inizializzati correttamente');
+
+    getEl('emailLoginBtn')?.addEventListener('click', async () => {
+        const email = getEl('loginEmail')?.value;
+        const password = getEl('loginPassword')?.value;
+        if (email && password) {
+            try {
+                await loginUser(email, password);
+                getEl('loginModal')?.classList.add('hidden');
+            } catch (error) {
+                uiFeedback.showFeedback('Errore di login', 'error');
+            }
+        }
+    });
+
+    // Regioni
+    const regionSelect = getEl('regionSelect');
+    if (regionSelect) {
+        Object.keys(database.REGIONAL_COEFFICIENTS).forEach(region => {
+            const option = document.createElement('option');
+            option.value = region;
+            option.textContent = region;
+            regionSelect.appendChild(option);
+        });
+    }
+
+    // Mostra/nascondi prezzo ricevuto
+    getEl('receivedPriceGroup')?.style.display = state.isQuickMode ? 'none' : 'block';
 });
+
+export { renderMacroCategories };
