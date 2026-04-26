@@ -449,7 +449,7 @@ function _renderPrezzi(analysis) {
         </h3>
 
         <!-- Grafico obbligatorio — container dedicato -->
-        <div id="priceChartInline" style="position:relative; height:260px; margin-bottom:24px;">
+        <div id="priceChartInline" style="position:relative; height:260px; margin-bottom:24px; display:block; visibility:visible;">
             <canvas id="priceChartCanvas"></canvas>
         </div>
 
@@ -731,106 +731,9 @@ function displayResults(analysis) {
     results.classList.remove('hidden');
 
     // ── BLOCCO 2: Rendering grafico obbligatorio ──
-    // Il canvas è appena stato inserito nel DOM; usiamo requestAnimationFrame
-    // per garantire che il browser abbia completato il layout prima di disegnare.
+    // STEP 1 — SEMPRE chiamato centralizzando la logica in chart-renderer.js
     requestAnimationFrame(() => {
-        const canvas = document.getElementById('priceChartCanvas');
-        if (!canvas) {
-            console.error('[displayResults] CRITICO: canvas #priceChartCanvas non trovato — grafico non renderizzato');
-            return;
-        }
-
-        // Distruggi eventuale istanza precedente
-        const existing = Chart.getChart(canvas);
-        if (existing) existing.destroy();
-
-        const { marketAnalysis, input } = analysis;
-        const isQuick = state.isQuickMode;
-
-        const labels = isQuick
-            ? ['Mercato Min', 'Mercato Medio', 'Mercato Max']
-            : ['Mercato Min', 'Mercato Medio', 'Mercato Max', 'TUO PREZZO'];
-
-        const dataValues = isQuick
-            ? [marketAnalysis.marketMin, marketAnalysis.marketMid, marketAnalysis.marketMax]
-            : [marketAnalysis.marketMin, marketAnalysis.marketMid, marketAnalysis.marketMax, input.receivedPrice];
-
-        // Colore dinamico per il prezzo utente
-        let userColor = 'rgba(99,102,241,.85)';
-        let userBorder = 'rgb(99,102,241)';
-        if (!isQuick && input.receivedPrice > 0) {
-            if (input.receivedPrice > marketAnalysis.marketMax) {
-                userColor = 'rgba(239,68,68,.85)'; userBorder = 'rgb(239,68,68)';
-            } else if (input.receivedPrice < marketAnalysis.marketMin) {
-                userColor = 'rgba(0,217,90,.85)'; userBorder = 'rgb(0,217,90)';
-            } else {
-                userColor = 'rgba(245,158,11,.85)'; userBorder = 'rgb(245,158,11)';
-            }
-        }
-
-        const bgColors = isQuick
-            ? ['rgba(0,217,90,.25)', 'rgba(0,117,255,.35)', 'rgba(255,77,77,.25)']
-            : ['rgba(0,217,90,.25)', 'rgba(0,117,255,.35)', 'rgba(255,77,77,.25)', userColor];
-
-        const borderColors = isQuick
-            ? ['rgba(0,217,90,.7)', 'rgba(0,117,255,.9)', 'rgba(255,77,77,.7)']
-            : ['rgba(0,217,90,.7)', 'rgba(0,117,255,.9)', 'rgba(255,77,77,.7)', userBorder];
-
-        const borderWidths = isQuick ? [1, 2, 1] : [1, 2, 1, 3];
-
-        new Chart(canvas.getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Prezzo (€)',
-                    data: dataValues,
-                    backgroundColor: bgColors,
-                    borderColor: borderColors,
-                    borderWidth: borderWidths,
-                    borderRadius: 8,
-                    hoverBackgroundColor: bgColors.map(c => c.replace(/[\d.]+\)$/, '0.95)'))
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: 'rgba(15,23,42,.95)',
-                        padding: 12,
-                        titleFont: { size: 13, weight: 'bold', family: 'Inter' },
-                        bodyFont: { size: 12, family: 'Inter' },
-                        borderColor: 'rgba(255,255,255,.1)',
-                        borderWidth: 1,
-                        cornerRadius: 8,
-                        callbacks: {
-                            label: ctx => ` €${ctx.parsed.y.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: {
-                            callback: v => '€' + v.toLocaleString('it-IT'),
-                            font: { size: 11, weight: '500' },
-                            color: '#94a3b8'
-                        },
-                        grid: { color: 'rgba(255,255,255,.05)', drawBorder: false }
-                    },
-                    x: {
-                        ticks: {
-                            font: { size: 11, weight: '600' },
-                            color: ctx => ctx.tick.label === 'TUO PREZZO' ? '#fff' : '#64748b'
-                        },
-                        grid: { display: false, drawBorder: false }
-                    }
-                },
-                animation: { duration: 1200, easing: 'easeOutQuart' }
-            }
-        });
+        renderPriceComparisonChart('priceChartInline', analysis);
     });
 
     if (nav) nav.classList.remove('hidden');

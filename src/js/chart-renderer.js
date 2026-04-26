@@ -3,13 +3,42 @@
  * Visualizzazione grafica dei risultati di analisi
  */
 
+/**
+ * Renderizza il grafico di confronto prezzi
+ * @param {string} containerId - ID del contenitore DOM
+ * @param {Object} analysis - Oggetto analisi dal motore
+ */
 export function renderPriceComparisonChart(containerId, analysis) {
+    // STEP 2: VALIDAZIONE DATI
+    if (!analysis || !analysis.marketAnalysis) {
+        console.error('[ChartRenderer] Dati analisi mancanti');
+        return;
+    }
+
+    const { marketMin, marketMid, marketMax } = analysis.marketAnalysis;
+    const userPrice = analysis.input ? analysis.input.receivedPrice : 0;
+
+    // Se mancano i valori fondamentali, NON renderizzare
+    if (marketMin === undefined || marketMid === undefined || marketMax === undefined) {
+        console.error('[ChartRenderer] Dati di mercato incompleti (min/mid/max)', { marketMin, marketMid, marketMax });
+        return;
+    }
+
     const container = document.getElementById(containerId);
-    if (!container) return;
+    if (!container) {
+        console.error(`[ChartRenderer] Container #${containerId} non trovato`);
+        return;
+    }
+
+    // STEP 3: UI RULE - Assicura visibilità (rimuove classi hidden o stili statici limitanti)
+    container.classList.remove('hidden');
+    container.style.display = 'block';
+    container.style.visibility = 'visible';
+    container.style.opacity = '1';
 
     let canvas = container.querySelector('canvas');
     if (!canvas) {
-        container.innerHTML = '<canvas></canvas>';
+        container.innerHTML = '<canvas style="width:100%; height:100%;"></canvas>';
         canvas = container.querySelector('canvas');
     }
 
@@ -21,67 +50,62 @@ export function renderPriceComparisonChart(containerId, analysis) {
 
     const canvasCtx = canvas.getContext('2d');
 
-    // Dati per il grafico
-    const min = analysis.marketAnalysis.marketMin;
-    const mid = analysis.marketAnalysis.marketMid;
-    const max = analysis.marketAnalysis.marketMax;
-    const received = analysis.input.receivedPrice || 0;
+    // Configurazione dati e colori
+    const isQuickMode = !userPrice || userPrice <= 0;
+    const labels = isQuickMode 
+        ? ['Mercato Min', 'Mercato Medio', 'Mercato Max'] 
+        : ['Mercato Min', 'Mercato Medio', 'Mercato Max', 'TUO PREZZO'];
+    
+    const dataValues = isQuickMode
+        ? [marketMin, marketMid, marketMax]
+        : [marketMin, marketMid, marketMax, userPrice];
 
-    // Colore dinamico per il prezzo ricevuto
-    let receivedColor = 'rgba(99, 102, 241, 0.8)'; // Indigo di default
-    let receivedBorder = 'rgb(99, 102, 241)';
+    // Colore dinamico per il prezzo utente
+    let userColor = 'rgba(99, 102, 241, 0.85)';
+    let userBorder = 'rgb(99, 102, 241)';
 
-    if (received > 0) {
-        if (received > max) {
-            receivedColor = 'rgba(239, 68, 68, 0.8)'; // Rosso
-            receivedBorder = 'rgb(239, 68, 68)';
-        } else if (received < min) {
-            receivedColor = 'rgba(34, 197, 94, 0.8)'; // Verde
-            receivedBorder = 'rgb(34, 197, 94)';
+    if (!isQuickMode) {
+        if (userPrice > marketMax) {
+            userColor = 'rgba(239, 68, 68, 0.85)'; // Rosso
+            userBorder = 'rgb(239, 68, 68)';
+        } else if (userPrice < marketMin) {
+            userColor = 'rgba(34, 197, 94, 0.85)'; // Verde
+            userBorder = 'rgb(34, 197, 94)';
         } else {
-            receivedColor = 'rgba(245, 158, 11, 0.8)'; // Arancione (equo)
-            receivedBorder = 'rgb(245, 158, 11)';
+            userColor = 'rgba(245, 158, 11, 0.85)'; // Arancione (equo)
+            userBorder = 'rgb(245, 158, 11)';
         }
     }
+
+    const bgColors = isQuickMode
+        ? ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 0.1)']
+        : ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 0.1)', userColor];
+
+    const borderColors = isQuickMode
+        ? ['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.5)', 'rgba(255, 255, 255, 0.3)']
+        : ['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.5)', 'rgba(255, 255, 255, 0.3)', userBorder];
 
     const chart = new Chart(canvasCtx, {
         type: 'bar',
         data: {
-            labels: ['Mercato Min', 'MERCATO MEDIO', 'Mercato Max', 'TUO PREZZO'],
+            labels: labels,
             datasets: [{
                 label: 'Prezzo (€)',
-                data: [min, mid, max, received],
-                backgroundColor: [
-                    'rgba(255, 255, 255, 0.1)',  // Min
-                    'rgba(255, 255, 255, 0.2)',  // Mid
-                    'rgba(255, 255, 255, 0.1)',  // Max
-                    receivedColor                 // Ricevuto (Evidenziato)
-                ],
-                borderColor: [
-                    'rgba(255, 255, 255, 0.3)',
-                    'rgba(255, 255, 255, 0.5)',
-                    'rgba(255, 255, 255, 0.3)',
-                    receivedBorder
-                ],
-                borderWidth: [1, 2, 1, 3],
+                data: dataValues,
+                backgroundColor: bgColors,
+                borderColor: borderColors,
+                borderWidth: isQuickMode ? [1, 2, 1] : [1, 2, 1, 3],
                 borderRadius: 8,
-                hoverBackgroundColor: [
-                    'rgba(255, 255, 255, 0.2)',
-                    'rgba(255, 255, 255, 0.3)',
-                    'rgba(255, 255, 255, 0.2)',
-                    receivedColor
-                ]
+                hoverBackgroundColor: bgColors
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
-                legend: {
-                    display: false
-                },
+                legend: { display: false },
                 tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
+                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
                     padding: 12,
                     titleFont: { size: 14, weight: 'bold', family: 'Inter' },
                     bodyFont: { size: 13, family: 'Inter' },
@@ -131,7 +155,7 @@ export function renderPriceComparisonChart(containerId, analysis) {
                 }
             },
             animation: {
-                duration: 2000,
+                duration: 1500,
                 easing: 'easeOutQuart'
             }
         }
@@ -140,28 +164,20 @@ export function renderPriceComparisonChart(containerId, analysis) {
     return chart;
 }
 
+/**
+ * Altri renderer (mantenuti per compatibilità se usati altrove)
+ */
 export function renderCongruityGauge(containerId, analysis) {
     const container = document.getElementById(containerId);
     if (!container) return;
-
-    let canvas = container.querySelector('canvas');
-    if (!canvas) {
-        container.innerHTML = '<canvas></canvas>';
-        canvas = container.querySelector('canvas');
-    }
-
-    // Distruggi il grafico esistente se presente
+    const canvas = container.querySelector('canvas') || (container.innerHTML = '<canvas></canvas>', container.querySelector('canvas'));
     const existingChart = Chart.getChart(canvas);
-    if (existingChart) {
-        existingChart.destroy();
-    }
-
-    const canvasCtx = canvas.getContext('2d');
+    if (existingChart) existingChart.destroy();
 
     const diffPercent = analysis.congruityAnalysis.diffPercent;
     const color = diffPercent < -10 ? 'rgb(34, 197, 94)' : diffPercent > 20 ? 'rgb(239, 68, 68)' : 'rgb(99, 102, 241)';
 
-    const chart = new Chart(canvasCtx, {
+    return new Chart(canvas.getContext('2d'), {
         type: 'doughnut',
         data: {
             labels: ['Scostamento', 'Resto'],
@@ -178,44 +194,23 @@ export function renderCongruityGauge(containerId, analysis) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    enabled: false
-                }
-            }
+            plugins: { legend: { display: false }, tooltip: { enabled: false } }
         }
     });
-
-    return chart;
 }
 
 export function renderMarketTrendChart(containerId, analysis) {
     const container = document.getElementById(containerId);
     if (!container) return;
-
-    let canvas = container.querySelector('canvas');
-    if (!canvas) {
-        container.innerHTML = '<canvas></canvas>';
-        canvas = container.querySelector('canvas');
-    }
-
-    // Distruggi il grafico esistente se presente
+    const canvas = container.querySelector('canvas') || (container.innerHTML = '<canvas></canvas>', container.querySelector('canvas'));
     const existingChart = Chart.getChart(canvas);
-    if (existingChart) {
-        existingChart.destroy();
-    }
+    if (existingChart) existingChart.destroy();
 
-    const canvasCtx = canvas.getContext('2d');
-
-    // Simulazione di trend di mercato
-    const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'];
     const basePrice = analysis.marketAnalysis.marketMid;
+    const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'];
     const trend = months.map((_, i) => basePrice * (1 + (Math.random() - 0.5) * 0.1));
 
-    const chart = new Chart(canvasCtx, {
+    return new Chart(canvas.getContext('2d'), {
         type: 'line',
         data: {
             labels: months,
@@ -236,48 +231,13 @@ export function renderMarketTrendChart(containerId, analysis) {
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: {
-                legend: {
-                    display: false
-                },
-                tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                    padding: 12,
-                    callbacks: {
-                        label: function(context) {
-                            return '€ ' + context.parsed.y.toFixed(2);
-                        }
-                    }
-                }
-            },
+            plugins: { legend: { display: false } },
             scales: {
-                y: {
-                    beginAtZero: false,
-                    ticks: {
-                        callback: function(value) {
-                            return '€' + value.toFixed(0);
-                        },
-                        color: '#94a3b8'
-                    },
-                    grid: {
-                        color: 'rgba(255, 255, 255, 0.05)',
-                        drawBorder: false
-                    }
-                },
-                x: {
-                    ticks: {
-                        color: '#94a3b8'
-                    },
-                    grid: {
-                        display: false,
-                        drawBorder: false
-                    }
-                }
+                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
+                x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
             }
         }
     });
-
-    return chart;
 }
 
 export default {
