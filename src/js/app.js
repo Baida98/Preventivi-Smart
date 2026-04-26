@@ -1,6 +1,6 @@
 /*
- * Preventivi-Smart Pro v28.0 — Versione Master Definitiva
- * Consolidamento di tutte le versioni in un unico file base.
+ * Preventivi-Smart Pro v28.0 — Versione Migliorata
+ * Correzioni bug + Miglioramenti grafici + Effetto semitrasparente login
  */
 
 import database from './database.js';
@@ -160,6 +160,7 @@ window.selectTrade = (tradeId) => {
     getEl('unitLabel').textContent = trade.unit;
     getEl('quantityInput').placeholder = `Es: 10 ${trade.unit}`;
     getEl('tradeNameDisplay').textContent = trade.name;
+    // Rimosso: getEl('basePriceDisplay').textContent = `€${trade.basePrice}`;
     
     renderQuestions(trade);
     goToStep(2);
@@ -208,6 +209,7 @@ async function runAnalysis() {
         return;
     }
 
+    // Se non siamo in quick mode, il prezzo è obbligatorio
     if (!state.isQuickMode && price <= 0) {
         uiFeedback.showFeedback('Inserisci un prezzo valido per l\'analisi', 'error');
         return;
@@ -216,6 +218,7 @@ async function runAnalysis() {
     const runBtn = getEl('runAnalysisBtn');
     if (runBtn) uiFeedback.setButtonLoading(runBtn, true);
     
+    // Mostra caricamento
     goToStep(4);
     const results = getEl('analysisResults');
     const loading = getEl('analysisLoading');
@@ -244,6 +247,7 @@ async function runAnalysis() {
         uiFeedback.setButtonLoading(runBtn, false);
         displayResults(analysis);
         
+        // Salvataggio strutturato e protetto
         if (state.user && state.quoteManager) {
             uiFeedback.showSaveState('saving');
             try {
@@ -330,6 +334,7 @@ function loadSavedQuotes() {
 
 // ===== EVENT LISTENERS =====
 document.addEventListener('DOMContentLoaded', () => {
+    // Mostra hero
     const heroSection = getEl('hero-section');
     const appRoot = getEl('app-root');
     
@@ -349,6 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
         goToStep(1);
     });
 
+    // Pulsanti di navigazione
     getEl('backSelectionBtn')?.addEventListener('click', renderMacroCategories);
     getEl('homeFromStep1Btn')?.addEventListener('click', () => {
         if (heroSection) heroSection.style.display = 'block';
@@ -364,14 +370,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (heroSection) heroSection.style.display = 'block';
         if (appRoot) appRoot.style.display = 'none';
         state = {
-            ...state,
             currentStep: 1,
             selectedTrade: null,
             selectedSub: null,
             selectedMacro: null,
             isQuickMode: false,
+            user: state.user,
             questionAnswers: {},
-            lastAnalysis: null
+            lastAnalysis: null,
+            quoteManager: state.quoteManager
         };
     });
 
@@ -384,6 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
         link.click();
     });
 
+    // Login
     getEl('closeLoginBtn')?.addEventListener('click', () => {
         getEl('loginModal')?.classList.add('hidden');
     });
@@ -411,6 +419,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    // Regioni
     const regionSelect = getEl('regionSelect');
     if (regionSelect) {
         Object.keys(database.REGIONAL_COEFFICIENTS).forEach(region => {
@@ -420,47 +429,69 @@ document.addEventListener('DOMContentLoaded', () => {
             regionSelect.appendChild(option);
         });
     }
+
+    // Mostra/nascondi prezzo ricevuto
+    getEl('receivedPriceGroup')?.style.display = state.isQuickMode ? 'none' : 'block';
 });
 
-// Esporta funzioni globali per compatibilità con HTML onclick
-window.selectMacro = (macroId) => {
+// Esporta funzioni globali per onclick handlers
+window.selectMacro = window.selectMacro || ((macroId) => {
     state.selectedMacro = macroId;
     const macro = database.MACRO_CATEGORIES.find(m => m.id === macroId);
+    
     getEl('step1-title').textContent = macro.name;
     getEl('step1-subtitle').textContent = "Seleziona il tipo di intervento";
+    
     const container = getEl('macro-grid');
     if (!container) return;
+    
     const subs = database.SUB_CATEGORIES.filter(s => s.parent === macroId);
-    container.innerHTML = subs.length === 0 ? `<p>Nessuna sottocategoria</p>` : subs.map(sub => `
-        <div class="trade-card" onclick="window.selectSub('${sub.id}')">
-            <div class="trade-card-icon" style="background: ${sub.color};"><i class="fa-solid ${sub.icon}"></i></div>
-            <h3 class="trade-card-title">${sub.name}</h3>
-        </div>
-    `).join('');
+    if (subs.length === 0) {
+        container.innerHTML = `<p class="text-center" style="grid-column: 1/-1; padding: 40px; color: var(--muted);">Nessuna sottocategoria trovata.</p>`;
+    } else {
+        container.innerHTML = subs.map((sub, idx) => `
+            <div class="trade-card" onclick="window.selectSub('${sub.id}')">
+                <div class="trade-card-icon" style="background: ${sub.color};">
+                    <i class="fa-solid ${sub.icon}"></i>
+                </div>
+                <h3 class="trade-card-title">${sub.name}</h3>
+            </div>
+        `).join('');
+    }
+    
     getEl('homeFromStep1Btn').classList.remove('hidden');
-};
+});
 
-window.selectSub = (subId) => {
+window.selectSub = window.selectSub || ((subId) => {
     state.selectedSub = subId;
+    
     getEl('step1-title').textContent = "Intervento Specifico";
+    getEl('step1-subtitle').textContent = "Qual è il lavoro da svolgere?";
+    
     const container = getEl('macro-grid');
+    if (!container) return;
+    
     const trades = database.TRADES_DATABASE.filter(t => t.subId === subId);
-    container.innerHTML = trades.map(trade => `
+    container.innerHTML = trades.map((trade, idx) => `
         <div class="trade-card" onclick="window.selectTrade('${trade.id}')">
-            <div class="trade-card-icon" style="background: ${trade.color};"><i class="fa-solid ${trade.icon}"></i></div>
+            <div class="trade-card-icon" style="background: ${trade.color};">
+                <i class="fa-solid ${trade.icon}"></i>
+            </div>
             <h3 class="trade-card-title">${trade.name}</h3>
         </div>
     `).join('');
-};
+});
 
-window.selectTrade = (tradeId) => {
+window.selectTrade = window.selectTrade || ((tradeId) => {
     state.selectedTrade = tradeId;
     const trade = database.TRADES_DATABASE.find(t => t.id === tradeId);
+    
     getEl('unitLabel').textContent = trade.unit;
     getEl('quantityInput').placeholder = `Es: 10 ${trade.unit}`;
     getEl('tradeNameDisplay').textContent = trade.name;
+    
     renderQuestions(trade);
     goToStep(2);
-};
+});
 
 export { renderMacroCategories };
