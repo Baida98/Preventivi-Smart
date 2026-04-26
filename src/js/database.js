@@ -46,7 +46,7 @@ export const MACRO_CATEGORIES = [
   { 
     id: "muratore_interni", 
     name: "Muratore & Interni", 
-    icon: "fa-hammer-and-wrench", 
+    icon: "fa-hard-hat", 
     color: "#a855f7", 
     description: "Muratura, cartongesso, pittura, pavimenti" 
   },

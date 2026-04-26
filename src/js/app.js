@@ -363,41 +363,41 @@ function _renderSummary(analysis) {
 
     return `
     <!-- ═══ BLOCCO 1: SUMMARY ═══ -->
-    <div class="result-card ${cardClass}" style="padding: 28px;">
-        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
-            <span style="font-size:2rem;">${emoji}</span>
+    <div class="result-card ${cardClass}" style="padding: 20px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:16px; flex-wrap:wrap;">
+            <span style="font-size:1.75rem;">${emoji}</span>
             <div>
-                <h2 style="margin:0; font-size:1.35rem; font-weight:800; color:var(--text);">${verdictText}</h2>
-                <p style="margin:4px 0 0; font-size:0.875rem; color:var(--text-secondary);">
+                <h2 style="margin:0; font-size:1.2rem; font-weight:800; color:var(--text);">${verdictText}</h2>
+                <p style="margin:2px 0 0; font-size:0.8rem; color:var(--text-secondary);">
                     ${trade.name} &bull; ${input.region} &bull; ${input.quantity} unità
                 </p>
             </div>
-            <div style="margin-left:auto; text-align:center; min-width:80px;">
-                <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px;">Score</div>
-                <div style="font-size:2.2rem; font-weight:900; color:${scoreInfo.color}; line-height:1;">${reliabilityScore}</div>
-                <div style="font-size:0.75rem; font-weight:700; color:${scoreInfo.color};">${scoreInfo.label}</div>
+            <div style="margin-left:auto; text-align:center; min-width:70px;">
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:2px;">Score</div>
+                <div style="font-size:1.5rem; font-weight:900; color:${scoreInfo.color}; line-height:1;">${reliabilityScore}</div>
+                <div style="font-size:0.7rem; font-weight:700; color:${scoreInfo.color};">${scoreInfo.label}</div>
             </div>
         </div>
 
         <!-- Griglia KPI -->
         <div class="results-grid" style="margin-top:0;">
             ${!isQuick ? `
-            <div class="result-stat">
-                <div class="result-stat-label">Prezzo Ricevuto</div>
-                <div class="result-stat-value">€${input.receivedPrice.toLocaleString('it-IT')}</div>
+            <div class="result-stat" style="padding:12px;">
+                <div class="result-stat-label" style="font-size:0.65rem;">Prezzo Ricevuto</div>
+                <div class="result-stat-value" style="font-size:1.2rem;">€${input.receivedPrice.toLocaleString('it-IT')}</div>
             </div>` : ''}
-            <div class="result-stat">
-                <div class="result-stat-label">Mercato Medio</div>
-                <div class="result-stat-value">€${marketAnalysis.marketMid.toLocaleString('it-IT')}</div>
+            <div class="result-stat" style="padding:12px;">
+                <div class="result-stat-label" style="font-size:0.65rem;">Mercato Medio</div>
+                <div class="result-stat-value" style="font-size:1.2rem;">€${marketAnalysis.marketMid.toLocaleString('it-IT')}</div>
             </div>
-            <div class="result-stat">
-                <div class="result-stat-label">Range Mercato</div>
-                <div class="result-stat-value" style="font-size:1.2rem;">€${marketAnalysis.marketMin.toLocaleString('it-IT')} – €${marketAnalysis.marketMax.toLocaleString('it-IT')}</div>
+            <div class="result-stat" style="padding:12px;">
+                <div class="result-stat-label" style="font-size:0.65rem;">Range Mercato</div>
+                <div class="result-stat-value" style="font-size:1rem;">€${marketAnalysis.marketMin.toLocaleString('it-IT')} – €${marketAnalysis.marketMax.toLocaleString('it-IT')}</div>
             </div>
             ${!isQuick ? `
-            <div class="result-stat">
-                <div class="result-stat-label">Differenza vs Mercato</div>
-                <div class="result-stat-value" style="font-size:1.4rem; color:${congruityAnalysis.diffAmount > 0 ? 'var(--danger)' : congruityAnalysis.diffAmount < 0 ? 'var(--success)' : 'var(--text)'};">${diffAmountStr}</div>
+            <div class="result-stat" style="padding:12px;">
+                <div class="result-stat-label" style="font-size:0.65rem;">Differenza</div>
+                <div class="result-stat-value" style="font-size:1.2rem; color:${congruityAnalysis.diffAmount > 0 ? 'var(--danger)' : congruityAnalysis.diffAmount < 0 ? 'var(--success)' : 'var(--text)'};">${diffAmountStr}</div>
             </div>` : ''}
         </div>
 
@@ -442,14 +442,14 @@ function _renderPrezzi(analysis) {
 
     return `
     <!-- ═══ BLOCCO 2: PREZZI ═══ -->
-    <div class="result-card" style="padding:28px;">
-        <h3 style="margin:0 0 20px; font-size:1.1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+    <div class="result-card" style="padding:20px;">
+        <h3 style="margin:0 0 16px; font-size:1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
             <i class="fa-solid fa-chart-bar" style="color:var(--info);"></i>
             Confronto Prezzi di Mercato
         </h3>
 
         <!-- Grafico obbligatorio — container dedicato -->
-        <div id="priceChartInline" style="position:relative; height:260px; margin-bottom:24px; display:block; visibility:visible;">
+        <div id="priceChartInline" style="position:relative; height:220px; margin-bottom:20px; display:block; visibility:visible;">
             <canvas id="priceChartCanvas"></canvas>
         </div>
 
@@ -457,41 +457,41 @@ function _renderPrezzi(analysis) {
         <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-bottom:${!isQuick ? '20px' : '0'};">
             <div style="text-align:center; padding:12px; background:rgba(0,217,90,.08); border-radius:10px; border:1px solid rgba(0,217,90,.2);">
                 <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--success); margin-bottom:4px;">Minimo</div>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--text);">€${marketAnalysis.marketMin.toLocaleString('it-IT')}</div>
+                <div style="font-size:1rem; font-weight:800; color:var(--text);">€${marketAnalysis.marketMin.toLocaleString('it-IT')}</div>
             </div>
-            <div style="text-align:center; padding:12px; background:rgba(0,117,255,.08); border-radius:10px; border:2px solid rgba(0,117,255,.3);">
-                <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--info); margin-bottom:4px;">Medio Mercato</div>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--text);">€${marketAnalysis.marketMid.toLocaleString('it-IT')}</div>
+            <div style="text-align:center; padding:10px; background:rgba(0,117,255,.08); border-radius:10px; border:2px solid rgba(0,117,255,.3);">
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--info); margin-bottom:4px;">Medio</div>
+                <div style="font-size:1rem; font-weight:800; color:var(--text);">€${marketAnalysis.marketMid.toLocaleString('it-IT')}</div>
             </div>
-            <div style="text-align:center; padding:12px; background:rgba(255,77,77,.08); border-radius:10px; border:1px solid rgba(255,77,77,.2);">
-                <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--danger); margin-bottom:4px;">Massimo</div>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--text);">€${marketAnalysis.marketMax.toLocaleString('it-IT')}</div>
+            <div style="text-align:center; padding:10px; background:rgba(255,77,77,.08); border-radius:10px; border:1px solid rgba(255,77,77,.2);">
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--danger); margin-bottom:4px;">Massimo</div>
+                <div style="font-size:1rem; font-weight:800; color:var(--text);">€${marketAnalysis.marketMax.toLocaleString('it-IT')}</div>
             </div>
             ${!isQuick ? `
-            <div style="text-align:center; padding:12px; background:rgba(99,102,241,.1); border-radius:10px; border:2px solid rgba(99,102,241,.4);">
-                <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6366f1; margin-bottom:4px;">Tuo Prezzo</div>
-                <div style="font-size:1.25rem; font-weight:800; color:var(--text);">€${input.receivedPrice.toLocaleString('it-IT')}</div>
+            <div style="text-align:center; padding:10px; background:rgba(99,102,241,.1); border-radius:10px; border:2px solid rgba(99,102,241,.4);">
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6366f1; margin-bottom:4px;">Tuo Prezzo</div>
+                <div style="font-size:1rem; font-weight:800; color:var(--text);">€${input.receivedPrice.toLocaleString('it-IT')}</div>
             </div>` : ''}
         </div>
 
         ${!isQuick ? `
         <!-- Benchmark orario -->
         <div style="padding:14px 16px; background:var(--surface-2,var(--bg-secondary)); border-radius:10px; display:flex; flex-wrap:wrap; gap:16px; align-items:center;">
-            <div style="flex:1; min-width:120px;">
-                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px;">€/ora Ricevuto</div>
-                <div style="font-size:1.4rem; font-weight:800; color:var(--text);">€${hourlyBenchmark.receivedHourly}/h</div>
+            <div style="flex:1; min-width:100px;">
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:2px;">€/ora Ricevuto</div>
+                <div style="font-size:1.1rem; font-weight:800; color:var(--text);">€${hourlyBenchmark.receivedHourly}/h</div>
             </div>
-            <div style="flex:1; min-width:120px;">
-                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px;">€/ora Mercato</div>
-                <div style="font-size:1.4rem; font-weight:800; color:var(--text);">€${hourlyBenchmark.marketHourly}/h</div>
+            <div style="flex:1; min-width:100px;">
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:2px;">€/ora Mercato</div>
+                <div style="font-size:1.1rem; font-weight:800; color:var(--text);">€${hourlyBenchmark.marketHourly}/h</div>
             </div>
-            <div style="flex:1; min-width:120px;">
-                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px;">Ore Totali Stimate</div>
-                <div style="font-size:1.4rem; font-weight:800; color:var(--text);">${hourlyBenchmark.totalHours}h</div>
+            <div style="flex:1; min-width:100px;">
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:2px;">Ore Totali</div>
+                <div style="font-size:1.1rem; font-weight:800; color:var(--text);">${hourlyBenchmark.totalHours}h</div>
             </div>
-            <div style="flex:1; min-width:120px;">
-                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px;">Giorni Lavorativi</div>
-                <div style="font-size:1.4rem; font-weight:800; color:var(--text);">${hourlyBenchmark.workDays}gg</div>
+            <div style="flex:1; min-width:100px;">
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:2px;">Giorni</div>
+                <div style="font-size:1.1rem; font-weight:800; color:var(--text);">${hourlyBenchmark.workDays}gg</div>
             </div>
         </div>` : ''}
     </div>`;
@@ -508,8 +508,8 @@ function _renderBreakdown(analysis) {
 
     return `
     <!-- ═══ BLOCCO 3: BREAKDOWN COSTI ═══ -->
-    <div class="result-card" style="padding:28px;">
-        <h3 style="margin:0 0 20px; font-size:1.1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+    <div class="result-card" style="padding:20px;">
+        <h3 style="margin:0 0 16px; font-size:1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
             <i class="fa-solid fa-chart-pie" style="color:#8b5cf6;"></i>
             Composizione del Costo (su €${total.toLocaleString('it-IT')} medio mercato)
         </h3>
@@ -520,15 +520,15 @@ function _renderBreakdown(analysis) {
                 <span style="font-size:0.9rem; font-weight:700; color:var(--text);">
                     <i class="fa-solid fa-person-digging" style="color:#6366f1; margin-right:6px;"></i>Manodopera
                 </span>
-                <span style="font-size:1rem; font-weight:800; color:var(--text);">
+                <span style="font-size:0.9rem; font-weight:800; color:var(--text);">
                     €${breakdown.labor.toLocaleString('it-IT')}
-                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-left:4px;">${breakdown.laborPercentage}%</span>
+                    <span style="font-size:0.7rem; font-weight:600; color:var(--text-secondary); margin-left:4px;">${breakdown.laborPercentage}%</span>
                 </span>
             </div>
-            <div style="background:var(--surface-2,#f1f4f7); border-radius:999px; height:8px; overflow:hidden;">
+            <div style="background:var(--surface-2,#f1f4f7); border-radius:999px; height:6px; overflow:hidden;">
                 <div ${barStyle(breakdown.laborPercentage, '#6366f1')}></div>
             </div>
-            <p style="margin:4px 0 0; font-size:0.75rem; color:var(--text-secondary);">
+            <p style="margin:4px 0 0; font-size:0.7rem; color:var(--text-secondary);">
                 Costo orario stimato: €${breakdown.laborPerHour}/h &bull; ${timeline.totalHours}h totali
             </p>
         </div>
@@ -539,12 +539,12 @@ function _renderBreakdown(analysis) {
                 <span style="font-size:0.9rem; font-weight:700; color:var(--text);">
                     <i class="fa-solid fa-box" style="color:#f59e0b; margin-right:6px;"></i>Materiali
                 </span>
-                <span style="font-size:1rem; font-weight:800; color:var(--text);">
+                <span style="font-size:0.9rem; font-weight:800; color:var(--text);">
                     €${breakdown.materials.toLocaleString('it-IT')}
-                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-left:4px;">${breakdown.materialsPercentage}%</span>
+                    <span style="font-size:0.7rem; font-weight:600; color:var(--text-secondary); margin-left:4px;">${breakdown.materialsPercentage}%</span>
                 </span>
             </div>
-            <div style="background:var(--surface-2,#f1f4f7); border-radius:999px; height:8px; overflow:hidden;">
+            <div style="background:var(--surface-2,#f1f4f7); border-radius:999px; height:6px; overflow:hidden;">
                 <div ${barStyle(breakdown.materialsPercentage, '#f59e0b')}></div>
             </div>
         </div>
@@ -555,28 +555,28 @@ function _renderBreakdown(analysis) {
                 <span style="font-size:0.9rem; font-weight:700; color:var(--text);">
                     <i class="fa-solid fa-briefcase" style="color:#10b981; margin-right:6px;"></i>Oneri & Margine Implicito
                 </span>
-                <span style="font-size:1rem; font-weight:800; color:var(--text);">
+                <span style="font-size:0.9rem; font-weight:800; color:var(--text);">
                     €${breakdown.overhead.toLocaleString('it-IT')}
-                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-left:4px;">${breakdown.overheadPercentage}%</span>
+                    <span style="font-size:0.7rem; font-weight:600; color:var(--text-secondary); margin-left:4px;">${breakdown.overheadPercentage}%</span>
                 </span>
             </div>
-            <div style="background:var(--surface-2,#f1f4f7); border-radius:999px; height:8px; overflow:hidden;">
+            <div style="background:var(--surface-2,#f1f4f7); border-radius:999px; height:6px; overflow:hidden;">
                 <div ${barStyle(breakdown.overheadPercentage, '#10b981')}></div>
             </div>
-            <p style="margin:4px 0 0; font-size:0.75rem; color:var(--text-secondary);">
+            <p style="margin:4px 0 0; font-size:0.7rem; color:var(--text-secondary);">
                 Include spese generali, assicurazione, utile d'impresa
             </p>
         </div>
 
         <!-- Totale recap -->
-        <div style="margin-top:20px; padding:14px 16px; background:var(--surface-2,var(--bg-secondary)); border-radius:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+        <div style="margin-top:16px; padding:12px 14px; background:var(--surface-2,var(--bg-secondary)); border-radius:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
             <div>
-                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary);">Totale Mercato Medio</div>
-                <div style="font-size:1.5rem; font-weight:900; color:var(--text);">€${total.toLocaleString('it-IT')}</div>
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary);">Totale Mercato Medio</div>
+                <div style="font-size:1.2rem; font-weight:900; color:var(--text);">€${total.toLocaleString('it-IT')}</div>
             </div>
             <div style="text-align:right;">
-                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary);">Durata Stimata</div>
-                <div style="font-size:1.1rem; font-weight:800; color:var(--text);">${timeline.workDays} giorni lav. (~${timeline.calendarDays} cal.)</div>
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary);">Durata Stimata</div>
+                <div style="font-size:0.95rem; font-weight:800; color:var(--text);">${timeline.workDays} gg lav. (~${timeline.calendarDays} cal.)</div>
             </div>
         </div>
     </div>`;
@@ -646,56 +646,56 @@ function _renderRischiConsigli(analysis) {
     };
 
     const risksHTML = risksToShow.map(r => `
-        <div style="padding:16px; background:var(--surface-2,var(--bg-secondary)); border-radius:10px; border-left:4px solid ${_riskBorder(r.severity)}; margin-bottom:12px;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                <span style="font-size:1.1rem;">${_riskIcon(r.severity)}</span>
-                <span style="font-size:0.9rem; font-weight:700; color:var(--text);">${r.title}</span>
+        <div style="padding:12px; background:var(--surface-2,var(--bg-secondary)); border-radius:10px; border-left:4px solid ${_riskBorder(r.severity)}; margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <span style="font-size:1rem;">${_riskIcon(r.severity)}</span>
+                <span style="font-size:0.85rem; font-weight:700; color:var(--text);">${r.title}</span>
             </div>
-            <p style="margin:0 0 8px; font-size:0.825rem; color:var(--text-secondary); line-height:1.5;">${r.description}</p>
-            ${r.action ? `<div style="display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:700; color:${_riskBorder(r.severity)};">
+            <p style="margin:0 0 6px; font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">${r.description}</p>
+            ${r.action ? `<div style="display:inline-flex; align-items:center; gap:6px; font-size:0.7rem; font-weight:700; color:${_riskBorder(r.severity)};">
                 <i class="fa-solid fa-arrow-right"></i> ${r.action}
             </div>` : ''}
         </div>
     `).join('');
 
     const adviceHTML = adviceToShow.map(a => `
-        <div style="padding:16px; background:rgba(0,117,255,.05); border-radius:10px; border:1px solid rgba(0,117,255,.15); margin-bottom:12px;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
-                <i class="fa-solid ${a.icon}" style="color:var(--info); font-size:1rem;"></i>
-                <span style="font-size:0.9rem; font-weight:700; color:var(--text);">${a.title}</span>
+        <div style="padding:12px; background:rgba(0,117,255,.05); border-radius:10px; border:1px solid rgba(0,117,255,.15); margin-bottom:10px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+                <i class="fa-solid ${a.icon}" style="color:var(--info); font-size:0.9rem;"></i>
+                <span style="font-size:0.85rem; font-weight:700; color:var(--text);">${a.title}</span>
             </div>
-            <p style="margin:0; font-size:0.825rem; color:var(--text-secondary); line-height:1.5;">${a.text}</p>
+            <p style="margin:0; font-size:0.75rem; color:var(--text-secondary); line-height:1.4;">${a.text}</p>
         </div>
     `).join('');
 
     // Raccomandazioni dal motore (contratto, verifiche)
     const recsHTML = recommendations.slice(0, 3).map(rec => `
-        <div style="display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--border);">
-            <span style="color:var(--success); font-size:1rem; margin-top:2px;">✅</span>
+        <div style="display:flex; align-items:flex-start; gap:8px; padding:8px 0; border-bottom:1px solid var(--border);">
+            <span style="color:var(--success); font-size:0.85rem; margin-top:2px;">✅</span>
             <div>
-                <div style="font-size:0.875rem; font-weight:700; color:var(--text);">${rec.title}</div>
-                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">${rec.description}</div>
+                <div style="font-size:0.8rem; font-weight:700; color:var(--text);">${rec.title}</div>
+                <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:1px;">${rec.description}</div>
             </div>
         </div>
     `).join('');
 
     return `
     <!-- ═══ BLOCCO 4: RISCHI + CONSIGLI ═══ -->
-    <div class="result-card" style="padding:28px;">
-        <h3 style="margin:0 0 20px; font-size:1.1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+    <div class="result-card" style="padding:20px;">
+        <h3 style="margin:0 0 16px; font-size:1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
             <i class="fa-solid fa-shield-halved" style="color:var(--danger);"></i>
             Rischi Identificati
         </h3>
         ${risksHTML}
 
-        <h3 style="margin:24px 0 16px; font-size:1.1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+        <h3 style="margin:20px 0 12px; font-size:1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
             <i class="fa-solid fa-lightbulb" style="color:var(--warning);"></i>
             Consigli Pratici
         </h3>
         ${adviceHTML}
 
         ${recommendations.length > 0 ? `
-        <h3 style="margin:24px 0 12px; font-size:1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+        <h3 style="margin:20px 0 10px; font-size:0.95rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
             <i class="fa-solid fa-list-check" style="color:var(--success);"></i>
             Checklist Prima di Firmare
         </h3>
