@@ -7,26 +7,37 @@
 :root {
     /* Palette Revolut - Pulizia e Contrasto */
     --bg: #ffffff;
+    --background: #ffffff;
+    --background-alt: #f6f8fa;
     --bg-secondary: #f6f8fa;
     --surface: #ffffff;
     --surface-2: #f1f4f7;
+    --surface-alt: #f1f4f7;
     --surface-hover: #ebf0f5;
+    --white: #ffffff;
     
     /* Colori Primari Fintech */
     --primary: #000000; /* Nero Revolut */
     --primary-hover: #1a1a1a;
     --primary-light: rgba(0, 0, 0, 0.05);
     --primary-dark: #000000;
+    --text-primary: #191c1f;
     
     /* Colori Semantici */
     --success: #00d95a; /* Verde brillante Revolut */
     --success-light: rgba(0, 217, 90, 0.1);
+    --emerald: #00d95a;
+    --emerald-light: rgba(0, 217, 90, 0.1);
     --warning: #ffb800;
     --warning-light: rgba(255, 184, 0, 0.1);
+    --amber: #ffb800;
     --danger: #ff4d4d;
     --danger-light: rgba(255, 77, 77, 0.1);
+    --ruby: #ff4d4d;
     --info: #0075ff;
     --info-light: rgba(0, 117, 255, 0.1);
+    --sapphire: #0075ff;
+    --sapphire-light: rgba(0, 117, 255, 0.1);
     
     /* Testo e Neutrali */
     --text: #191c1f;
@@ -137,13 +148,19 @@ body {
 /* ===== HEADER (REVOLUT NAV) ===== */
 .main-header {
     padding: 16px 0;
-    background: rgba(var(--bg), 0.8);
+    background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     position: sticky;
     top: 0;
     z-index: 100;
     border-bottom: 1px solid var(--border);
+}
+
+@media (prefers-color-scheme: dark) {
+    .main-header {
+        background: rgba(0, 0, 0, 0.8);
+    }
 }
 
 .nav-flex {

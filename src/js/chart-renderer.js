@@ -77,13 +77,19 @@ export function renderPriceComparisonChart(containerId, analysis) {
         }
     }
 
+    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const neutralBg = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
+    const neutralBorder = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
+    const midBg = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
+    const midBorder = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.2)';
+
     const bgColors = isQuickMode
-        ? ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 0.1)']
-        : ['rgba(255, 255, 255, 0.1)', 'rgba(255, 255, 255, 0.2)', 'rgba(255, 255, 255, 0.1)', userColor];
+        ? [neutralBg, midBg, neutralBg]
+        : [neutralBg, midBg, neutralBg, userColor];
 
     const borderColors = isQuickMode
-        ? ['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.5)', 'rgba(255, 255, 255, 0.3)']
-        : ['rgba(255, 255, 255, 0.3)', 'rgba(255, 255, 255, 0.5)', 'rgba(255, 255, 255, 0.3)', userBorder];
+        ? [neutralBorder, midBorder, neutralBorder]
+        : [neutralBorder, midBorder, neutralBorder, userBorder];
 
     const chart = new Chart(canvasCtx, {
         type: 'bar',
@@ -127,10 +133,10 @@ export function renderPriceComparisonChart(containerId, analysis) {
                             return '€' + value.toLocaleString('it-IT');
                         },
                         font: { size: 11, weight: '500' },
-                        color: '#94a3b8'
+                        color: isDark ? '#94a3b8' : '#64748b'
                     },
                     grid: {
-                        color: 'rgba(255, 255, 255, 0.05)',
+                        color: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
                         drawBorder: false
                     }
                 },
@@ -145,7 +151,8 @@ export function renderPriceComparisonChart(containerId, analysis) {
                             }
                         },
                         color: function(context) {
-                            return context.tick.label === 'TUO PREZZO' ? '#fff' : '#64748b';
+                            if (context.tick.label === 'TUO PREZZO') return isDark ? '#fff' : '#000';
+                            return isDark ? '#64748b' : '#475569';
                         }
                     },
                     grid: {

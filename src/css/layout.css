@@ -78,6 +78,12 @@
 .wizard-container {
     animation: slideUp var(--transition-slow);
     position: relative;
+    max-width: 650px;
+    margin: 0 auto;
+    padding: 40px;
+    background: var(--surface);
+    border-radius: var(--radius-2xl);
+    box-shadow: var(--shadow-xl);
 }
 
 .wizard-container::before {
@@ -85,12 +91,13 @@
     position: absolute;
     inset: 0;
     border-radius: var(--radius-2xl);
-    padding: 1px;
-    background: linear-gradient(135deg, rgba(0, 102, 255, 0.2), rgba(124, 58, 237, 0.2));
+    padding: 2px;
+    background: linear-gradient(135deg, var(--primary), var(--info));
     -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
     -webkit-mask-composite: xor;
     mask-composite: exclude;
     pointer-events: none;
+    opacity: 0.1;
 }
 
 /* ===== STEP CONTENT LAYOUT ===== */
@@ -313,13 +320,13 @@
 
 @media (max-width: 768px) {
     .app-container {
-        padding: 24px 0;
+        padding: 24px 16px;
     }
     
     .wizard-container {
-        padding: 28px;
-        margin: 24px;
-        border-radius: var(--radius-lg);
+        padding: 24px;
+        margin: 0 auto;
+        border-radius: var(--radius-xl);
     }
     
     .hero {
