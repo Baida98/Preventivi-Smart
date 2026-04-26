@@ -483,9 +483,20 @@ export const TRADES_DATABASE = [
     category: "strutture",
     description: "Chiusura crepe e ripristino intonaco ammalorato.",
     questions: [
-      { label: "Profondità crepa?", options: [
-        { text: "Superficiale", multiplier: 1.0 },
-        { text: "Strutturale", multiplier: 2.0 }
+      { label: "Profondita crepa?", options: [
+        { text: "Superficiale (< 5mm)", multiplier: 1.0 },
+        { text: "Media (5-15mm)", multiplier: 1.5 },
+        { text: "Strutturale (> 15mm)", multiplier: 2.0 }
+      ]},
+      { label: "Causa della crepa?", options: [
+        { text: "Assestamento normale", multiplier: 1.0 },
+        { text: "Infiltrazione d'acqua", multiplier: 1.4 },
+        { text: "Problemi strutturali", multiplier: 2.2 }
+      ]},
+      { label: "Lunghezza totale crepe?", options: [
+        { text: "Fino a 5 metri", multiplier: 1.0 },
+        { text: "5-15 metri", multiplier: 1.3 },
+        { text: "Oltre 15 metri", multiplier: 1.6 }
       ]}
     ]
   },
@@ -501,6 +512,21 @@ export const TRADES_DATABASE = [
     category: "strutture",
     description: "Applicazione intonaco e finitura liscia.",
     questions: [
+      { label: "Tipo di intonaco?", options: [
+        { text: "Intonaco civile standard", multiplier: 1.0 },
+        { text: "Intonaco termico/isolante", multiplier: 1.3 },
+        { text: "Intonaco deumidificante", multiplier: 1.5 }
+      ]},
+      { label: "Stato della base?", options: [
+        { text: "Buono, pochi difetti", multiplier: 1.0 },
+        { text: "Normale, imperfezioni medie", multiplier: 1.2 },
+        { text: "Cattivo, molti difetti", multiplier: 1.6 }
+      ]},
+      { label: "Tipo di finitura?", options: [
+        { text: "Liscia (standard)", multiplier: 1.0 },
+        { text: "Rustica/sabbiata", multiplier: 1.2 },
+        { text: "Decorativa/speciale", multiplier: 1.5 }
+      ]},
       { label: "Superficie totale?", options: [
         { text: "Fino a 20mq", multiplier: 1.2 },
         { text: "Oltre 20mq", multiplier: 1.0 }
@@ -559,6 +585,35 @@ export const TRADES_DATABASE = [
     category: "finiture",
     description: "Pittura pareti con due mani di idropittura.",
     questions: [
+      { label: "Tipo di intervento?", options: [
+        { text: "Interno", multiplier: 1.0 },
+        { text: "Esterno", multiplier: 1.4 }
+      ]},
+      { label: "Stato attuale delle pareti?", options: [
+        { text: "Buono (solo ritocchi)", multiplier: 0.8 },
+        { text: "Normale (piccole imperfezioni)", multiplier: 1.0 },
+        { text: "Cattivo (crepe, umidita, scrostature)", multiplier: 1.6 }
+      ]},
+      { label: "Presenza di muffa o umidita?", options: [
+        { text: "No", multiplier: 1.0 },
+        { text: "Si, leggera", multiplier: 1.3 },
+        { text: "Si, estesa", multiplier: 1.8 }
+      ]},
+      { label: "Mobili presenti da spostare?", options: [
+        { text: "No, pareti libere", multiplier: 1.0 },
+        { text: "Si, arredamento leggero", multiplier: 1.1 },
+        { text: "Si, arredamento pesante", multiplier: 1.3 }
+      ]},
+      { label: "Numero di mani di vernice?", options: [
+        { text: "Una mano", multiplier: 0.7 },
+        { text: "Due mani (standard)", multiplier: 1.0 },
+        { text: "Tre o piu mani", multiplier: 1.5 }
+      ]},
+      { label: "Tipo di vernice?", options: [
+        { text: "Idropittura standard", multiplier: 1.0 },
+        { text: "Vernice antimuffa", multiplier: 1.2 },
+        { text: "Vernice lavabile/premium", multiplier: 1.4 }
+      ]},
       { label: "Colore?", options: [
         { text: "Bianco", multiplier: 1.0 },
         { text: "Colorato", multiplier: 1.3 }
@@ -577,9 +632,30 @@ export const TRADES_DATABASE = [
     category: "finiture",
     description: "Posa in opera nuovo pavimento (solo manodopera).",
     questions: [
+      { label: "Tipo di pavimento?", options: [
+        { text: "Piastrelle ceramica/gres", multiplier: 1.0 },
+        { text: "Parquet/legno", multiplier: 1.3 },
+        { text: "Resina/cemento", multiplier: 1.5 }
+      ]},
+      { label: "Stato del sottofondo?", options: [
+        { text: "Regolare e pronto", multiplier: 1.0 },
+        { text: "Necessita preparazione", multiplier: 1.2 },
+        { text: "Necessita livellamento importante", multiplier: 1.8 }
+      ]},
       { label: "Formato piastrelle?", options: [
         { text: "Standard (30x30, 60x60)", multiplier: 1.0 },
-        { text: "Grandi formati", multiplier: 1.4 }
+        { text: "Grandi formati (80x80+)", multiplier: 1.4 },
+        { text: "Piccoli mosaici", multiplier: 1.6 }
+      ]},
+      { label: "Motivo di posa?", options: [
+        { text: "Diritto/standard", multiplier: 1.0 },
+        { text: "Diagonale", multiplier: 1.2 },
+        { text: "Spina di pesce/complesso", multiplier: 1.5 }
+      ]},
+      { label: "Presenza di ostacoli?", options: [
+        { text: "No, area libera", multiplier: 1.0 },
+        { text: "Si, pilastri/colonne", multiplier: 1.1 },
+        { text: "Si, molti ostacoli", multiplier: 1.3 }
       ]}
     ]
   },
