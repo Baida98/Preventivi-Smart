@@ -156,6 +156,40 @@
                     </div>
                 </div>
 
+                <div class="form-group">
+                    <label class="form-label">Qualità del Lavoro</label>
+                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 8px;">
+                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--surface); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="quality-option" data-quality="economica">
+                            <input type="radio" name="quality" value="economica" style="cursor: pointer;">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Economica</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">-15% dal mercato</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--surface); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="quality-option" data-quality="standard">
+                            <input type="radio" name="quality" value="standard" checked style="cursor: pointer;">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Standard</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Prezzo medio</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--surface); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="quality-option" data-quality="premium">
+                            <input type="radio" name="quality" value="premium" style="cursor: pointer;">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Premium</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">+35% dal mercato</div>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--surface); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="quality-option" data-quality="lusso">
+                            <input type="radio" name="quality" value="lusso" style="cursor: pointer;">
+                            <div>
+                                <div style="font-weight: 600; font-size: 0.9rem;">Lusso</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">+75% dal mercato</div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <div id="dynamicQuestions" class="dynamic-questions"></div>
 
                 <div class="form-group" id="receivedPriceGroup" style="display: none;">

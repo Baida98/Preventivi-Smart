@@ -203,6 +203,7 @@ async function runAnalysis() {
     const qty = parseFloat(getEl('quantityInput')?.value);
     const priceInput = getEl('receivedPriceInputStep3')?.value || getEl('receivedPriceInput')?.value;
     const price = parseFloat(priceInput) || 0;
+    const quality = document.querySelector('input[name="quality"]:checked')?.value || 'standard';
     
     if (!state.selectedTrade || !region || !qty) {
         uiFeedback.showFeedback('Compila tutti i campi obbligatori', 'error');
@@ -230,7 +231,7 @@ async function runAnalysis() {
             tradeName: trade ? trade.name : 'Lavoro',
             region: region,
             quantity: qty,
-            quality: 'standard', 
+            quality: quality, 
             receivedPrice: state.isQuickMode ? 0 : price,
             answers: state.questionAnswers
         });
