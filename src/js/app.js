@@ -1,6 +1,6 @@
 /*
- * Preventivi-Smart Pro v28.0 — Versione Migliorata (FIXED)
- * Correzioni bug + Miglioramenti grafici + Effetto semitrasparente login
+ * Preventivi-Smart Pro v29.0 — displayResults() REFACTOR
+ * 4 blocchi logici: Summary | Prezzi (grafico) | Breakdown | Rischi + Consigli
  */
 
 import database from './database.js';
@@ -13,7 +13,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 import { performProfessionalAnalysis } from './professional-analyzer.js';
 import { generateProfessionalPDF } from './professional-pdf.js';
-import chartRenderer from './chart-renderer.js';
+import { renderPriceComparisonChart } from './chart-renderer.js';
 import { loginUser, loginWithGoogle } from './auth.js';
 import QuoteManager from './quote-manager.js';
 import uiFeedback from './ui-feedback.js';
@@ -263,46 +263,577 @@ async function runAnalysis() {
     }, 800);
 }
 
+// ===== HELPERS INTERNI displayResults =====
+
+/**
+ * Restituisce colori semantici in base alla severity del motore
+ */
+function _severityStyle(severity) {
+    const map = {
+        critical: { card: 'danger',   badge: 'badge-danger',   icon: 'fa-circle-xmark',      color: 'var(--danger)'  },
+        high:     { card: 'warning',  badge: 'badge-warning',  icon: 'fa-triangle-exclamation', color: 'var(--warning)' },
+        medium:   { card: 'warning',  badge: 'badge-warning',  icon: 'fa-exclamation-circle', color: 'var(--warning)' },
+        low:      { card: 'success',  badge: 'badge-success',  icon: 'fa-check-circle',       color: 'var(--success)' },
+        info:     { card: 'info',     badge: 'badge-primary',  icon: 'fa-circle-info',        color: 'var(--info)'    }
+    };
+    return map[severity] || map.info;
+}
+
+/**
+ * Restituisce la classe CSS del result-card in base alla classificazione di congruità
+ */
+function _verdictCardClass(classification, isQuickMode) {
+    if (isQuickMode) return 'info';
+    const map = {
+        SOSPETTO_BASSO:  'danger',
+        MOLTO_BASSO:     'warning',
+        SOTTO_MERCATO:   'success',
+        NELLA_MEDIA:     'info',
+        SOPRA_MERCATO:   'warning',
+        MOLTO_ALTO:      'warning',
+        SOSPETTO_ALTO:   'danger'
+    };
+    return map[classification] || 'info';
+}
+
+/**
+ * Testo leggibile del verdetto
+ */
+function _verdictText(classification, diffPercent, isQuickMode) {
+    if (isQuickMode) return 'Stima di Mercato';
+    const abs = Math.abs(diffPercent).toFixed(1);
+    const map = {
+        SOSPETTO_BASSO:  `Prezzo Sospettosamente Basso (${abs}% sotto mercato)`,
+        MOLTO_BASSO:     `Prezzo Molto Basso (${abs}% sotto mercato)`,
+        SOTTO_MERCATO:   `Prezzo Conveniente (${abs}% sotto mercato)`,
+        NELLA_MEDIA:     `Prezzo Allineato al Mercato`,
+        SOPRA_MERCATO:   `Prezzo Sopra Mercato (+${abs}%)`,
+        MOLTO_ALTO:      `Prezzo Molto Alto (+${abs}%)`,
+        SOSPETTO_ALTO:   `Prezzo Sospettosamente Alto (+${abs}%)`
+    };
+    return map[classification] || 'Analisi Completata';
+}
+
+/**
+ * Icona emoji del verdetto
+ */
+function _verdictEmoji(classification, isQuickMode) {
+    if (isQuickMode) return '📊';
+    const map = {
+        SOSPETTO_BASSO:  '🚨',
+        MOLTO_BASSO:     '⚠️',
+        SOTTO_MERCATO:   '✅',
+        NELLA_MEDIA:     'ℹ️',
+        SOPRA_MERCATO:   '⚠️',
+        MOLTO_ALTO:      '🔴',
+        SOSPETTO_ALTO:   '🚨'
+    };
+    return map[classification] || 'ℹ️';
+}
+
+/**
+ * Score label testuale
+ */
+function _scoreLabel(score) {
+    if (score >= 80) return { label: 'Affidabile',  color: 'var(--success)' };
+    if (score >= 60) return { label: 'Accettabile', color: 'var(--warning)' };
+    if (score >= 40) return { label: 'Dubbio',      color: '#f97316' };
+    return                  { label: 'Rischioso',   color: 'var(--danger)'  };
+}
+
+// ===== BLOCCO 1 — SUMMARY =====
+function _renderSummary(analysis) {
+    const { congruityAnalysis, marketAnalysis, input, reliabilityScore, trade } = analysis;
+    const isQuick = state.isQuickMode;
+
+    const cardClass   = _verdictCardClass(congruityAnalysis.classification, isQuick);
+    const verdictText = _verdictText(congruityAnalysis.classification, congruityAnalysis.diffPercent, isQuick);
+    const emoji       = _verdictEmoji(congruityAnalysis.classification, isQuick);
+    const scoreInfo   = _scoreLabel(reliabilityScore);
+
+    // Barra comparativa prezzi (posizione del prezzo utente nel range min–max)
+    const pct = isQuick ? 50 : Math.max(0, Math.min(100,
+        ((input.receivedPrice - marketAnalysis.marketMin) /
+         (marketAnalysis.marketMax - marketAnalysis.marketMin)) * 100
+    ));
+
+    const diffAmountStr = isQuick ? '—' :
+        (congruityAnalysis.diffAmount > 0 ? `+€${congruityAnalysis.diffAmount.toLocaleString('it-IT')}` :
+         congruityAnalysis.diffAmount < 0 ? `-€${Math.abs(congruityAnalysis.diffAmount).toLocaleString('it-IT')}` : '€0');
+
+    return `
+    <!-- ═══ BLOCCO 1: SUMMARY ═══ -->
+    <div class="result-card ${cardClass}" style="padding: 28px;">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+            <span style="font-size:2rem;">${emoji}</span>
+            <div>
+                <h2 style="margin:0; font-size:1.35rem; font-weight:800; color:var(--text);">${verdictText}</h2>
+                <p style="margin:4px 0 0; font-size:0.875rem; color:var(--text-secondary);">
+                    ${trade.name} &bull; ${input.region} &bull; ${input.quantity} unità
+                </p>
+            </div>
+            <div style="margin-left:auto; text-align:center; min-width:80px;">
+                <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px;">Score</div>
+                <div style="font-size:2.2rem; font-weight:900; color:${scoreInfo.color}; line-height:1;">${reliabilityScore}</div>
+                <div style="font-size:0.75rem; font-weight:700; color:${scoreInfo.color};">${scoreInfo.label}</div>
+            </div>
+        </div>
+
+        <!-- Griglia KPI -->
+        <div class="results-grid" style="margin-top:0;">
+            ${!isQuick ? `
+            <div class="result-stat">
+                <div class="result-stat-label">Prezzo Ricevuto</div>
+                <div class="result-stat-value">€${input.receivedPrice.toLocaleString('it-IT')}</div>
+            </div>` : ''}
+            <div class="result-stat">
+                <div class="result-stat-label">Mercato Medio</div>
+                <div class="result-stat-value">€${marketAnalysis.marketMid.toLocaleString('it-IT')}</div>
+            </div>
+            <div class="result-stat">
+                <div class="result-stat-label">Range Mercato</div>
+                <div class="result-stat-value" style="font-size:1.2rem;">€${marketAnalysis.marketMin.toLocaleString('it-IT')} – €${marketAnalysis.marketMax.toLocaleString('it-IT')}</div>
+            </div>
+            ${!isQuick ? `
+            <div class="result-stat">
+                <div class="result-stat-label">Differenza vs Mercato</div>
+                <div class="result-stat-value" style="font-size:1.4rem; color:${congruityAnalysis.diffAmount > 0 ? 'var(--danger)' : congruityAnalysis.diffAmount < 0 ? 'var(--success)' : 'var(--text)'};">${diffAmountStr}</div>
+            </div>` : ''}
+        </div>
+
+        ${!isQuick ? `
+        <!-- Barra comparativa posizione prezzo -->
+        <div style="margin-top:20px;">
+            <div style="display:flex; justify-content:space-between; font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-bottom:6px;">
+                <span>Min €${marketAnalysis.marketMin.toLocaleString('it-IT')}</span>
+                <span style="font-weight:700; color:var(--text);">Tuo prezzo: €${input.receivedPrice.toLocaleString('it-IT')}</span>
+                <span>Max €${marketAnalysis.marketMax.toLocaleString('it-IT')}</span>
+            </div>
+            <div style="position:relative; height:12px; background:linear-gradient(90deg,#00d95a,#ffb800,#ff4d4d); border-radius:999px; overflow:visible;">
+                <div style="position:absolute; top:50%; left:${pct}%; transform:translate(-50%,-50%); width:18px; height:18px; background:#fff; border:3px solid #1f2937; border-radius:50%; box-shadow:0 2px 8px rgba(0,0,0,.3); z-index:2;"></div>
+            </div>
+            <div style="display:flex; justify-content:space-between; font-size:0.7rem; color:var(--text-secondary); margin-top:4px;">
+                <span>Conveniente</span>
+                <span>Nella media</span>
+                <span>Alto</span>
+            </div>
+        </div>
+
+        <!-- Raccomandazione motore -->
+        <div style="margin-top:16px; padding:12px 16px; background:var(--surface-2,var(--bg-secondary)); border-radius:10px; border-left:4px solid ${_severityStyle(congruityAnalysis.severity).color};">
+            <p style="margin:0; font-size:0.875rem; font-weight:600; color:var(--text);">
+                <i class="fa-solid fa-lightbulb" style="color:${_severityStyle(congruityAnalysis.severity).color}; margin-right:6px;"></i>
+                ${congruityAnalysis.recommendation}
+            </p>
+        </div>` : `
+        <div style="margin-top:16px; padding:12px 16px; background:var(--surface-2,var(--bg-secondary)); border-radius:10px; border-left:4px solid var(--info);">
+            <p style="margin:0; font-size:0.875rem; font-weight:600; color:var(--text);">
+                <i class="fa-solid fa-circle-info" style="color:var(--info); margin-right:6px;"></i>
+                Stima basata sui prezzari regionali 2025. Inserisci un prezzo ricevuto per l'analisi completa.
+            </p>
+        </div>`}
+    </div>`;
+}
+
+// ===== BLOCCO 2 — PREZZI (con grafico obbligatorio) =====
+function _renderPrezzi(analysis) {
+    const { marketAnalysis, input, hourlyBenchmark } = analysis;
+    const isQuick = state.isQuickMode;
+
+    return `
+    <!-- ═══ BLOCCO 2: PREZZI ═══ -->
+    <div class="result-card" style="padding:28px;">
+        <h3 style="margin:0 0 20px; font-size:1.1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-chart-bar" style="color:var(--info);"></i>
+            Confronto Prezzi di Mercato
+        </h3>
+
+        <!-- Grafico obbligatorio — container dedicato -->
+        <div id="priceChartInline" style="position:relative; height:260px; margin-bottom:24px;">
+            <canvas id="priceChartCanvas"></canvas>
+        </div>
+
+        <!-- Tabella valori numerici -->
+        <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); gap:12px; margin-bottom:${!isQuick ? '20px' : '0'};">
+            <div style="text-align:center; padding:12px; background:rgba(0,217,90,.08); border-radius:10px; border:1px solid rgba(0,217,90,.2);">
+                <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--success); margin-bottom:4px;">Minimo</div>
+                <div style="font-size:1.25rem; font-weight:800; color:var(--text);">€${marketAnalysis.marketMin.toLocaleString('it-IT')}</div>
+            </div>
+            <div style="text-align:center; padding:12px; background:rgba(0,117,255,.08); border-radius:10px; border:2px solid rgba(0,117,255,.3);">
+                <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--info); margin-bottom:4px;">Medio Mercato</div>
+                <div style="font-size:1.25rem; font-weight:800; color:var(--text);">€${marketAnalysis.marketMid.toLocaleString('it-IT')}</div>
+            </div>
+            <div style="text-align:center; padding:12px; background:rgba(255,77,77,.08); border-radius:10px; border:1px solid rgba(255,77,77,.2);">
+                <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--danger); margin-bottom:4px;">Massimo</div>
+                <div style="font-size:1.25rem; font-weight:800; color:var(--text);">€${marketAnalysis.marketMax.toLocaleString('it-IT')}</div>
+            </div>
+            ${!isQuick ? `
+            <div style="text-align:center; padding:12px; background:rgba(99,102,241,.1); border-radius:10px; border:2px solid rgba(99,102,241,.4);">
+                <div style="font-size:0.7rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6366f1; margin-bottom:4px;">Tuo Prezzo</div>
+                <div style="font-size:1.25rem; font-weight:800; color:var(--text);">€${input.receivedPrice.toLocaleString('it-IT')}</div>
+            </div>` : ''}
+        </div>
+
+        ${!isQuick ? `
+        <!-- Benchmark orario -->
+        <div style="padding:14px 16px; background:var(--surface-2,var(--bg-secondary)); border-radius:10px; display:flex; flex-wrap:wrap; gap:16px; align-items:center;">
+            <div style="flex:1; min-width:120px;">
+                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px;">€/ora Ricevuto</div>
+                <div style="font-size:1.4rem; font-weight:800; color:var(--text);">€${hourlyBenchmark.receivedHourly}/h</div>
+            </div>
+            <div style="flex:1; min-width:120px;">
+                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px;">€/ora Mercato</div>
+                <div style="font-size:1.4rem; font-weight:800; color:var(--text);">€${hourlyBenchmark.marketHourly}/h</div>
+            </div>
+            <div style="flex:1; min-width:120px;">
+                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px;">Ore Totali Stimate</div>
+                <div style="font-size:1.4rem; font-weight:800; color:var(--text);">${hourlyBenchmark.totalHours}h</div>
+            </div>
+            <div style="flex:1; min-width:120px;">
+                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary); margin-bottom:4px;">Giorni Lavorativi</div>
+                <div style="font-size:1.4rem; font-weight:800; color:var(--text);">${hourlyBenchmark.workDays}gg</div>
+            </div>
+        </div>` : ''}
+    </div>`;
+}
+
+// ===== BLOCCO 3 — BREAKDOWN COSTI =====
+function _renderBreakdown(analysis) {
+    const { breakdown, timeline, marketAnalysis } = analysis;
+    const total = marketAnalysis.marketMid;
+
+    // Barre percentuali
+    const barStyle = (pct, color) =>
+        `style="height:8px; width:${pct}%; background:${color}; border-radius:999px; transition:width .6s ease;"`;
+
+    return `
+    <!-- ═══ BLOCCO 3: BREAKDOWN COSTI ═══ -->
+    <div class="result-card" style="padding:28px;">
+        <h3 style="margin:0 0 20px; font-size:1.1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-chart-pie" style="color:#8b5cf6;"></i>
+            Composizione del Costo (su €${total.toLocaleString('it-IT')} medio mercato)
+        </h3>
+
+        <!-- Voce: Manodopera -->
+        <div style="margin-bottom:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+                <span style="font-size:0.9rem; font-weight:700; color:var(--text);">
+                    <i class="fa-solid fa-person-digging" style="color:#6366f1; margin-right:6px;"></i>Manodopera
+                </span>
+                <span style="font-size:1rem; font-weight:800; color:var(--text);">
+                    €${breakdown.labor.toLocaleString('it-IT')}
+                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-left:4px;">${breakdown.laborPercentage}%</span>
+                </span>
+            </div>
+            <div style="background:var(--surface-2,#f1f4f7); border-radius:999px; height:8px; overflow:hidden;">
+                <div ${barStyle(breakdown.laborPercentage, '#6366f1')}></div>
+            </div>
+            <p style="margin:4px 0 0; font-size:0.75rem; color:var(--text-secondary);">
+                Costo orario stimato: €${breakdown.laborPerHour}/h &bull; ${timeline.totalHours}h totali
+            </p>
+        </div>
+
+        <!-- Voce: Materiali -->
+        <div style="margin-bottom:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+                <span style="font-size:0.9rem; font-weight:700; color:var(--text);">
+                    <i class="fa-solid fa-box" style="color:#f59e0b; margin-right:6px;"></i>Materiali
+                </span>
+                <span style="font-size:1rem; font-weight:800; color:var(--text);">
+                    €${breakdown.materials.toLocaleString('it-IT')}
+                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-left:4px;">${breakdown.materialsPercentage}%</span>
+                </span>
+            </div>
+            <div style="background:var(--surface-2,#f1f4f7); border-radius:999px; height:8px; overflow:hidden;">
+                <div ${barStyle(breakdown.materialsPercentage, '#f59e0b')}></div>
+            </div>
+        </div>
+
+        <!-- Voce: Oneri & Gestione (margine implicito) -->
+        <div style="margin-bottom:18px;">
+            <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
+                <span style="font-size:0.9rem; font-weight:700; color:var(--text);">
+                    <i class="fa-solid fa-briefcase" style="color:#10b981; margin-right:6px;"></i>Oneri & Margine Implicito
+                </span>
+                <span style="font-size:1rem; font-weight:800; color:var(--text);">
+                    €${breakdown.overhead.toLocaleString('it-IT')}
+                    <span style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-left:4px;">${breakdown.overheadPercentage}%</span>
+                </span>
+            </div>
+            <div style="background:var(--surface-2,#f1f4f7); border-radius:999px; height:8px; overflow:hidden;">
+                <div ${barStyle(breakdown.overheadPercentage, '#10b981')}></div>
+            </div>
+            <p style="margin:4px 0 0; font-size:0.75rem; color:var(--text-secondary);">
+                Include spese generali, assicurazione, utile d'impresa
+            </p>
+        </div>
+
+        <!-- Totale recap -->
+        <div style="margin-top:20px; padding:14px 16px; background:var(--surface-2,var(--bg-secondary)); border-radius:10px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+            <div>
+                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary);">Totale Mercato Medio</div>
+                <div style="font-size:1.5rem; font-weight:900; color:var(--text);">€${total.toLocaleString('it-IT')}</div>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--text-secondary);">Durata Stimata</div>
+                <div style="font-size:1.1rem; font-weight:800; color:var(--text);">${timeline.workDays} giorni lav. (~${timeline.calendarDays} cal.)</div>
+            </div>
+        </div>
+    </div>`;
+}
+
+// ===== BLOCCO 4 — RISCHI + CONSIGLI =====
+function _renderRischiConsigli(analysis) {
+    const { riskAssessment, professionalAdvice, congruityAnalysis } = analysis;
+    const { risks, warnings, recommendations } = riskAssessment;
+
+    // Garantiamo minimo 3 voci tra rischi + avvisi
+    const allRisks = [...risks, ...warnings];
+
+    // Se il motore non ha prodotto abbastanza rischi contestuali, aggiungiamo quelli di default
+    const defaultRisks = [
+        {
+            title: 'Contratto Scritto Obbligatorio',
+            description: 'Per importi superiori a €500 è sempre obbligatorio un contratto scritto che specifichi materiali, tempistiche e modalità di pagamento.',
+            action: 'Richiedi il contratto prima di versare qualsiasi anticipo',
+            severity: 'high'
+        },
+        {
+            title: 'Verifica Iscrizione Camera di Commercio',
+            description: 'L\'artigiano deve essere iscritto alla Camera di Commercio e in regola con i contributi. Richiedere visura camerale.',
+            action: 'Controlla la visura su impresainungiorno.gov.it',
+            severity: 'medium'
+        },
+        {
+            title: 'Assicurazione RC Professionale',
+            description: 'In caso di danni durante i lavori, l\'artigiano deve avere una polizza RC professionale attiva.',
+            action: 'Richiedi copia della polizza assicurativa',
+            severity: 'medium'
+        },
+        {
+            title: 'Pagamento a Stato Avanzamento Lavori',
+            description: 'Non pagare mai il 100% in anticipo. La prassi corretta è 30% all\'inizio, 40% a metà lavori, 30% al collaudo finale.',
+            action: 'Inserisci le scadenze di pagamento nel contratto',
+            severity: 'medium'
+        },
+        {
+            title: 'Smaltimento Materiali di Scarto',
+            description: 'Verificare che il preventivo includa lo smaltimento dei materiali di risulta. Se non indicato, è un costo nascosto potenziale.',
+            action: 'Chiedi esplicitamente chi gestisce lo smaltimento',
+            severity: 'low'
+        }
+    ];
+
+    // Riempiamo fino a 3 rischi minimi, massimo 5
+    const risksToShow = allRisks.slice(0, 5);
+    while (risksToShow.length < 3) {
+        const next = defaultRisks.find(d => !risksToShow.some(r => r.title === d.title));
+        if (!next) break;
+        risksToShow.push(next);
+    }
+
+    // Consigli: sempre 2–3 azioni pratiche
+    const adviceToShow = professionalAdvice.slice(0, 3);
+
+    const _riskIcon = (severity) => {
+        const icons = { critical: '🚨', high: '⚠️', medium: '⚡', low: '💡' };
+        return icons[severity] || '⚡';
+    };
+
+    const _riskBorder = (severity) => {
+        const colors = { critical: 'var(--danger)', high: 'var(--warning)', medium: '#f59e0b', low: 'var(--success)' };
+        return colors[severity] || '#f59e0b';
+    };
+
+    const risksHTML = risksToShow.map(r => `
+        <div style="padding:16px; background:var(--surface-2,var(--bg-secondary)); border-radius:10px; border-left:4px solid ${_riskBorder(r.severity)}; margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                <span style="font-size:1.1rem;">${_riskIcon(r.severity)}</span>
+                <span style="font-size:0.9rem; font-weight:700; color:var(--text);">${r.title}</span>
+            </div>
+            <p style="margin:0 0 8px; font-size:0.825rem; color:var(--text-secondary); line-height:1.5;">${r.description}</p>
+            ${r.action ? `<div style="display:inline-flex; align-items:center; gap:6px; font-size:0.75rem; font-weight:700; color:${_riskBorder(r.severity)};">
+                <i class="fa-solid fa-arrow-right"></i> ${r.action}
+            </div>` : ''}
+        </div>
+    `).join('');
+
+    const adviceHTML = adviceToShow.map(a => `
+        <div style="padding:16px; background:rgba(0,117,255,.05); border-radius:10px; border:1px solid rgba(0,117,255,.15); margin-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                <i class="fa-solid ${a.icon}" style="color:var(--info); font-size:1rem;"></i>
+                <span style="font-size:0.9rem; font-weight:700; color:var(--text);">${a.title}</span>
+            </div>
+            <p style="margin:0; font-size:0.825rem; color:var(--text-secondary); line-height:1.5;">${a.text}</p>
+        </div>
+    `).join('');
+
+    // Raccomandazioni dal motore (contratto, verifiche)
+    const recsHTML = recommendations.slice(0, 3).map(rec => `
+        <div style="display:flex; align-items:flex-start; gap:10px; padding:10px 0; border-bottom:1px solid var(--border);">
+            <span style="color:var(--success); font-size:1rem; margin-top:2px;">✅</span>
+            <div>
+                <div style="font-size:0.875rem; font-weight:700; color:var(--text);">${rec.title}</div>
+                <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:2px;">${rec.description}</div>
+            </div>
+        </div>
+    `).join('');
+
+    return `
+    <!-- ═══ BLOCCO 4: RISCHI + CONSIGLI ═══ -->
+    <div class="result-card" style="padding:28px;">
+        <h3 style="margin:0 0 20px; font-size:1.1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-shield-halved" style="color:var(--danger);"></i>
+            Rischi Identificati
+        </h3>
+        ${risksHTML}
+
+        <h3 style="margin:24px 0 16px; font-size:1.1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-lightbulb" style="color:var(--warning);"></i>
+            Consigli Pratici
+        </h3>
+        ${adviceHTML}
+
+        ${recommendations.length > 0 ? `
+        <h3 style="margin:24px 0 12px; font-size:1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
+            <i class="fa-solid fa-list-check" style="color:var(--success);"></i>
+            Checklist Prima di Firmare
+        </h3>
+        <div style="padding:0 4px;">
+            ${recsHTML}
+        </div>` : ''}
+    </div>`;
+}
+
+// ===== displayResults() — FUNZIONE PRINCIPALE RISTRUTTURATA =====
 function displayResults(analysis) {
     const results = getEl('analysisResults');
     const loading = getEl('analysisLoading');
-    const nav = getEl('resultsNav');
-    
+    const nav     = getEl('resultsNav');
+    const chartsSection = getEl('analysisCharts'); // sezione chart legacy (la nascondiamo)
+
     if (loading) loading.classList.add('hidden');
-    if (results) {
-        results.classList.remove('hidden');
-        let verdict = '';
-        let verdictClass = '';
-        
-        const diff = analysis.congruityAnalysis.diffPercent;
-        if (state.isQuickMode) {
-            verdict = `📊 Stima di Mercato`;
-            verdictClass = 'info';
-        } else {
-            if (diff < -10) { 
-                verdict = `✅ Prezzo Conveniente (${Math.abs(diff).toFixed(1)}% sotto mercato)`;
-                verdictClass = 'success';
-            } else if (diff > 10) {
-                verdict = `⚠️ Prezzo Alto (${diff.toFixed(1)}% sopra mercato)`;
-                verdictClass = 'warning';
+    // Nascondi il blocco chart legacy (ora il grafico è inline nel blocco 2)
+    if (chartsSection) chartsSection.classList.add('hidden');
+
+    if (!results) {
+        console.error('[displayResults] Contenitore #analysisResults non trovato');
+        return;
+    }
+
+    // ── Costruzione HTML dei 4 blocchi ──
+    results.innerHTML =
+        _renderSummary(analysis) +
+        _renderPrezzi(analysis) +
+        _renderBreakdown(analysis) +
+        _renderRischiConsigli(analysis);
+
+    results.classList.remove('hidden');
+
+    // ── BLOCCO 2: Rendering grafico obbligatorio ──
+    // Il canvas è appena stato inserito nel DOM; usiamo requestAnimationFrame
+    // per garantire che il browser abbia completato il layout prima di disegnare.
+    requestAnimationFrame(() => {
+        const canvas = document.getElementById('priceChartCanvas');
+        if (!canvas) {
+            console.error('[displayResults] CRITICO: canvas #priceChartCanvas non trovato — grafico non renderizzato');
+            return;
+        }
+
+        // Distruggi eventuale istanza precedente
+        const existing = Chart.getChart(canvas);
+        if (existing) existing.destroy();
+
+        const { marketAnalysis, input } = analysis;
+        const isQuick = state.isQuickMode;
+
+        const labels = isQuick
+            ? ['Mercato Min', 'Mercato Medio', 'Mercato Max']
+            : ['Mercato Min', 'Mercato Medio', 'Mercato Max', 'TUO PREZZO'];
+
+        const dataValues = isQuick
+            ? [marketAnalysis.marketMin, marketAnalysis.marketMid, marketAnalysis.marketMax]
+            : [marketAnalysis.marketMin, marketAnalysis.marketMid, marketAnalysis.marketMax, input.receivedPrice];
+
+        // Colore dinamico per il prezzo utente
+        let userColor = 'rgba(99,102,241,.85)';
+        let userBorder = 'rgb(99,102,241)';
+        if (!isQuick && input.receivedPrice > 0) {
+            if (input.receivedPrice > marketAnalysis.marketMax) {
+                userColor = 'rgba(239,68,68,.85)'; userBorder = 'rgb(239,68,68)';
+            } else if (input.receivedPrice < marketAnalysis.marketMin) {
+                userColor = 'rgba(0,217,90,.85)'; userBorder = 'rgb(0,217,90)';
             } else {
-                verdict = `ℹ️ Prezzo Allineato al Mercato`;
-                verdictClass = 'info';
+                userColor = 'rgba(245,158,11,.85)'; userBorder = 'rgb(245,158,11)';
             }
         }
 
-        results.innerHTML = `
-            <div class="result-card ${verdictClass}">
-                <h2 class="result-card-title">${verdict}</h2>
-                <p style="color: var(--text-secondary); margin-top: 8px;">
-                    Prezzo ricevuto: <strong>€${analysis.input.receivedPrice.toLocaleString('it-IT')}</strong><br>
-                    Prezzo medio mercato: <strong>€${analysis.marketAnalysis.marketMid.toLocaleString('it-IT')}</strong>
-                </p>
-            </div>
-        `;
+        const bgColors = isQuick
+            ? ['rgba(0,217,90,.25)', 'rgba(0,117,255,.35)', 'rgba(255,77,77,.25)']
+            : ['rgba(0,217,90,.25)', 'rgba(0,117,255,.35)', 'rgba(255,77,77,.25)', userColor];
 
-        if (nav) nav.classList.remove('hidden');
-    }
+        const borderColors = isQuick
+            ? ['rgba(0,217,90,.7)', 'rgba(0,117,255,.9)', 'rgba(255,77,77,.7)']
+            : ['rgba(0,217,90,.7)', 'rgba(0,117,255,.9)', 'rgba(255,77,77,.7)', userBorder];
+
+        const borderWidths = isQuick ? [1, 2, 1] : [1, 2, 1, 3];
+
+        new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'Prezzo (€)',
+                    data: dataValues,
+                    backgroundColor: bgColors,
+                    borderColor: borderColors,
+                    borderWidth: borderWidths,
+                    borderRadius: 8,
+                    hoverBackgroundColor: bgColors.map(c => c.replace(/[\d.]+\)$/, '0.95)'))
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(15,23,42,.95)',
+                        padding: 12,
+                        titleFont: { size: 13, weight: 'bold', family: 'Inter' },
+                        bodyFont: { size: 12, family: 'Inter' },
+                        borderColor: 'rgba(255,255,255,.1)',
+                        borderWidth: 1,
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: ctx => ` €${ctx.parsed.y.toLocaleString('it-IT', { minimumFractionDigits: 2 })}`
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: v => '€' + v.toLocaleString('it-IT'),
+                            font: { size: 11, weight: '500' },
+                            color: '#94a3b8'
+                        },
+                        grid: { color: 'rgba(255,255,255,.05)', drawBorder: false }
+                    },
+                    x: {
+                        ticks: {
+                            font: { size: 11, weight: '600' },
+                            color: ctx => ctx.tick.label === 'TUO PREZZO' ? '#fff' : '#64748b'
+                        },
+                        grid: { display: false, drawBorder: false }
+                    }
+                },
+                animation: { duration: 1200, easing: 'easeOutQuart' }
+            }
+        });
+    });
+
+    if (nav) nav.classList.remove('hidden');
 }
 
 function loadSavedQuotes() {
