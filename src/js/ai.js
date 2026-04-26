@@ -1,7 +1,7 @@
 import { doc, getDoc, setDoc, updateDoc } 
 from "https://www.gstatic.com/firebasejs/12.12.0/firebase-firestore.js";
 
-import { db } from "../firebase.js";
+import { db } from "./firebase.js";
 
 /* ---------------- PREDICT ---------------- */
 export async function aiPredict(tipo, citta) {
