@@ -434,4 +434,64 @@ document.addEventListener('DOMContentLoaded', () => {
     getEl('receivedPriceGroup')?.style.display = state.isQuickMode ? 'none' : 'block';
 });
 
+// Esporta funzioni globali per onclick handlers
+window.selectMacro = window.selectMacro || ((macroId) => {
+    state.selectedMacro = macroId;
+    const macro = database.MACRO_CATEGORIES.find(m => m.id === macroId);
+    
+    getEl('step1-title').textContent = macro.name;
+    getEl('step1-subtitle').textContent = "Seleziona il tipo di intervento";
+    
+    const container = getEl('macro-grid');
+    if (!container) return;
+    
+    const subs = database.SUB_CATEGORIES.filter(s => s.parent === macroId);
+    if (subs.length === 0) {
+        container.innerHTML = `<p class="text-center" style="grid-column: 1/-1; padding: 40px; color: var(--muted);">Nessuna sottocategoria trovata.</p>`;
+    } else {
+        container.innerHTML = subs.map((sub, idx) => `
+            <div class="trade-card" onclick="window.selectSub('${sub.id}')">
+                <div class="trade-card-icon" style="background: ${sub.color};">
+                    <i class="fa-solid ${sub.icon}"></i>
+                </div>
+                <h3 class="trade-card-title">${sub.name}</h3>
+            </div>
+        `).join('');
+    }
+    
+    getEl('homeFromStep1Btn').classList.remove('hidden');
+});
+
+window.selectSub = window.selectSub || ((subId) => {
+    state.selectedSub = subId;
+    
+    getEl('step1-title').textContent = "Intervento Specifico";
+    getEl('step1-subtitle').textContent = "Qual è il lavoro da svolgere?";
+    
+    const container = getEl('macro-grid');
+    if (!container) return;
+    
+    const trades = database.TRADES_DATABASE.filter(t => t.subId === subId);
+    container.innerHTML = trades.map((trade, idx) => `
+        <div class="trade-card" onclick="window.selectTrade('${trade.id}')">
+            <div class="trade-card-icon" style="background: ${trade.color};">
+                <i class="fa-solid ${trade.icon}"></i>
+            </div>
+            <h3 class="trade-card-title">${trade.name}</h3>
+        </div>
+    `).join('');
+});
+
+window.selectTrade = window.selectTrade || ((tradeId) => {
+    state.selectedTrade = tradeId;
+    const trade = database.TRADES_DATABASE.find(t => t.id === tradeId);
+    
+    getEl('unitLabel').textContent = trade.unit;
+    getEl('quantityInput').placeholder = `Es: 10 ${trade.unit}`;
+    getEl('tradeNameDisplay').textContent = trade.name;
+    
+    renderQuestions(trade);
+    goToStep(2);
+});
+
 export { renderMacroCategories };
