@@ -52,7 +52,7 @@ function updateUserUI() {
     if (state.user) {
         userNav.innerHTML = `
             <div class="user-profile-nav" style="display: flex; align-items: center; gap: 12px;">
-                <span class="user-name" style="font-weight: 600; font-size: 0.875rem; color: var(--text);">${state.user.displayName || state.user.email.split('@')[0]}</span>
+                <span class="user-name" style="font-weight: 700; font-size: 0.875rem; color: var(--text-primary);">${state.user.displayName || state.user.email.split('@')[0]}</span>
                 <button class="btn btn-secondary btn-sm" id="logoutBtn">Esci</button>
             </div>
         `;

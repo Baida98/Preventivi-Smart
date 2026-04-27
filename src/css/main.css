@@ -5,44 +5,44 @@
 
 /* ===== DESIGN TOKENS UNIFICATI (REVOLUT STYLE) ===== */
 :root {
-    /* Palette Revolut - Pulizia e Contrasto */
-    --bg: #ffffff;
-    --background: #ffffff;
-    --background-alt: #f6f8fa;
-    --bg-secondary: #f6f8fa;
+    /* Palette Originale - Contrasto Elevato */
+    --bg: #f8fafc;
+    --background: #f8fafc;
+    --background-alt: #ffffff;
+    --bg-secondary: #ffffff;
     --surface: #ffffff;
-    --surface-2: #f1f4f7;
-    --surface-alt: #f1f4f7;
-    --surface-hover: #ebf0f5;
+    --surface-2: #f1f5f9;
+    --surface-alt: #f1f5f9;
+    --surface-hover: #e2e8f0;
     --white: #ffffff;
     
-    /* Colori Primari Fintech */
-    --primary: #000000; /* Nero Revolut */
-    --primary-hover: #1a1a1a;
-    --primary-light: rgba(0, 0, 0, 0.05);
-    --primary-dark: #000000;
-    --text-primary: #191c1f;
+    /* Colori Primari - Identità Chiara */
+    --primary: #2563eb; /* Blu Professionale */
+    --primary-hover: #1d4ed8;
+    --primary-light: rgba(37, 99, 235, 0.1);
+    --primary-dark: #1e40af;
+    --text-primary: #0f172a;
     
     /* Colori Semantici */
-    --success: #00d95a; /* Verde brillante Revolut */
-    --success-light: rgba(0, 217, 90, 0.1);
-    --emerald: #00d95a;
-    --emerald-light: rgba(0, 217, 90, 0.1);
-    --warning: #ffb800;
-    --warning-light: rgba(255, 184, 0, 0.1);
-    --amber: #ffb800;
-    --danger: #ff4d4d;
-    --danger-light: rgba(255, 77, 77, 0.1);
-    --ruby: #ff4d4d;
-    --info: #0075ff;
-    --info-light: rgba(0, 117, 255, 0.1);
-    --sapphire: #0075ff;
-    --sapphire-light: rgba(0, 117, 255, 0.1);
+    --success: #10b981;
+    --success-light: rgba(16, 185, 129, 0.1);
+    --emerald: #10b981;
+    --emerald-light: rgba(16, 185, 129, 0.1);
+    --warning: #f59e0b;
+    --warning-light: rgba(245, 158, 11, 0.1);
+    --amber: #f59e0b;
+    --danger: #ef4444;
+    --danger-light: rgba(239, 68, 68, 0.1);
+    --ruby: #ef4444;
+    --info: #3b82f6;
+    --info-light: rgba(59, 130, 246, 0.1);
+    --sapphire: #3b82f6;
+    --sapphire-light: rgba(59, 130, 246, 0.1);
     
-    /* Testo e Neutrali */
-    --text: #191c1f;
-    --text-secondary: #5e676e;
-    --text-tertiary: #8a949d;
+    /* Testo e Neutrali - Leggibilità Massima */
+    --text: #0f172a;
+    --text-secondary: #475569;
+    --text-tertiary: #64748b;
     --muted: #8a949d;
     --gray-50: #f9fafb;
     --gray-100: #f3f4f6;
@@ -405,9 +405,10 @@ body {
 }
 
 .trade-card-title {
-    font-weight: 700;
+    font-weight: 800;
     font-size: 1.1rem;
     flex-grow: 1;
+    color: var(--text-primary);
 }
 
 .trade-card-desc {
