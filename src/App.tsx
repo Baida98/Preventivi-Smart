@@ -1,0 +1,99 @@
+import { useEffect, useRef, useState } from "react";
+import { Toaster } from "@/components/ui/sonner";
+import Header from "./components/Header";
+import Hero from "./components/Hero";
+import HowItWorks from "./components/HowItWorks";
+import Categories from "./components/Categories";
+import Trust from "./components/Trust";
+import Examples from "./components/Examples";
+import FAQ from "./components/FAQ";
+import Footer from "./components/Footer";
+import Wizard, { type Mode } from "./components/Wizard";
+import Archive from "./components/Archive";
+import { deleteQuote, loadArchive, type SavedQuote } from "./lib/storage";
+
+export default function App() {
+  const [mode, setMode] = useState<Mode | null>(null);
+  const [archiveOpen, setArchiveOpen] = useState(false);
+  const [archive, setArchive] = useState<SavedQuote[]>([]);
+  const [presetCategoryId, setPresetCategoryId] = useState<string | null>(null);
+  const wizardRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    setArchive(loadArchive());
+  }, []);
+
+  function refreshArchive() {
+    setArchive(loadArchive());
+  }
+
+  function startMode(m: Mode, categoryId: string | null = null) {
+    setPresetCategoryId(categoryId);
+    setMode(m);
+    setTimeout(() => {
+      wizardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 60);
+  }
+
+  function handleDelete(id: string) {
+    deleteQuote(id);
+    refreshArchive();
+  }
+
+  return (
+    <div className="min-h-screen text-foreground">
+      <Header
+        archiveCount={archive.length}
+        onOpenArchive={() => setArchiveOpen(true)}
+        onHome={() => {
+          setMode(null);
+          setPresetCategoryId(null);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }}
+      />
+
+      {mode === null && (
+        <>
+          <Hero
+            onAnalizza={() => startMode("analizza")}
+            onStima={() => startMode("stima")}
+          />
+          <HowItWorks />
+          <Categories
+            onPickCategory={(id) => startMode("analizza", id)}
+          />
+          <Trust />
+          <Examples />
+          <FAQ />
+        </>
+      )}
+
+      {mode !== null && (
+        <div ref={wizardRef}>
+          <Wizard
+            key={`${mode}-${presetCategoryId ?? "none"}`}
+            mode={mode}
+            initialCategoryId={presetCategoryId}
+            onClose={() => {
+              setMode(null);
+              setPresetCategoryId(null);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            onSaved={refreshArchive}
+          />
+        </div>
+      )}
+
+      <Footer />
+
+      <Archive
+        open={archiveOpen}
+        onOpenChange={setArchiveOpen}
+        quotes={archive}
+        onDelete={handleDelete}
+      />
+
+      <Toaster richColors theme="dark" position="bottom-right" />
+    </div>
+  );
+}
