@@ -3,6 +3,7 @@
  * REGOLA 4: ZERO AMBIGUITÀ NELL'INTERFACCIA
  * Feedback certi e azioni chiare
  */
+import { escapeHtml } from './escape-html.js';
 
 /**
  * Mostra modal di conferma per eliminazione
@@ -47,7 +48,7 @@ export function showDeleteConfirmation(message, onConfirm, onCancel) {
                 color: var(--muted);
                 margin-bottom: 24px;
                 line-height: 1.6;
-            ">${message}</p>
+            ">${escapeHtml(message)}</p>
             
             <div style="
                 display: flex;
@@ -117,7 +118,7 @@ export function showFeedback(message, type = 'info', duration = 3000) {
     `;
 
     const icon = getIconByType(type);
-    toast.innerHTML = `<i class="fa-solid ${icon}"></i> ${message}`;
+    toast.innerHTML = `<i class="fa-solid ${icon}"></i> ${escapeHtml(message)}`;
 
     document.body.appendChild(toast);
 

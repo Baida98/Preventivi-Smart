@@ -1,15 +1,71 @@
 /**
  * Chart Renderer per Preventivi-Smart Pro
  * Visualizzazione grafica dei risultati di analisi
+ *
+ * v31.1 — VISIBILITA' MASSIMA:
+ *  - Font assi piu grandi (11 -> 13px) e bold (600 -> 700)
+ *  - Valori in € MOSTRATI SOPRA OGNI BARRA (no piu lettura dall'asse)
+ *  - Barre neutre con opacita raddoppiata (0.18 -> 0.35)
+ *  - "TUO PREZZO": bordo 4px, label 14px, evidenziatore colorato sopra
+ *  - Tooltip ingranditi con titolo a colori semantici
+ *  - Plugin custom afterDatasetsDraw per labels sopra le barre
  */
+
+const C = {
+    text:        '#f8fafc',
+    textMuted:   '#e2e8f0',
+    grid:        'rgba(148, 163, 184, 0.18)',
+    tooltipBg:   'rgba(15, 23, 42, 0.98)',
+    tooltipBd:   'rgba(148, 163, 184, 0.4)',
+    neutralBg:   'rgba(148, 163, 184, 0.35)',
+    neutralBd:   'rgba(226, 232, 240, 0.7)',
+    midBg:       'rgba(96, 165, 250, 0.55)',
+    midBd:       'rgba(147, 197, 253, 1)',
+};
+
+/**
+ * Plugin Chart.js: disegna il valore in € sopra ogni barra
+ */
+const valueOnTopPlugin = {
+    id: 'valueOnTop',
+    afterDatasetsDraw(chart) {
+        const { ctx, data } = chart;
+        const dataset = data.datasets[0];
+        if (!dataset) return;
+
+        const meta = chart.getDatasetMeta(0);
+        if (!meta || !meta.data) return;
+
+        ctx.save();
+        ctx.font = '700 12px Inter, system-ui, -apple-system, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+
+        meta.data.forEach((bar, idx) => {
+            const value = dataset.data[idx];
+            const label = data.labels[idx];
+            const formatted = '€' + Number(value).toLocaleString('it-IT');
+
+            // TUO PREZZO: usa colore brand della barra; gli altri: bianco soft
+            const isUser = label === 'TUO PREZZO';
+            ctx.fillStyle = isUser ? '#ffffff' : '#e2e8f0';
+            ctx.font = isUser
+                ? '800 14px Inter, system-ui, sans-serif'
+                : '700 12px Inter, system-ui, sans-serif';
+
+            const x = bar.x;
+            const y = bar.y - 8;
+            ctx.fillText(formatted, x, y);
+        });
+
+        ctx.restore();
+    }
+};
 
 /**
  * Renderizza il grafico di confronto prezzi
- * @param {string} containerId - ID del contenitore DOM
- * @param {Object} analysis - Oggetto analisi dal motore
  */
 export function renderPriceComparisonChart(containerId, analysis) {
-    // STEP 2: VALIDAZIONE DATI
     if (!analysis || !analysis.marketAnalysis) {
         console.error('[ChartRenderer] Dati analisi mancanti');
         return;
@@ -18,9 +74,8 @@ export function renderPriceComparisonChart(containerId, analysis) {
     const { marketMin, marketMid, marketMax } = analysis.marketAnalysis;
     const userPrice = analysis.input ? analysis.input.receivedPrice : 0;
 
-    // Se mancano i valori fondamentali, NON renderizzare
     if (marketMin === undefined || marketMid === undefined || marketMax === undefined) {
-        console.error('[ChartRenderer] Dati di mercato incompleti (min/mid/max)', { marketMin, marketMid, marketMax });
+        console.error('[ChartRenderer] Dati di mercato incompleti', { marketMin, marketMid, marketMax });
         return;
     }
 
@@ -30,7 +85,6 @@ export function renderPriceComparisonChart(containerId, analysis) {
         return;
     }
 
-    // STEP 3: UI RULE - Assicura visibilità (rimuove classi hidden o stili statici limitanti)
     container.classList.remove('hidden');
     container.style.display = 'block';
     container.style.visibility = 'visible';
@@ -42,86 +96,86 @@ export function renderPriceComparisonChart(containerId, analysis) {
         canvas = container.querySelector('canvas');
     }
 
-    // Distruggi il grafico esistente se presente
     const existingChart = Chart.getChart(canvas);
-    if (existingChart) {
-        existingChart.destroy();
-    }
+    if (existingChart) existingChart.destroy();
 
     const canvasCtx = canvas.getContext('2d');
 
-    // Configurazione dati e colori
     const isQuickMode = !userPrice || userPrice <= 0;
-    const labels = isQuickMode 
-        ? ['Mercato Min', 'Mercato Medio', 'Mercato Max'] 
+    const labels = isQuickMode
+        ? ['Mercato Min', 'Mercato Medio', 'Mercato Max']
         : ['Mercato Min', 'Mercato Medio', 'Mercato Max', 'TUO PREZZO'];
-    
+
     const dataValues = isQuickMode
         ? [marketMin, marketMid, marketMax]
         : [marketMin, marketMid, marketMax, userPrice];
 
-    // Colore dinamico per il prezzo utente
-    let userColor = 'rgba(99, 102, 241, 0.85)';
-    let userBorder = 'rgb(99, 102, 241)';
+    // Colori semantici per il prezzo utente
+    let userColor  = 'rgba(99, 102, 241, 0.95)';
+    let userBorder = 'rgb(199, 210, 254)';
+    let userVerdict = 'NEUTRO';
 
     if (!isQuickMode) {
         if (userPrice > marketMax) {
-            userColor = 'rgba(239, 68, 68, 0.85)'; // Rosso
-            userBorder = 'rgb(239, 68, 68)';
+            userColor   = 'rgba(239, 68, 68, 0.95)';
+            userBorder  = 'rgb(254, 202, 202)';
+            userVerdict = 'TROPPO ALTO';
         } else if (userPrice < marketMin) {
-            userColor = 'rgba(34, 197, 94, 0.85)'; // Verde
-            userBorder = 'rgb(34, 197, 94)';
+            userColor   = 'rgba(34, 197, 94, 0.95)';
+            userBorder  = 'rgb(187, 247, 208)';
+            userVerdict = 'CONVENIENTE';
         } else {
-            userColor = 'rgba(245, 158, 11, 0.85)'; // Arancione (equo)
-            userBorder = 'rgb(245, 158, 11)';
+            userColor   = 'rgba(245, 158, 11, 0.95)';
+            userBorder  = 'rgb(254, 215, 170)';
+            userVerdict = 'NELLA MEDIA';
         }
     }
 
-    const isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const neutralBg = isDark ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)';
-    const neutralBorder = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
-    const midBg = isDark ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
-    const midBorder = isDark ? 'rgba(255, 255, 255, 0.4)' : 'rgba(0, 0, 0, 0.2)';
-
     const bgColors = isQuickMode
-        ? [neutralBg, midBg, neutralBg]
-        : [neutralBg, midBg, neutralBg, userColor];
+        ? [C.neutralBg, C.midBg, C.neutralBg]
+        : [C.neutralBg, C.midBg, C.neutralBg, userColor];
 
     const borderColors = isQuickMode
-        ? [neutralBorder, midBorder, neutralBorder]
-        : [neutralBorder, midBorder, neutralBorder, userBorder];
+        ? [C.neutralBd, C.midBd, C.neutralBd]
+        : [C.neutralBd, C.midBd, C.neutralBd, userBorder];
 
-    const chart = new Chart(canvasCtx, {
+    return new Chart(canvasCtx, {
         type: 'bar',
         data: {
-            labels: labels,
+            labels,
             datasets: [{
                 label: 'Prezzo (€)',
                 data: dataValues,
                 backgroundColor: bgColors,
                 borderColor: borderColors,
-                borderWidth: isQuickMode ? [1, 2, 1] : [1, 2, 1, 3],
-                borderRadius: 8,
+                borderWidth: isQuickMode ? [2, 2, 2] : [2, 2, 2, 4],
+                borderRadius: 10,
                 hoverBackgroundColor: bgColors
             }]
         },
+        plugins: [valueOnTopPlugin],
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            layout: { padding: { top: 28 } }, // spazio per i valori sopra le barre
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: 'rgba(15, 23, 42, 0.95)',
-                    padding: 12,
-                    titleFont: { size: 14, weight: 'bold', family: 'Inter' },
-                    bodyFont: { size: 13, family: 'Inter' },
-                    borderColor: 'rgba(255, 255, 255, 0.1)',
+                    backgroundColor: C.tooltipBg,
+                    titleColor: '#ffffff',
+                    bodyColor: '#f1f5f9',
+                    padding: 14,
+                    titleFont: { size: 15, weight: 'bold', family: 'Inter' },
+                    bodyFont:  { size: 14, family: 'Inter', weight: '600' },
+                    borderColor: C.tooltipBd,
                     borderWidth: 1,
-                    cornerRadius: 8,
+                    cornerRadius: 10,
+                    displayColors: false,
                     callbacks: {
-                        label: function(context) {
-                            return ' € ' + context.parsed.y.toLocaleString('it-IT', { minimumFractionDigits: 2 });
-                        }
+                        title: (items) => items[0].label === 'TUO PREZZO'
+                            ? `Tuo Prezzo (${userVerdict})`
+                            : items[0].label,
+                        label: (ctx) => '€ ' + ctx.parsed.y.toLocaleString('it-IT', { minimumFractionDigits: 2 })
                     }
                 }
             },
@@ -129,60 +183,51 @@ export function renderPriceComparisonChart(containerId, analysis) {
                 y: {
                     beginAtZero: true,
                     ticks: {
-                        callback: function(value) {
-                            return '€' + value.toLocaleString('it-IT');
-                        },
-                        font: { size: 11, weight: '500' },
-                        color: isDark ? '#94a3b8' : '#64748b'
+                        callback: (value) => '€' + value.toLocaleString('it-IT'),
+                        font: { size: 12, weight: '700', family: 'Inter' },
+                        color: C.textMuted,
+                        padding: 6
                     },
-                    grid: {
-                        color: isDark ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.05)',
-                        drawBorder: false
-                    }
+                    grid: { color: C.grid, drawBorder: false }
                 },
                 x: {
                     ticks: {
-                        font: { 
-                            size: function(context) {
-                                return context.tick.label === 'TUO PREZZO' ? 12 : 10;
-                            }, 
-                            weight: function(context) {
-                                return context.tick.label === 'TUO PREZZO' ? '800' : '500';
-                            }
+                        font: {
+                            size: (ctx) => ctx.tick.label === 'TUO PREZZO' ? 14 : 13,
+                            weight: (ctx) => ctx.tick.label === 'TUO PREZZO' ? '900' : '700',
+                            family: 'Inter'
                         },
-                        color: function(context) {
-                            if (context.tick.label === 'TUO PREZZO') return isDark ? '#fff' : '#000';
-                            return isDark ? '#64748b' : '#475569';
-                        }
+                        color: (ctx) => ctx.tick.label === 'TUO PREZZO'
+                            ? '#ffffff'
+                            : C.textMuted,
+                        padding: 8
                     },
-                    grid: {
-                        display: false,
-                        drawBorder: false
-                    }
+                    grid: { display: false, drawBorder: false }
                 }
             },
-            animation: {
-                duration: 1500,
-                easing: 'easeOutQuart'
-            }
+            animation: { duration: 1200, easing: 'easeOutQuart' }
         }
     });
-
-    return chart;
 }
 
 /**
- * Altri renderer (mantenuti per compatibilità se usati altrove)
+ * Gauge di congruità (semicerchio doughnut)
  */
 export function renderCongruityGauge(containerId, analysis) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    const canvas = container.querySelector('canvas') || (container.innerHTML = '<canvas></canvas>', container.querySelector('canvas'));
+    let canvas = container.querySelector('canvas');
+    if (!canvas) {
+        container.innerHTML = '<canvas></canvas>';
+        canvas = container.querySelector('canvas');
+    }
     const existingChart = Chart.getChart(canvas);
     if (existingChart) existingChart.destroy();
 
     const diffPercent = analysis.congruityAnalysis.diffPercent;
-    const color = diffPercent < -10 ? 'rgb(34, 197, 94)' : diffPercent > 20 ? 'rgb(239, 68, 68)' : 'rgb(99, 102, 241)';
+    const color = diffPercent < -10 ? 'rgb(34, 197, 94)'
+                : diffPercent > 20  ? 'rgb(239, 68, 68)'
+                                    : 'rgb(96, 165, 250)';
 
     return new Chart(canvas.getContext('2d'), {
         type: 'doughnut',
@@ -190,12 +235,12 @@ export function renderCongruityGauge(containerId, analysis) {
             labels: ['Scostamento', 'Resto'],
             datasets: [{
                 data: [Math.abs(diffPercent), Math.max(0, 100 - Math.abs(diffPercent))],
-                backgroundColor: [color, 'rgba(255, 255, 255, 0.05)'],
+                backgroundColor: [color, 'rgba(148, 163, 184, 0.18)'],
                 borderColor: ['transparent', 'transparent'],
                 borderWidth: 0,
                 circumference: 180,
                 rotation: 270,
-                cutout: '80%'
+                cutout: '78%'
             }]
         },
         options: {
@@ -206,16 +251,23 @@ export function renderCongruityGauge(containerId, analysis) {
     });
 }
 
+/**
+ * Trend prezzi (linea)
+ */
 export function renderMarketTrendChart(containerId, analysis) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    const canvas = container.querySelector('canvas') || (container.innerHTML = '<canvas></canvas>', container.querySelector('canvas'));
+    let canvas = container.querySelector('canvas');
+    if (!canvas) {
+        container.innerHTML = '<canvas></canvas>';
+        canvas = container.querySelector('canvas');
+    }
     const existingChart = Chart.getChart(canvas);
     if (existingChart) existingChart.destroy();
 
     const basePrice = analysis.marketAnalysis.marketMid;
     const months = ['Gen', 'Feb', 'Mar', 'Apr', 'Mag', 'Giu'];
-    const trend = months.map((_, i) => basePrice * (1 + (Math.random() - 0.5) * 0.1));
+    const trend  = months.map(() => basePrice * (1 + (Math.random() - 0.5) * 0.1));
 
     return new Chart(canvas.getContext('2d'), {
         type: 'line',
@@ -224,24 +276,36 @@ export function renderMarketTrendChart(containerId, analysis) {
             datasets: [{
                 label: 'Trend Prezzo di Mercato',
                 data: trend,
-                borderColor: 'rgb(99, 102, 241)',
-                backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                borderColor: 'rgb(96, 165, 250)',
+                backgroundColor: 'rgba(96, 165, 250, 0.22)',
                 borderWidth: 3,
                 fill: true,
                 tension: 0.4,
-                pointRadius: 4,
-                pointBackgroundColor: '#fff',
-                pointBorderColor: 'rgb(99, 102, 241)',
-                pointBorderWidth: 2
+                pointRadius: 5,
+                pointBackgroundColor: '#ffffff',
+                pointBorderColor: 'rgb(96, 165, 250)',
+                pointBorderWidth: 2.5
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: true,
-            plugins: { legend: { display: false } },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    backgroundColor: C.tooltipBg,
+                    titleColor: '#ffffff',
+                    bodyColor: '#f1f5f9',
+                    borderColor: C.tooltipBd,
+                    borderWidth: 1,
+                    cornerRadius: 10,
+                    titleFont: { size: 14, weight: 'bold' },
+                    bodyFont:  { size: 13, weight: '600' }
+                }
+            },
             scales: {
-                y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255, 255, 255, 0.05)' } },
-                x: { ticks: { color: '#94a3b8' }, grid: { display: false } }
+                y: { ticks: { color: C.textMuted, font: { weight: '700', size: 12 } }, grid: { color: C.grid } },
+                x: { ticks: { color: C.textMuted, font: { weight: '700', size: 12 } }, grid: { display: false } }
             }
         }
     });

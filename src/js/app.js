@@ -5,18 +5,14 @@
 
 import database from './database.js';
 import { auth, db } from './firebase.js';
-import { 
-    onAuthStateChanged, 
-    GoogleAuthProvider, 
-    signInWithPopup, 
-    signOut 
-} from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.12.0/firebase-auth.js";
 import { performProfessionalAnalysis } from './professional-analyzer.js';
 import { generateProfessionalPDF } from './professional-pdf.js';
 import { renderPriceComparisonChart } from './chart-renderer.js';
-import { loginUser, loginWithGoogle } from './auth.js';
+import { loginUser, loginWithGoogle, logoutUser } from './auth.js';
 import QuoteManager from './quote-manager.js';
 import uiFeedback from './ui-feedback.js';
+import { escapeHtml } from './escape-html.js';
 
 // ===== STATE MANAGEMENT =====
 let state = {
@@ -50,14 +46,15 @@ function updateUserUI() {
     if (!userNav) return;
 
     if (state.user) {
+        const displayName = state.user.displayName || (state.user.email || '').split('@')[0] || 'Utente';
         userNav.innerHTML = `
             <div class="user-profile-nav" style="display: flex; align-items: center; gap: 12px;">
-                <span class="user-name" style="font-weight: 700; font-size: 0.875rem; color: var(--text-primary);">${state.user.displayName || state.user.email.split('@')[0]}</span>
+                <span class="user-name" style="font-weight: 700; font-size: 0.875rem; color: var(--text-primary);">${escapeHtml(displayName)}</span>
                 <button class="btn btn-secondary btn-sm" id="logoutBtn">Esci</button>
             </div>
         `;
         const logoutBtn = getEl('logoutBtn');
-        if (logoutBtn) logoutBtn.addEventListener('click', () => signOut(auth));
+        if (logoutBtn) logoutBtn.addEventListener('click', () => logoutUser());
         loginModal?.classList.add('hidden');
     } else {
         userNav.innerHTML = `<button class="btn btn-login-trigger" id="loginTriggerBtn">Accedi</button>`;
@@ -104,6 +101,10 @@ function renderMacroCategories() {
             <p class="trade-card-desc">${macro.description}</p>
         </div>
     `).join('');
+    
+    // Nascondi il pulsante Indietro alla prima schermata
+    getEl('backSelectionBtn').classList.add('hidden');
+    getEl('homeFromStep1Btn').classList.remove('hidden');
 }
 
 // ===== GLOBAL HANDLERS (for HTML onclick) =====
@@ -131,6 +132,8 @@ window.selectMacro = (macroId) => {
         `).join('');
     }
     
+    // Mostra solo il pulsante Home, nascondi Indietro nella sottocategoria
+    getEl('backSelectionBtn').classList.add('hidden');
     getEl('homeFromStep1Btn').classList.remove('hidden');
 };
 
@@ -152,6 +155,10 @@ window.selectSub = (subId) => {
             <h3 class="trade-card-title">${trade.name}</h3>
         </div>
     `).join('');
+    
+    // Mostra il pulsante Indietro solo nella terza schermata (mestieri specifici)
+    getEl('backSelectionBtn').classList.remove('hidden');
+    getEl('homeFromStep1Btn').classList.remove('hidden');
 };
 
 window.selectTrade = (tradeId) => {
@@ -470,7 +477,7 @@ function _renderPrezzi(analysis) {
             </div>
             ${!isQuick ? `
             <div style="text-align:center; padding:10px; background:rgba(99,102,241,.1); border-radius:10px; border:2px solid rgba(99,102,241,.4);">
-                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#6366f1; margin-bottom:4px;">Tuo Prezzo</div>
+                <div style="font-size:0.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:#a5b4fc; margin-bottom:4px;">Tuo Prezzo</div>
                 <div style="font-size:1rem; font-weight:800; color:var(--text);">€${input.receivedPrice.toLocaleString('it-IT')}</div>
             </div>` : ''}
         </div>
@@ -511,7 +518,7 @@ function _renderBreakdown(analysis) {
     <!-- ═══ BLOCCO 3: BREAKDOWN COSTI ═══ -->
     <div class="result-card" style="padding:20px;">
         <h3 style="margin:0 0 16px; font-size:1rem; font-weight:800; color:var(--text); display:flex; align-items:center; gap:8px;">
-            <i class="fa-solid fa-chart-pie" style="color:#8b5cf6;"></i>
+            <i class="fa-solid fa-chart-pie" style="color:#c4b5fd;"></i>
             Composizione del Costo (su €${total.toLocaleString('it-IT')} medio mercato)
         </h3>
 
@@ -519,7 +526,7 @@ function _renderBreakdown(analysis) {
         <div style="margin-bottom:18px;">
             <div style="display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;">
                 <span style="font-size:0.9rem; font-weight:700; color:var(--text);">
-                    <i class="fa-solid fa-person-digging" style="color:#6366f1; margin-right:6px;"></i>Manodopera
+                    <i class="fa-solid fa-person-digging" style="color:#a5b4fc; margin-right:6px;"></i>Manodopera
                 </span>
                 <span style="font-size:0.9rem; font-weight:800; color:var(--text);">
                     €${breakdown.labor.toLocaleString('it-IT')}
@@ -746,21 +753,29 @@ function loadSavedQuotes() {
     const container = getEl('savedQuotesList');
     if (!container) return;
 
-    state.quoteManager.getQuotes().then(quotes => {
+    state.quoteManager.getAllQuotes().then(quotes => {
         if (!quotes || quotes.length === 0) {
             container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Nessun preventivo salvato</p>';
             return;
         }
 
-        container.innerHTML = quotes.map(q => `
+        container.innerHTML = quotes.map(q => {
+            const cliente = escapeHtml(q.cliente || 'Senza nome');
+            const servizi = Array.isArray(q.servizi) ? q.servizi.map(escapeHtml).join(', ') : '';
+            const totale = Number(q.totale || 0).toLocaleString('it-IT');
+            return `
             <div class="result-card info" style="margin-bottom: 16px;">
-                <h4 style="margin: 0 0 8px 0; font-size: 1rem;">${q.cliente}</h4>
+                <h4 style="margin: 0 0 8px 0; font-size: 1rem;">${cliente}</h4>
                 <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">
-                    ${q.servizi.join(', ')}<br>
-                    <strong>€${q.totale.toLocaleString('it-IT')}</strong>
+                    ${servizi}<br>
+                    <strong>€${totale}</strong>
                 </p>
             </div>
-        `).join('');
+        `;
+        }).join('');
+    }).catch(err => {
+        console.error('Errore caricamento preventivi:', err);
+        container.innerHTML = '<p style="color: var(--text-secondary); text-align: center;">Impossibile caricare i preventivi.</p>';
     });
 }
 
