@@ -2,22 +2,46 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Preventivi-Smart Pro | La tua protezione economica</title>
-    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+    <!-- SEO -->
+    <title>Preventivi-Smart Pro | Verifica se il preventivo che hai ricevuto è onesto</title>
+    <meta name="description" content="Analizza in pochi secondi i preventivi degli artigiani: prezzi di mercato, congruità, rischi nascosti e consigli professionali. Italiano, gratuito, niente registrazione obbligatoria.">
+    <meta name="keywords" content="preventivi, artigiani, verifica preventivo, prezzi lavori casa, calcolo costi ristrutturazione, idraulico, imbianchino, elettricista">
+    <meta name="author" content="Preventivi-Smart">
+    <meta name="robots" content="index,follow">
+    <meta name="theme-color" content="#0ea5e9">
+    <meta name="color-scheme" content="dark">
+    <link rel="canonical" href="https://preventivi-smart.vercel.app/">
+
+    <!-- Open Graph / social preview -->
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="it_IT">
+    <meta property="og:title" content="Preventivi-Smart Pro | La tua protezione economica">
+    <meta property="og:description" content="Analizza in pochi secondi se il preventivo che hai ricevuto è in linea col mercato. Per artigiani onesti e clienti informati.">
+    <meta property="og:url" content="https://preventivi-smart.vercel.app/">
+    <meta property="og:image" content="/assets/hero_banner.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Preventivi-Smart Pro">
+    <meta name="twitter:description" content="Verifica in pochi secondi se il preventivo è onesto.">
+    <meta name="twitter:image" content="/assets/hero_banner.png">
+
+    <!-- Favicon & PWA -->
+    <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg">
+    <link rel="manifest" href="/manifest.json">
+
     <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- FontAwesome 6.5.2 -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
-    <!-- Chart.js 4.4.3 -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    
 
-    
+    <!-- FontAwesome 6.5.2 (carica in modo non bloccante) -->
+    <link rel="preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"></noscript>
+
+    <!-- Chart.js 4.4.3 (defer: non blocca il rendering) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+
     <!-- Unified Design System CSS -->
     <link rel="stylesheet" href="src/css/main.css">
     <link rel="stylesheet" href="src/css/components.css">
@@ -77,25 +101,14 @@
         <p class="hero-subtitle">
             Verifica i tuoi preventivi con i dati ISTAT 2025 e i prezzari regionali certificati.
         </p>
-        
-        <div class="hero-actions-grid">
-            <div class="action-card" id="startAnalysisBtn">
-                <div class="card-icon">
-                    <i class="fa-solid fa-magnifying-glass"></i>
-                </div>
-                <h3 class="card-title">Analizza Preventivo</h3>
-                <p class="card-desc">Verifica se il prezzo è conveniente</p>
-                <button class="btn btn-primary btn-full">Inizia <i class="fa-solid fa-arrow-right"></i></button>
-            </div>
-            
-            <div class="action-card" id="startQuickBtn">
-                <div class="card-icon">
-                    <i class="fa-solid fa-calculator"></i>
-                </div>
-                <h3 class="card-title">Stima Rapida</h3>
-                <p class="card-desc">Calcola il prezzo medio di mercato</p>
-                <button class="btn btn-secondary btn-full">Calcola <i class="fa-solid fa-arrow-right"></i></button>
-            </div>
+
+        <div class="hero-actions">
+            <button class="btn btn-primary btn-lg" id="startAnalysisBtn">
+                <i class="fa-solid fa-magnifying-glass"></i> Analizza Preventivo
+            </button>
+            <button class="btn btn-secondary btn-lg" id="startQuickBtn">
+                <i class="fa-solid fa-calculator"></i> Stima Rapida
+            </button>
         </div>
     </section>
 
@@ -153,40 +166,6 @@
                             </div>
                         </div>
                         <input type="number" id="quantityInput" class="form-input" placeholder="Es. 50">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Qualità del Lavoro</label>
-                    <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 8px;">
-                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--surface); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="quality-option" data-quality="economica">
-                            <input type="radio" name="quality" value="economica" style="cursor: pointer;">
-                            <div>
-                                <div style="font-weight: 600; font-size: 0.9rem;">Economica</div>
-                                <div style="font-size: 0.75rem; color: var(--text-secondary);">-15% dal mercato</div>
-                            </div>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--surface); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="quality-option" data-quality="standard">
-                            <input type="radio" name="quality" value="standard" checked style="cursor: pointer;">
-                            <div>
-                                <div style="font-weight: 600; font-size: 0.9rem;">Standard</div>
-                                <div style="font-size: 0.75rem; color: var(--text-secondary);">Prezzo medio</div>
-                            </div>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--surface); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="quality-option" data-quality="premium">
-                            <input type="radio" name="quality" value="premium" style="cursor: pointer;">
-                            <div>
-                                <div style="font-weight: 600; font-size: 0.9rem;">Premium</div>
-                                <div style="font-size: 0.75rem; color: var(--text-secondary);">+35% dal mercato</div>
-                            </div>
-                        </label>
-                        <label style="display: flex; align-items: center; gap: 8px; padding: 12px; background: var(--surface); border-radius: 8px; cursor: pointer; border: 2px solid transparent; transition: all 0.2s;" class="quality-option" data-quality="lusso">
-                            <input type="radio" name="quality" value="lusso" style="cursor: pointer;">
-                            <div>
-                                <div style="font-weight: 600; font-size: 0.9rem;">Lusso</div>
-                                <div style="font-size: 0.75rem; color: var(--text-secondary);">+75% dal mercato</div>
-                            </div>
-                        </label>
                     </div>
                 </div>
 
@@ -249,7 +228,7 @@
                 
                 <div id="savedQuotesSection" style="margin-top: 48px; border-top: 1px solid var(--border); padding-top: 32px;">
                     <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--gray-50); margin-bottom: 24px;">
-                        <i class="fa-solid fa-box-archive" style="color: var(--primary); margin-right: 8px;"></i> Archivio Preventivi
+                        <i class="fa-solid fa-box-archive" style="color: #ffffff; margin-right: 8px;"></i> Archivio Preventivi
                     </h3>
                     <div id="savedQuotesList"></div>
                 </div>
@@ -264,6 +243,11 @@
 
     <footer class="main-footer">
         <p>&copy; 2026 Preventivi-Smart Pro. <span class="badge-ai"><i class="fa-solid fa-shield-halved"></i> AI Security Layer Active</span></p>
+        <p style="margin-top: 8px; font-size: 0.85rem;">
+            <a href="/privacy.html" style="color: var(--text-secondary); text-decoration: none; margin: 0 8px;">Privacy Policy</a>
+            <span style="color: var(--text-tertiary);">·</span>
+            <a href="mailto:privacy@preventivi-smart.it" style="color: var(--text-secondary); text-decoration: none; margin: 0 8px;">Contatti GDPR</a>
+        </p>
     </footer>
 
     <!-- Toast Notifications -->

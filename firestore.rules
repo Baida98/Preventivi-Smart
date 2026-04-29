@@ -1,165 +1,114 @@
 /**
- * Preventivi-Smart Pro — Firestore Security Rules v1.0
- * Protezione massima dei dati nel cloud
+ * Preventivi-Smart Pro — Firestore Security Rules v2.0
+ * - Schema allineato a quote-manager.js
+ * - isAdmin() senza ricorsione (allow get sulla collection admins)
+ * - Rate limiting tramite query lato client + sanity-check sul doc
+ * - Validazione tipi e dimensioni stringhe
  */
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // ===== FUNZIONI HELPER =====
-    
-    // Verifica se utente è autenticato
+    // ===== HELPERS =====
+
     function isAuthenticated() {
       return request.auth != null;
     }
 
-    // Verifica se è il proprietario del documento
     function isOwner(uid) {
       return isAuthenticated() && request.auth.uid == uid;
     }
 
-    // Verifica se è admin (opzionale)
+    // Lettura admins consentita: nessuna ricorsione.
     function isAdmin() {
-      return isAuthenticated() && 
-             get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.isAdmin == true;
+      return isAuthenticated()
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
-    // Valida struttura quote
-    function isValidQuote(data) {
-      return data.keys().hasAll(['uid', 'tradeName', 'quantity', 'region', 'quality', 'midPrice', 'receivedPrice', 'timestamp']) &&
-             data.uid is string &&
-             data.tradeName is string &&
-             data.quantity is number &&
-             data.region is string &&
-             data.quality is string &&
-             data.midPrice is number &&
-             data.receivedPrice is number &&
-             data.timestamp is timestamp;
+    // String guard: presente, stringa, non vuota, lunghezza max
+    function isString(v, maxLen) {
+      return v is string && v.size() > 0 && v.size() <= maxLen;
     }
 
-    // Valida che i numeri siano positivi
     function isPositiveNumber(num) {
       return num is number && num > 0;
     }
 
-    // Verifica rate limiting (max 100 quote al giorno)
-    function isWithinRateLimit() {
-      let userQuotesToday = firestore.query(
-        /databases/$(database)/documents/quotes,
-        ['where', 'uid', '==', request.auth.uid],
-        ['where', 'createdAt', '>=', request.time.toDate().toDateString()]
-      ).size();
-      
-      return userQuotesToday < 100;
+    // Schema reale usato da quote-manager.js
+    function isValidQuote(d) {
+      return d.keys().hasAll([
+              'uid','numero','data','cliente','servizi','totale','createdAt','updatedAt'
+            ])
+        && d.uid is string
+        && d.numero is number && d.numero > 0
+        && isString(d.data, 32)
+        && isString(d.cliente, 200)
+        && d.servizi is list && d.servizi.size() > 0 && d.servizi.size() <= 100
+        && isPositiveNumber(d.totale) && d.totale < 10000000
+        && d.createdAt is number
+        && d.updatedAt is number
+        && (!('note' in d) || (d.note is string && d.note.size() <= 5000));
     }
 
-    // ===== COLLECTION: quotes =====
+    // ===== quotes =====
+    // Nota: usiamo `resource.data.get('uid', '')` per evitare errori su
+    // documenti legacy senza campo uid (regola fail-safe). Admin sempre OK.
     match /quotes/{document=**} {
-      
-      // LETTURA: Solo il proprietario può leggere i propri preventivi
-      allow read: if isOwner(resource.data.uid);
-      
-      // CREAZIONE: Utente autenticato può creare solo i propri preventivi
-      allow create: if isAuthenticated() &&
-                       isValidQuote(request.resource.data) &&
-                       request.resource.data.uid == request.auth.uid &&
-                       isPositiveNumber(request.resource.data.quantity) &&
-                       isPositiveNumber(request.resource.data.midPrice) &&
-                       isPositiveNumber(request.resource.data.receivedPrice) &&
-                       isWithinRateLimit();
-      
-      // AGGIORNAMENTO: Solo il proprietario può modificare
-      allow update: if isOwner(resource.data.uid) &&
-                       request.resource.data.uid == resource.data.uid &&
-                       isValidQuote(request.resource.data);
-      
-      // ELIMINAZIONE: Solo il proprietario può eliminare
-      allow delete: if isOwner(resource.data.uid);
+      allow read:   if isAdmin()
+                    || isOwner(resource.data.get('uid', ''));
+      allow create: if isAuthenticated()
+                    && isValidQuote(request.resource.data)
+                    && request.resource.data.uid == request.auth.uid;
+      allow update: if isAdmin()
+                    || (isOwner(resource.data.get('uid', ''))
+                        && request.resource.data.uid == resource.data.uid
+                        && isValidQuote(request.resource.data));
+      allow delete: if isAdmin()
+                    || isOwner(resource.data.get('uid', ''));
     }
 
-    // ===== COLLECTION: users =====
+    // ===== users =====
     match /users/{uid} {
-      
-      // LETTURA: Utente può leggere solo il suo profilo
-      allow read: if isAuthenticated() && request.auth.uid == uid;
-      
-      // CREAZIONE: Utente autenticato crea il suo profilo
-      allow create: if isAuthenticated() &&
-                       request.auth.uid == uid &&
-                       request.resource.data.uid == uid &&
-                       request.resource.data.email is string;
-      
-      // AGGIORNAMENTO: Solo il proprietario del profilo
-      allow update: if isAuthenticated() &&
-                       request.auth.uid == uid &&
-                       request.resource.data.uid == uid;
-      
-      // ELIMINAZIONE: Solo il proprietario
+      allow read:   if isAuthenticated() && request.auth.uid == uid;
+      allow create: if isAuthenticated()
+                    && request.auth.uid == uid
+                    && request.resource.data.uid == uid
+                    && isString(request.resource.data.email, 320);
+      allow update: if isAuthenticated()
+                    && request.auth.uid == uid
+                    && request.resource.data.uid == uid;
       allow delete: if isAuthenticated() && request.auth.uid == uid;
     }
 
-    // ===== COLLECTION: analytics (dati aggregati) =====
+    // ===== analytics (aggregati pubblici) =====
     match /analytics/{document=**} {
-      
-      // LETTURA: Pubblico (per statistiche aggregate)
-      allow read: if true;
-      
-      // SCRITTURA: Solo admin
+      allow read:  if true;
       allow write: if isAdmin();
     }
 
-    // ===== COLLECTION: admins =====
+    // ===== admins (solo lettura agli admin, scrittura nessuno via client) =====
     match /admins/{uid} {
-      
-      // LETTURA: Solo admin
-      allow read: if isAdmin();
-      
-      // SCRITTURA: Solo admin
-      allow write: if isAdmin();
+      allow read:  if isAdmin();
+      allow write: if false;
     }
 
-    // ===== COLLECTION: security-logs =====
-    match /security-logs/{document=**} {
-      
-      // LETTURA: Solo admin
-      allow read: if isAdmin();
-      
-      // CREAZIONE: Sistema può scrivere log di sicurezza
-      allow create: if request.auth != null;
-      
-      // SCRITTURA: Solo admin
-      allow write: if isAdmin();
-    }
-
-    // ===== COLLECTION: feedback =====
+    // ===== feedback =====
     match /feedback/{document=**} {
-      
-      // CREAZIONE: Utente autenticato può inviare feedback
-      allow create: if isAuthenticated() &&
-                       request.resource.data.uid == request.auth.uid &&
-                       request.resource.data.message is string &&
-                       request.resource.data.message.size() > 0 &&
-                       request.resource.data.message.size() < 5000;
-      
-      // LETTURA: Solo admin
-      allow read: if isAdmin();
-      
-      // ELIMINAZIONE: Solo admin
+      allow create: if isAuthenticated()
+                    && request.resource.data.uid == request.auth.uid
+                    && isString(request.resource.data.message, 5000);
+      allow read:   if isAdmin();
       allow delete: if isAdmin();
+      allow update: if false;
     }
 
-    // ===== COLLECTION: api-keys (per backend) =====
+    // ===== api-keys (mai dal client) =====
     match /api-keys/{document=**} {
-      
-      // LETTURA: Solo admin
-      allow read: if isAdmin();
-      
-      // SCRITTURA: Solo admin
-      allow write: if isAdmin();
+      allow read, write: if false;
     }
 
-    // ===== DEFAULT: NEGA TUTTO =====
+    // ===== default deny =====
     match /{document=**} {
       allow read, write: if false;
     }
