@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
+import { applySecurityHeaders } from "./lib/security";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import HowItWorks from "./components/HowItWorks";
@@ -20,6 +21,8 @@ export default function App() {
   const wizardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    // Applica gli header di sicurezza al caricamento
+    applySecurityHeaders();
     setArchive(loadArchive());
   }, []);
 
