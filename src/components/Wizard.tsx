@@ -30,7 +30,7 @@ import {
   type MarketAnalysis,
 } from "@/lib/pricing";
 import { judge, type Verdict } from "@/lib/verdict";
-import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT } from "@/lib/storage";
+import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT, getClientSuggestions } from "@/lib/storage";
 import ResultsView from "./Results";
 
 export type Mode = "analizza" | "stima";
@@ -57,6 +57,8 @@ export default function Wizard({
   const [quantity, setQuantity] = useState<string>("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<string>("");
+  const [clientName, setClientName] = useState<string>("");
+  const [clientEmail, setClientEmail] = useState<string>("");
   const [price, setPrice] = useState<string>("");
 
   const [loading, setLoading] = useState(false);
@@ -108,6 +110,8 @@ export default function Wizard({
       setQuantity("");
       setFieldValues({});
       setNotes("");
+      setClientName("");
+      setClientEmail("");
       setPrice("");
       setAnalysis(null);
       setVerdict(null);
@@ -166,6 +170,10 @@ export default function Wizard({
           f.options.find((o) => o.value === fieldValues[f.id])?.label ?? "",
       })),
       notes: notes || undefined,
+      cliente: clientName ? {
+        nome: clientName,
+        email: clientEmail || undefined,
+      } : undefined,
       receivedPrice: mode === "analizza" ? Number(price) : undefined,
       marketMin: analysis.marketMin,
       marketMid: analysis.marketMid,
@@ -397,6 +405,40 @@ export default function Wizard({
                   </Select>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
+                  Nome Cliente (facoltativo)
+                </Label>
+                <div className="relative">
+                  <Input
+                    value={clientName}
+                    onChange={(e) => setClientName(e.target.value)}
+                    placeholder="Es: Mario Rossi"
+                    className="h-11 bg-card/60"
+                    list="client-suggestions"
+                  />
+                  <datalist id="client-suggestions">
+                    {getClientSuggestions().map((c, i) => (
+                      <option key={i} value={`${c.nome}${c.cognome ? ' ' + c.cognome : ''}`} />
+                    ))}
+                  </datalist>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
+                  Email Cliente (facoltativo)
+                </Label>
+                <Input
+                  type="email"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  placeholder="mario@esempio.it"
+                  className="h-11 bg-card/60"
+                />
+              </div>
             </div>
 
             <div className="mt-5 space-y-2">
