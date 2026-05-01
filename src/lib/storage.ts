@@ -1,6 +1,7 @@
 import type { VerdictKey } from "./verdict";
 
 const KEY = "preventivi-smart-archive-v1";
+export const GUEST_QUOTE_LIMIT = 5;
 
 export type SavedQuote = {
   id: string;
@@ -31,24 +32,40 @@ export function loadArchive(): SavedQuote[] {
     const arr = JSON.parse(raw);
     if (!Array.isArray(arr)) return [];
     return arr;
-  } catch {
+  } catch (error) {
+    console.error("Errore nel caricamento dell'archivio:", error);
     return [];
   }
 }
 
 export function saveQuote(q: SavedQuote) {
-  const all = loadArchive();
-  all.unshift(q);
-  window.localStorage.setItem(KEY, JSON.stringify(all.slice(0, 100)));
+  try {
+    const all = loadArchive();
+    all.unshift(q);
+    window.localStorage.setItem(KEY, JSON.stringify(all.slice(0, 100)));
+  } catch (error) {
+    console.error("Errore nel salvataggio del preventivo:", error);
+    throw new Error("Impossibile salvare il preventivo. Verifica lo spazio disponibile.");
+  }
 }
 
 export function deleteQuote(id: string) {
-  const all = loadArchive().filter((q) => q.id !== id);
-  window.localStorage.setItem(KEY, JSON.stringify(all));
+  try {
+    const all = loadArchive().filter((q) => q.id !== id);
+    window.localStorage.setItem(KEY, JSON.stringify(all));
+  } catch (error) {
+    console.error("Errore nell'eliminazione del preventivo:", error);
+    throw new Error("Impossibile eliminare il preventivo.");
+  }
 }
 
 export function clearArchive() {
-  window.localStorage.removeItem(KEY);
+  try {
+    window.localStorage.removeItem(KEY);
+  } catch (error) {
+    console.error("Errore nella cancellazione dell'archivio:", error);
+    throw new Error("Impossibile cancellare l'archivio.");
+  }
 }
 
 export function newId() {
@@ -57,4 +74,46 @@ export function newId() {
     "-" +
     Math.random().toString(36).slice(2, 8)
   );
+}
+
+/**
+ * Conta il numero di preventivi salvati
+ */
+export function getQuoteCount(): number {
+  try {
+    return loadArchive().length;
+  } catch (error) {
+    console.error("Errore nel conteggio dei preventivi:", error);
+    return 0;
+  }
+}
+
+/**
+ * Verifica se l'utente ospite ha raggiunto il limite di preventivi
+ */
+export function isGuestLimitReached(): boolean {
+  try {
+    return getQuoteCount() >= GUEST_QUOTE_LIMIT;
+  } catch (error) {
+    console.error("Errore nella verifica del limite ospite:", error);
+    return false;
+  }
+}
+
+/**
+ * Calcola il totale economico di tutti i preventivi salvati
+ */
+export function calculateTotalArchive(): number {
+  try {
+    const quotes = loadArchive();
+    return quotes.reduce((sum, q) => {
+      const value = q.mode === "analizza" && q.receivedPrice 
+        ? q.receivedPrice 
+        : q.marketMid;
+      return sum + value;
+    }, 0);
+  } catch (error) {
+    console.error("Errore nel calcolo del totale archivio:", error);
+    return 0;
+  }
 }

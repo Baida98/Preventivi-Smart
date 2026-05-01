@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -5,6 +6,16 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Trash2, Inbox } from "lucide-react";
 import { fmtEUR, fmtDate } from "@/lib/format";
@@ -26,6 +37,19 @@ type Props = {
 };
 
 export default function Archive({ open, onOpenChange, quotes, onDelete }: Props) {
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  const handleDeleteClick = (id: string) => {
+    setDeleteConfirm(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteConfirm) {
+      onDelete(deleteConfirm);
+      setDeleteConfirm(null);
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
@@ -107,7 +131,7 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
                 <Button
                   size="sm"
                   variant="ghost"
-                  onClick={() => onDelete(q.id)}
+                  onClick={() => handleDeleteClick(q.id)}
                   className="h-7 px-2 text-xs text-muted-foreground hover:text-rose-300"
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1" /> Elimina
@@ -117,6 +141,23 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
           ))}
         </div>
       </SheetContent>
+
+      <AlertDialog open={deleteConfirm !== null} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Elimina preventivo?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Questa azione non puo essere annullata. Il preventivo sara rimosso dall'archivio.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-rose-600 hover:bg-rose-700">
+              Elimina
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sheet>
   );
 }

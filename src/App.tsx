@@ -11,23 +11,28 @@ import FAQ from "./components/FAQ";
 import Footer from "./components/Footer";
 import Wizard, { type Mode } from "./components/Wizard";
 import Archive from "./components/Archive";
-import { deleteQuote, loadArchive, type SavedQuote } from "./lib/storage";
+import { deleteQuote, loadArchive, calculateTotalArchive, type SavedQuote } from "./lib/storage";
 
 export default function App() {
   const [mode, setMode] = useState<Mode | null>(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archive, setArchive] = useState<SavedQuote[]>([]);
+  const [archiveTotal, setArchiveTotal] = useState(0);
   const [presetCategoryId, setPresetCategoryId] = useState<string | null>(null);
   const wizardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     // Applica gli header di sicurezza al caricamento
     applySecurityHeaders();
-    setArchive(loadArchive());
+    const loaded = loadArchive();
+    setArchive(loaded);
+    setArchiveTotal(calculateTotalArchive());
   }, []);
 
   function refreshArchive() {
-    setArchive(loadArchive());
+    const updated = loadArchive();
+    setArchive(updated);
+    setArchiveTotal(calculateTotalArchive());
   }
 
   function startMode(m: Mode, categoryId: string | null = null) {
@@ -47,6 +52,7 @@ export default function App() {
     <div className="min-h-screen text-foreground">
       <Header
         archiveCount={archive.length}
+        archiveTotal={archiveTotal}
         onOpenArchive={() => setArchiveOpen(true)}
         onHome={() => {
           setMode(null);

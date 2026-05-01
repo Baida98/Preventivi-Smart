@@ -30,7 +30,7 @@ import {
   type MarketAnalysis,
 } from "@/lib/pricing";
 import { judge, type Verdict } from "@/lib/verdict";
-import { newId, saveQuote, type SavedQuote } from "@/lib/storage";
+import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT } from "@/lib/storage";
 import ResultsView from "./Results";
 
 export type Mode = "analizza" | "stima";
@@ -118,22 +118,35 @@ export default function Wizard({
   function runAnalysis() {
     if (!job) return;
     setLoading(true);
-    const m = computeMarket(job, regionId, Number(quantity), fieldValues);
-    let v: Verdict | null = null;
-    if (mode === "analizza") {
-      v = judge(Number(price), m);
-    }
-    setTimeout(() => {
-      setAnalysis(m);
-      setVerdict(v);
+    try {
+      const m = computeMarket(job, regionId, Number(quantity), fieldValues);
+      let v: Verdict | null = null;
+      if (mode === "analizza") {
+        v = judge(Number(price), m);
+      }
+      setTimeout(() => {
+        setAnalysis(m);
+        setVerdict(v);
+        setLoading(false);
+        setStep(4);
+        setSavedThisRun(false);
+      }, 700);
+    } catch (error) {
+      console.error("Errore nell'analisi:", error);
       setLoading(false);
-      setStep(4);
-      setSavedThisRun(false);
-    }, 700);
+      toast.error("Errore nell'analisi del preventivo. Riprova.");
+    }
   }
 
   function handleSave() {
     if (!job || !analysis) return;
+    
+    // Verifica limite preventivi ospiti
+    if (isGuestLimitReached()) {
+      toast.error(`Limite raggiunto: massimo ${GUEST_QUOTE_LIMIT} preventivi per ospiti. Accedi per salvarne di più.`);
+      return;
+    }
+    
     const region = REGIONS.find((r) => r.id === regionId);
     if (!region) return;
     const quote: SavedQuote = {
@@ -161,10 +174,15 @@ export default function Wizard({
       verdictLabel: verdict?.label,
       mode,
     };
-    saveQuote(quote);
-    setSavedThisRun(true);
-    toast.success("Preventivo salvato in archivio.");
-    onSaved();
+    try {
+      saveQuote(quote);
+      setSavedThisRun(true);
+      toast.success("✅ Preventivo salvato in archivio.");
+      onSaved();
+    } catch (error) {
+      console.error("Errore nel salvataggio:", error);
+      toast.error(error instanceof Error ? error.message : "Errore nel salvataggio del preventivo.");
+    }
   }
 
   return (
