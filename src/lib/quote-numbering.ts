@@ -23,6 +23,7 @@ export type QuoteCounter = {
  */
 export async function getQuoteCounter(userId: string): Promise<QuoteCounter> {
   const db = getFirestoreInstance();
+  if (!db) throw new Error("Firebase non configurato.");
   const userRef = doc(db, "users", userId);
   const counterRef = doc(userRef, "counters", "quotes");
 
@@ -54,6 +55,7 @@ export async function getQuoteCounter(userId: string): Promise<QuoteCounter> {
  */
 export async function generateNextQuoteNumber(userId: string): Promise<string> {
   const db = getFirestoreInstance();
+  if (!db) throw new Error("Firebase non configurato.");
 
   return runTransaction(db, async (transaction: Transaction) => {
     const userRef = doc(db, "users", userId);
@@ -156,6 +158,7 @@ export function isValidQuoteNumber(numero: string): boolean {
  */
 export async function resetQuoteCounter(userId: string): Promise<void> {
   const db = getFirestoreInstance();
+  if (!db) throw new Error("Firebase non configurato.");
   const userRef = doc(db, "users", userId);
   const counterRef = doc(userRef, "counters", "quotes");
 
