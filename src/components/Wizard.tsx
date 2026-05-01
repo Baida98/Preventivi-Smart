@@ -384,7 +384,7 @@ export default function Wizard({
                   <SelectTrigger className="h-11 bg-card/60">
                     <SelectValue placeholder="Seleziona la regione" />
                   </SelectTrigger>
-                  <SelectContent position="popper">
+                  <SelectContent position="popper" sideOffset={8}>
                     {REGIONS.map((r) => (
                       <SelectItem key={r.id} value={r.id}>
                         {r.label}
@@ -424,7 +424,7 @@ export default function Wizard({
                     <SelectTrigger className="h-11 bg-card/60">
                       <SelectValue placeholder="Scegli" />
                     </SelectTrigger>
-                    <SelectContent position="popper">
+                    <SelectContent position="popper" sideOffset={8}>
                       {f.options.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
                           {o.label}
