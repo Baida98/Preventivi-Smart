@@ -15,6 +15,12 @@ export type SavedQuote = {
   fieldValues: Record<string, string>;
   fieldLabels: { id: string; label: string; valueLabel: string }[];
   notes?: string;
+  cliente?: {
+    nome: string;
+    cognome?: string;
+    email?: string;
+    telefono?: string;
+  };
   receivedPrice?: number;
   marketMin: number;
   marketMid: number;
@@ -115,5 +121,27 @@ export function calculateTotalArchive(): number {
   } catch (error) {
     console.error("Errore nel calcolo del totale archivio:", error);
     return 0;
+  }
+}
+
+/**
+ * Ottiene una lista di clienti unici dai preventivi salvati per l'autocompletamento
+ */
+export function getClientSuggestions() {
+  try {
+    const quotes = loadArchive();
+    const clients = quotes
+      .filter(q => q.cliente && q.cliente.nome)
+      .map(q => q.cliente!);
+    
+    // Rimuovi duplicati basati su nome e cognome
+    const uniqueClients = Array.from(
+      new Map(clients.map(c => [`${c.nome}-${c.cognome || ""}`, c])).values()
+    );
+    
+    return uniqueClients;
+  } catch (error) {
+    console.error("Errore nel recupero suggerimenti clienti:", error);
+    return [];
   }
 }
