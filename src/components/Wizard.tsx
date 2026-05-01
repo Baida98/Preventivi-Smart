@@ -7,6 +7,7 @@ import {
   Search,
   Calculator,
   X,
+  AlertCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -31,6 +32,7 @@ import {
 } from "@/lib/pricing";
 import { judge, type Verdict } from "@/lib/verdict";
 import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT, getClientSuggestions } from "@/lib/storage";
+import { validateWizardData } from "@/lib/validation";
 import ResultsView from "./Results";
 
 export type Mode = "analizza" | "stima";
@@ -121,6 +123,25 @@ export default function Wizard({
 
   function runAnalysis() {
     if (!job) return;
+    
+    // Validazione multi-livello
+    const validation = validateWizardData({
+      categoryId,
+      jobId,
+      regionId,
+      quantity,
+      fieldValues,
+      notes,
+      price: mode === "analizza" ? price : undefined,
+    });
+
+    if (!validation.success) {
+      validation.errors?.forEach(err => toast.error(err, {
+        icon: <AlertCircle className="w-4 h-4 text-destructive" />
+      }));
+      return;
+    }
+
     setLoading(true);
     try {
       const m = computeMarket(job, regionId, Number(quantity), fieldValues);
@@ -305,7 +326,7 @@ export default function Wizard({
                         Da € {j.base}/{j.unit}
                       </p>
                     </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground/60 group-hover:text-primary group-hover:translate-x-0.5 transition" />
+                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
                   </button>
                 ))}
               </div>
