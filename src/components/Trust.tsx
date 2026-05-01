@@ -45,7 +45,7 @@ export default function Trust() {
             className="rounded-2xl border border-border/70 bg-card/40 p-5 hover-elevate"
           >
             <span className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-emerald-500/10 ring-1 ring-emerald-500/30">
-              <it.Icon className="w-4.5 h-4.5 text-emerald-300" />
+              <it.Icon className="w-4 h-4 text-emerald-300" />
             </span>
             <h3 className="mt-4 text-[15px] font-semibold leading-tight">
               {it.title}

@@ -44,7 +44,7 @@ export default function HowItWorks() {
             transition={{ duration: 0.5, delay: i * 0.1 }}
             className="relative rounded-2xl border border-border/70 bg-card/50 p-6 hover-elevate"
           >
-            <div className="absolute top-5 right-5 text-[64px] leading-none font-bold text-primary/10 select-none">
+            <div className="absolute bottom-4 right-5 text-[72px] leading-none font-bold text-primary/8 select-none pointer-events-none">
               {i + 1}
             </div>
             <span className="inline-flex items-center justify-center w-11 h-11 rounded-xl bg-primary/10 ring-1 ring-primary/25">

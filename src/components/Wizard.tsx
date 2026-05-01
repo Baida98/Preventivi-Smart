@@ -8,6 +8,7 @@ import {
   Calculator,
   X,
   AlertCircle,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -85,6 +86,11 @@ export default function Wizard({
   const totalSteps = mode === "analizza" ? 4 : 3;
   // map step to displayed progress: in stima mode, the price step is skipped
   const progressIndex = step === 4 ? totalSteps : step;
+
+  // scroll to top on every step change so the header never covers content
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }, [step]);
 
   const canStep2Next = useMemo(() => {
     if (!regionId) return false;
@@ -215,7 +221,7 @@ export default function Wizard({
   }
 
   return (
-    <section className="relative mx-auto max-w-3xl px-5 sm:px-8 py-12 sm:py-16">
+    <section className="relative mx-auto max-w-3xl px-5 sm:px-8 pt-6 pb-16 sm:pt-8 sm:pb-20">
       {/* progress */}
       <div className="flex items-center justify-between mb-8 wizard-header-container">
         <div className="flex items-center gap-3">
@@ -487,14 +493,18 @@ export default function Wizard({
                 <ArrowLeft className="w-4 h-4" /> Indietro
               </Button>
               <Button
-                disabled={!canStep2Next}
+                disabled={!canStep2Next || loading}
                 onClick={() => {
                   if (mode === "analizza") setStep(3);
                   else runAnalysis();
                 }}
                 className="gap-2 ml-auto bg-primary text-primary-foreground glow-azure"
               >
-                {mode === "analizza" ? (
+                {loading && mode === "stima" ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Calcolo…
+                  </>
+                ) : mode === "analizza" ? (
                   <>
                     Continua <ArrowRight className="w-4 h-4" />
                   </>
@@ -559,11 +569,19 @@ export default function Wizard({
                 <ArrowLeft className="w-4 h-4" /> Indietro
               </Button>
               <Button
-                disabled={!canStep3Next}
+                disabled={!canStep3Next || loading}
                 onClick={runAnalysis}
                 className="gap-2 ml-auto bg-primary text-primary-foreground glow-azure"
               >
-                Avvia analisi <Sparkles className="w-4 h-4" />
+                {loading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" /> Calcolo…
+                  </>
+                ) : (
+                  <>
+                    Avvia analisi <Sparkles className="w-4 h-4" />
+                  </>
+                )}
               </Button>
             </div>
           </motion.div>

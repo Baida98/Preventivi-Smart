@@ -150,7 +150,7 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
                 <div>
                   <p className="text-muted-foreground">Mercato</p>
                   <p className="font-semibold tabular-nums">
-                    {fmtEUR(q.marketMin)}–{fmtEUR(q.marketMax)}
+                    {fmtEUR(q.marketMin)} – {fmtEUR(q.marketMax)}
                   </p>
                 </div>
               </div>
