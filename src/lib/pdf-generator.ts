@@ -1,4 +1,5 @@
-import type { Quote } from "./quote-model";
+import type { Quote, Service } from "./quote-model";
+import type { SavedQuote } from "./storage";
 import { ServiceManager } from "./service-manager";
 
 /**
@@ -376,6 +377,44 @@ export class PDFGenerator {
     } catch {
       return dateString;
     }
+  }
+
+  /**
+   * Converte un SavedQuote in un Quote completo per la generazione PDF
+   */
+  static fromSavedQuote(saved: SavedQuote): Quote {
+    const total = saved.receivedPrice || saved.marketMid;
+    
+    const service: Service = {
+      id: "s1",
+      descrizione: `${saved.jobLabel} (${saved.categoryLabel})`,
+      quantita: saved.quantity,
+      unitaMisura: saved.unitLabel,
+      prezzoUnitario: total / saved.quantity,
+      totale: total,
+    };
+
+    return {
+      id: saved.id,
+      numero: saved.id.slice(0, 8).toUpperCase(),
+      data: saved.createdAt.split('T')[0],
+      createdAt: saved.createdAt,
+      cliente: saved.cliente || { nome: "Cliente Occasionale" },
+      servizi: [service],
+      totale: total,
+      jobId: saved.jobId,
+      jobLabel: saved.jobLabel,
+      categoryLabel: saved.categoryLabel,
+      regionLabel: saved.regionLabel,
+      verdict: saved.verdict,
+      verdictLabel: saved.verdictLabel,
+      mode: saved.mode,
+      marketMin: saved.marketMin,
+      marketMid: saved.marketMid,
+      marketMax: saved.marketMax,
+      receivedPrice: saved.receivedPrice,
+      note: saved.notes,
+    };
   }
 
   /**
