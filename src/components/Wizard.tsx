@@ -89,7 +89,9 @@ export default function Wizard({
 
   // scroll to top on every step change so the header never covers content
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+    });
   }, [step]);
 
   const canStep2Next = useMemo(() => {
@@ -373,7 +375,7 @@ export default function Wizard({
               <span className="font-semibold">{job.label}</span>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
                   Regione
@@ -382,7 +384,7 @@ export default function Wizard({
                   <SelectTrigger className="h-11 bg-card/60">
                     <SelectValue placeholder="Seleziona la regione" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent position="popper">
                     {REGIONS.map((r) => (
                       <SelectItem key={r.id} value={r.id}>
                         {r.label}
@@ -422,7 +424,7 @@ export default function Wizard({
                     <SelectTrigger className="h-11 bg-card/60">
                       <SelectValue placeholder="Scegli" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper">
                       {f.options.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
                           {o.label}
@@ -434,7 +436,7 @@ export default function Wizard({
               ))}
             </div>
 
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
                   Nome Cliente (facoltativo)
