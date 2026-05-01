@@ -183,7 +183,7 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
           <AlertDialogHeader>
             <AlertDialogTitle>Elimina preventivo?</AlertDialogTitle>
             <AlertDialogDescription>
-              Questa azione non puo essere annullata. Il preventivo sara rimosso dall'archivio.
+              Questa azione non può essere annullata. Il preventivo sarà rimosso dall'archivio.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

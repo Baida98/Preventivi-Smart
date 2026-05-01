@@ -1,4 +1,4 @@
-import { ShieldCheck, Archive, LogIn, LogOut, User as UserIcon } from "lucide-react";
+import { ShieldCheck, Archive, LogIn, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { User } from "firebase/auth";
 
@@ -39,7 +39,11 @@ export default function Header({ user, onLogin, onLogout, onOpenArchive, onHome,
             <div className="text-right hidden sm:block">
               <p className="text-[11px] text-muted-foreground uppercase tracking-[0.18em]">Totale</p>
               <p className="text-sm font-semibold text-primary">
-                €{(archiveTotal / 100).toLocaleString('it-IT', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                {archiveTotal.toLocaleString("it-IT", {
+                  style: "currency",
+                  currency: "EUR",
+                  maximumFractionDigits: 0,
+                })}
               </p>
             </div>
           )}
@@ -61,7 +65,7 @@ export default function Header({ user, onLogin, onLogout, onOpenArchive, onHome,
           {user ? (
             <div className="flex items-center gap-2">
               <div className="hidden md:flex flex-col items-end leading-none mr-1">
-                <span className="text-xs font-semibold truncate max-w-[120px]">{user.displayName || 'Utente'}</span>
+                <span className="text-xs font-semibold truncate max-w-[120px]">{user.displayName || "Utente"}</span>
                 <span className="text-[10px] text-muted-foreground">Premium</span>
               </div>
               <Button

@@ -18,6 +18,7 @@ import {
   Lightbulb,
   AlertCircle,
   ShieldCheck,
+  RotateCcw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fmtEUR } from "@/lib/format";
