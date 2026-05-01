@@ -3,23 +3,21 @@ import {
   Bar,
   BarChart,
   Cell,
-  LabelList,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
 import {
-  Bookmark,
   CheckCircle2,
-  RotateCcw,
-  Pencil,
   Award,
   TrendingDown,
   TrendingUp,
   AlertTriangle,
   ShieldQuestion,
   Lightbulb,
+  AlertCircle,
+  ShieldCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fmtEUR } from "@/lib/format";
@@ -95,6 +93,18 @@ export default function ResultsView({
         </span>
       </div>
 
+      {/* Outlier Warning */}
+      {verdict?.outlierWarning && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm font-medium"
+        >
+          <AlertCircle className="w-5 h-5 shrink-0" />
+          <p>{verdict.outlierWarning}</p>
+        </motion.div>
+      )}
+
       {/* Verdict card */}
       {mode === "analizza" && verdict ? (
         <motion.div
@@ -110,9 +120,15 @@ export default function ResultsView({
               <VerdictIcon className={`w-6 h-6 ${verdict.color.text}`} />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
-                Verdetto
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+                  Verdetto
+                </p>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-background/30 ring-1 ring-white/10 text-[10px] font-bold text-muted-foreground">
+                  <ShieldCheck className="w-3 h-3" />
+                  CONFIDENZA: {Math.round(verdict.confidence * 100)}%
+                </div>
+              </div>
               <h3 className="mt-1 text-3xl sm:text-4xl font-bold tracking-tight">
                 <span className={verdict.color.text}>{verdict.label}</span>
               </h3>
@@ -137,9 +153,15 @@ export default function ResultsView({
               <Award className="w-6 h-6 text-accent" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
-                Stima di mercato
-              </p>
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+                  Stima di mercato
+                </p>
+                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-background/30 ring-1 ring-white/10 text-[10px] font-bold text-muted-foreground">
+                  <ShieldCheck className="w-3 h-3" />
+                  CONFIDENZA: {Math.round(analysis.confidence * 100)}%
+                </div>
+              </div>
               <h3 className="mt-1 text-3xl sm:text-4xl font-bold tracking-tight">
                 Tra{" "}
                 <span className="text-accent">{fmtEUR(analysis.marketMin)}</span>{" "}
@@ -296,57 +318,44 @@ export default function ResultsView({
                     stroke={
                       d.kind === "you"
                         ? `hsl(${youColor})`
-                        : "hsl(222 30% 30%)"
+                        : "transparent"
                     }
-                    strokeWidth={d.kind === "you" ? 2 : 1}
+                    strokeWidth={2}
+                    fillOpacity={d.kind === "you" ? 1 : 0.6}
                   />
                 ))}
-                <LabelList
-                  dataKey="value"
-                  position="top"
-                  offset={16}
-                  formatter={(v: number) => fmtEUR(v)}
-                  style={{
-                    fill: "hsl(210 40% 96%)",
-                    fontSize: 13,
-                    fontWeight: 500,
-                    letterSpacing: "0.3px",
-                    textShadow: "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.6)",
-                  }}
-                />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Breakdown */}
+      {/* Composition */}
       <div className="rounded-2xl border border-border/70 bg-card/40 p-5 sm:p-6">
         <h4 className="text-sm font-semibold tracking-tight">
-          Composizione del costo onesto
+          Analisi costi stimata
         </h4>
         <p className="mt-1 text-xs text-muted-foreground">
-          Stima media per {job.label.toLowerCase()} su un valore di{" "}
-          {fmtEUR(analysis.marketMid)}.
+          Ripartizione indicativa basata sulla categoria {category.label}.
         </p>
-        <div className="mt-5 space-y-4">
-          <BreakdownRow
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <CompositionItem
             label="Manodopera"
-            value={analysis.manodopera}
-            pct={55}
-            colorClass="bg-primary"
+            value={fmtEUR(analysis.manodopera)}
+            pct={Math.round((analysis.manodopera / analysis.expected) * 100)}
+            color="bg-primary"
           />
-          <BreakdownRow
-            label="Materiali"
-            value={analysis.materiali}
-            pct={35}
-            colorClass="bg-accent"
+          <CompositionItem
+            label="Materiali & Mezzi"
+            value={fmtEUR(analysis.materiali)}
+            pct={Math.round((analysis.materiali / analysis.expected) * 100)}
+            color="bg-accent"
           />
-          <BreakdownRow
-            label="Margine impresa"
-            value={analysis.margine}
-            pct={10}
-            colorClass="bg-amber-400"
+          <CompositionItem
+            label="Margine & Oneri"
+            value={fmtEUR(analysis.margine)}
+            pct={Math.round((analysis.margine / analysis.expected) * 100)}
+            color="bg-emerald-500"
           />
         </div>
       </div>
@@ -354,22 +363,17 @@ export default function ResultsView({
       {/* Recommendations */}
       {verdict && (
         <div className="rounded-2xl border border-border/70 bg-card/40 p-5 sm:p-6">
-          <div className="flex items-center gap-2.5">
-            <span className="inline-flex items-center justify-center w-8 h-8 rounded-lg bg-amber-500/15 ring-1 ring-amber-500/30">
-              <Lightbulb className="w-4 h-4 text-amber-300" />
-            </span>
+          <div className="flex items-center gap-2 mb-4">
+            <Lightbulb className="w-4 h-4 text-primary" />
             <h4 className="text-sm font-semibold tracking-tight">
-              Cosa fare adesso
+              Cosa fare ora
             </h4>
           </div>
-          <ul className="mt-4 space-y-2.5">
+          <ul className="space-y-3">
             {verdict.recommendations.map((r, i) => (
-              <li
-                key={i}
-                className="flex gap-3 text-sm text-foreground/90 leading-relaxed"
-              >
-                <span className="mt-1.5 inline-block w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                <span>{r}</span>
+              <li key={i} className="flex gap-3 text-sm leading-relaxed">
+                <span className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
+                <span className="text-muted-foreground">{r}</span>
               </li>
             ))}
           </ul>
@@ -377,29 +381,32 @@ export default function ResultsView({
       )}
 
       {/* Actions */}
-      <div className="flex flex-wrap items-center gap-2 pt-2">
-        <Button
-          variant="outline"
-          onClick={onEdit}
-          className="gap-2"
-        >
-          <Pencil className="w-4 h-4" /> Modifica dati
-        </Button>
-        <Button
-          variant="outline"
-          onClick={onReset}
-          className="gap-2"
-        >
-          <RotateCcw className="w-4 h-4" /> Nuova analisi
-        </Button>
+      <div className="pt-4 flex flex-col sm:flex-row gap-3">
         <Button
           onClick={onSave}
           disabled={savedThisRun}
-          className="ml-auto gap-2 bg-primary text-primary-foreground glow-azure disabled:opacity-60"
+          className="flex-1 h-12 gap-2 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20"
         >
-          <Bookmark className="w-4 h-4" />
-          {savedThisRun ? "Salvato in archivio" : "Salva preventivo"}
+          <CheckCircle2 className="w-4 h-4" />
+          {savedThisRun ? "Salvato in archivio" : "Salva nell'archivio"}
         </Button>
+        <div className="flex gap-2 flex-1">
+          <Button
+            variant="outline"
+            onClick={onEdit}
+            className="flex-1 h-12 gap-2 rounded-2xl border-border/80 bg-card/50"
+          >
+            <TrendingDown className="w-4 h-4" /> Modifica dati
+          </Button>
+          <Button
+            variant="outline"
+            onClick={onReset}
+            className="h-12 w-12 p-0 rounded-2xl border-border/80 bg-card/50"
+            title="Nuova analisi"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );
@@ -408,23 +415,23 @@ export default function ResultsView({
 function StatCard({
   label,
   value,
-  accent = "text-foreground",
-  big = false,
+  accent,
+  big,
 }: {
   label: string;
   value: string;
-  accent?: string;
+  accent: string;
   big?: boolean;
 }) {
   return (
     <div className="rounded-2xl border border-border/70 bg-card/50 p-4">
-      <p className="text-[10px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
+      <p className="text-[10px] font-semibold tracking-[0.12em] uppercase text-muted-foreground">
         {label}
       </p>
       <p
-        className={`mt-1.5 font-bold tabular-nums ${accent} ${
-          big ? "text-2xl" : "text-xl"
-        }`}
+        className={`mt-1.5 font-bold tabular-nums tracking-tight ${
+          big ? "text-xl sm:text-2xl" : "text-lg sm:text-xl"
+        } ${accent}`}
       >
         {value}
       </p>
@@ -432,32 +439,32 @@ function StatCard({
   );
 }
 
-function BreakdownRow({
+function CompositionItem({
   label,
   value,
   pct,
-  colorClass,
+  color,
 }: {
   label: string;
-  value: number;
+  value: string;
   pct: number;
-  colorClass: string;
+  color: string;
 }) {
   return (
-    <div>
-      <div className="flex items-baseline justify-between text-sm">
+    <div className="space-y-2">
+      <div className="flex items-center justify-between text-[11px] font-medium uppercase tracking-wider">
         <span className="text-muted-foreground">{label}</span>
-        <span className="tabular-nums">
-          <span className="font-semibold">{fmtEUR(value)}</span>
-          <span className="text-muted-foreground ml-2 text-xs">{pct}%</span>
-        </span>
+        <span className="text-foreground font-bold">{pct}%</span>
       </div>
-      <div className="mt-2 h-2 rounded-full bg-border/50 overflow-hidden">
-        <div
-          className={`h-full rounded-full ${colorClass}`}
-          style={{ width: `${pct}%` }}
+      <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ duration: 1, delay: 0.2 }}
+          className={`h-full ${color}`}
         />
       </div>
+      <p className="text-xs font-semibold tabular-nums">{value}</p>
     </div>
   );
 }
