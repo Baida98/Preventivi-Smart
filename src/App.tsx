@@ -12,14 +12,25 @@ import Footer from "./components/Footer";
 import Wizard, { type Mode } from "./components/Wizard";
 import Archive from "./components/Archive";
 import { deleteQuote, loadArchive, calculateTotalArchive, type SavedQuote } from "./lib/storage";
+import { onAuthChange, getCurrentUser, signInWithGoogle, signOutUser } from "./lib/firebase-service";
+import type { User } from "firebase/auth";
 
 export default function App() {
   const [mode, setMode] = useState<Mode | null>(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const [archive, setArchive] = useState<SavedQuote[]>([]);
   const [archiveTotal, setArchiveTotal] = useState(0);
+  const [user, setUser] = useState<User | null>(null);
   const [presetCategoryId, setPresetCategoryId] = useState<string | null>(null);
   const wizardRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    // Gestione autenticazione
+    const unsubscribe = onAuthChange((u) => {
+      setUser(u);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     // Applica gli header di sicurezza al caricamento
@@ -51,6 +62,9 @@ export default function App() {
   return (
     <div className="min-h-screen text-foreground">
       <Header
+        user={user}
+        onLogin={signInWithGoogle}
+        onLogout={signOutUser}
         archiveCount={archive.length}
         archiveTotal={archiveTotal}
         onOpenArchive={() => setArchiveOpen(true)}
