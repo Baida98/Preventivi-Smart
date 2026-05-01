@@ -16,6 +16,8 @@ export type Verdict = {
     glow: string;
   };
   recommendations: string[];
+  confidence: number;
+  outlierWarning?: string;
 };
 
 const COLORS: Record<VerdictKey, Verdict["color"]> = {
@@ -57,13 +59,32 @@ const COLORS: Record<VerdictKey, Verdict["color"]> = {
 };
 
 export function judge(price: number, m: MarketAnalysis): Verdict {
-  const diffPct = (price - m.marketMid) / m.marketMid;
+  const minThreshold = m.marketMin * 0.8;
+  const maxThreshold = m.marketMax * 1.15;
+  
   let v: VerdictKey;
-  if (price < m.marketMin * 0.85) v = "sospetto";
-  else if (price <= m.marketMin) v = "ottimo";
-  else if (price <= m.marketMax) v = "equo";
-  else if (price <= m.marketMax * 1.2) v = "alto";
-  else v = "troppo-alto";
+  let baseConfidence = m.confidence;
+
+  if (price < minThreshold) {
+    v = "sospetto";
+    baseConfidence *= 0.85;
+  } else if (price < m.marketMin) {
+    v = "ottimo";
+  } else if (price <= m.marketMax) {
+    v = "equo";
+  } else if (price <= maxThreshold) {
+    v = "alto";
+  } else {
+    v = "troppo-alto";
+    baseConfidence *= 0.85;
+  }
+
+  const isOutlier = price < m.marketMin * 0.5 || price > m.marketMax * 2;
+  const outlierWarning = isOutlier
+    ? "⚠️ ATTENZIONE: Questo prezzo è un outlier estremo. Verifica i dati inseriti."
+    : undefined;
+
+  const diffPct = (price - m.marketMid) / m.marketMid;
 
   const recommendations: Record<VerdictKey, string[]> = {
     ottimo: [
@@ -132,5 +153,7 @@ export function judge(price: number, m: MarketAnalysis): Verdict {
     ...labels[v],
     color: COLORS[v],
     recommendations: recommendations[v],
+    confidence: Math.max(0.5, Math.min(1, baseConfidence)),
+    outlierWarning,
   };
 }
