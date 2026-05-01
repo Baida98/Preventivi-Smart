@@ -46,10 +46,16 @@ export default function App() {
     setArchiveTotal(calculateTotalArchive());
   }
 
+  useEffect(() => {
+    if (mode !== null) {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    }
+  }, [mode]);
+
   function startMode(m: Mode, categoryId: string | null = null) {
     setPresetCategoryId(categoryId);
     setMode(m);
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }
 
   function handleDelete(id: string) {
@@ -58,7 +64,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen text-foreground">
+    <div className="min-h-screen text-foreground overflow-x-hidden">
       <Header
         user={user}
         onLogin={signInWithGoogle}
