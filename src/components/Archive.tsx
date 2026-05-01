@@ -17,9 +17,10 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2, Inbox, User, FileText } from "lucide-react";
+import { Trash2, Inbox, User, FileText, FileDown } from "lucide-react";
 import { fmtEUR, fmtDate } from "@/lib/format";
 import type { SavedQuote } from "@/lib/storage";
+import { PDFGenerator } from "@/lib/pdf-generator";
 
 const VERDICT_BADGE: Record<string, string> = {
   ottimo: "bg-emerald-500/15 text-emerald-300 border-emerald-500/30",
@@ -48,6 +49,11 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
       onDelete(deleteConfirm);
       setDeleteConfirm(null);
     }
+  };
+
+  const handleExportPDF = (q: SavedQuote) => {
+    const fullQuote = PDFGenerator.fromSavedQuote(q);
+    PDFGenerator.downloadPDF(fullQuote);
   };
 
   return (
@@ -149,7 +155,15 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
                 </div>
               </div>
 
-              <div className="mt-3 flex justify-end">
+              <div className="mt-3 flex justify-between items-center">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => handleExportPDF(q)}
+                  className="h-7 px-2 text-xs text-primary hover:text-primary/80"
+                >
+                  <FileDown className="w-3.5 h-3.5 mr-1" /> PDF
+                </Button>
                 <Button
                   size="sm"
                   variant="ghost"
