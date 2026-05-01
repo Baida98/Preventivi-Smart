@@ -217,7 +217,7 @@ export default function Wizard({
   return (
     <section className="relative mx-auto max-w-3xl px-5 sm:px-8 py-12 sm:py-16">
       {/* progress */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 wizard-header-container">
         <div className="flex items-center gap-3">
           <span
             className={`inline-flex items-center justify-center w-9 h-9 rounded-xl ${
@@ -232,11 +232,11 @@ export default function Wizard({
               <Calculator className="w-4 h-4 text-accent" />
             )}
           </span>
-          <div>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-muted-foreground">
+          <div className="flex flex-col justify-center">
+            <p className="text-[11px] leading-tight uppercase tracking-[0.18em] text-muted-foreground">
               {mode === "analizza" ? "Analisi preventivo" : "Stima rapida"}
             </p>
-            <p className="text-sm font-semibold">
+            <p className="text-sm font-semibold leading-tight mt-0.5">
               Passo {progressIndex} di {totalSteps}
             </p>
           </div>

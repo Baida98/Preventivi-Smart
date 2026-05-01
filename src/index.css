@@ -262,6 +262,13 @@
     overscroll-behavior: contain;
   }
 
+  /* Wizard Header Fix */
+  .wizard-header-container {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+
   @supports (-webkit-touch-callout: none) {
     [data-radix-select-viewport] {
       -webkit-user-select: none;
