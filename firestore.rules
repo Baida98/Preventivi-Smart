@@ -1,0 +1,25 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Regola base: accesso consentito solo agli utenti autenticati per i propri dati
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      
+      // Sottocollezione preventivi dell'utente
+      match /quotes/{quoteId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      
+      // Contatore per la numerazione dei preventivi
+      match /counters/{counterId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+    
+    // Blocco totale per tutto il resto
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
