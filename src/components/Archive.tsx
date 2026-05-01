@@ -17,7 +17,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2, Inbox } from "lucide-react";
+import { Trash2, Inbox, User, FileText } from "lucide-react";
 import { fmtEUR, fmtDate } from "@/lib/format";
 import type { SavedQuote } from "@/lib/storage";
 
@@ -102,6 +102,28 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
                   </span>
                 )}
               </div>
+
+              {(q.cliente || q.notes) && (
+                <div className="mt-3 space-y-1.5 border-t border-border/40 pt-3">
+                  {q.cliente && (
+                    <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                      <User className="w-3 h-3" />
+                      <span className="font-medium text-foreground/80 truncate">
+                        {q.cliente.nome} {q.cliente.cognome || ""}
+                      </span>
+                      {q.cliente.email && (
+                        <span className="truncate opacity-60">· {q.cliente.email}</span>
+                      )}
+                    </div>
+                  )}
+                  {q.notes && (
+                    <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
+                      <FileText className="w-3 h-3 mt-0.5 shrink-0" />
+                      <p className="italic line-clamp-2">{q.notes}</p>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
                 {q.mode === "analizza" && q.receivedPrice ? (
