@@ -221,7 +221,7 @@ export default function Wizard({
   }
 
   return (
-    <section className="relative mx-auto max-w-3xl px-5 sm:px-8 pt-6 pb-16 sm:pt-8 sm:pb-20">
+    <section className="relative mx-auto max-w-3xl px-5 sm:px-8 pt-6 pb-28 sm:pt-8 sm:pb-24">
       {/* progress */}
       <div className="flex items-center justify-between mb-8 wizard-header-container">
         <div className="flex items-center gap-3">

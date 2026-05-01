@@ -202,7 +202,7 @@ export default function ResultsView({
       {/* Diff + unit price — only analizza */}
       {mode === "analizza" && (
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-border/70 bg-card/50 p-4">
+          <div className="rounded-2xl border border-border/70 bg-card/50 p-4 min-w-0 overflow-hidden">
             <div className="flex items-center justify-between mb-2">
               <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground">
                 Vs media
@@ -211,18 +211,18 @@ export default function ResultsView({
                 ? <TrendingUp className="w-3.5 h-3.5 text-rose-300" />
                 : <TrendingDown className="w-3.5 h-3.5 text-emerald-300" />}
             </div>
-            <p className={`text-xl font-bold tabular-nums ${diff >= 0 ? "text-rose-300" : "text-emerald-300"}`}>
+            <p className={`text-base font-bold tabular-nums truncate ${diff >= 0 ? "text-rose-300" : "text-emerald-300"}`}>
               {diff >= 0 ? "+" : "−"}{fmtEUR(Math.abs(diff))}
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               {diff >= 0 ? "+" : "−"}{Math.abs(diffPct).toFixed(1).replace(".", ",")}%
             </p>
           </div>
-          <div className="rounded-2xl border border-border/70 bg-card/50 p-4">
+          <div className="rounded-2xl border border-border/70 bg-card/50 p-4 min-w-0 overflow-hidden">
             <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-2">
               Prezzo unitario
             </p>
-            <p className="text-xl font-bold tabular-nums">
+            <p className="text-base font-bold tabular-nums truncate">
               {fmtEUR(analysis.pricePerUnit)}
             </p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">per {job.unit}</p>
@@ -427,11 +427,11 @@ function StatCard({
   accent: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/50 p-3 sm:p-4">
-      <p className="text-[10px] font-semibold tracking-[0.12em] uppercase text-muted-foreground leading-none">
+    <div className="rounded-2xl border border-border/70 bg-card/50 p-3 sm:p-4 min-w-0 overflow-hidden">
+      <p className="text-[10px] font-semibold tracking-[0.12em] uppercase text-muted-foreground leading-none truncate">
         {label}
       </p>
-      <p className={`mt-2 text-base sm:text-lg font-bold tabular-nums tracking-tight leading-none ${accent}`}>
+      <p className={`mt-2 text-sm sm:text-base font-bold tabular-nums tracking-tight leading-none truncate ${accent}`}>
         {value}
       </p>
     </div>
