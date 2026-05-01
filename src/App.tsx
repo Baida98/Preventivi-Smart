@@ -49,9 +49,7 @@ export default function App() {
   function startMode(m: Mode, categoryId: string | null = null) {
     setPresetCategoryId(categoryId);
     setMode(m);
-    setTimeout(() => {
-      wizardRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 60);
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }
 
   function handleDelete(id: string) {
