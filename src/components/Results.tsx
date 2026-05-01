@@ -243,18 +243,18 @@ export default function ResultsView({
             ? "La tua barra colorata, le altre rappresentano la fascia onesta."
             : "Fascia di prezzo onesta calcolata per la tua regione."}
         </p>
-        <div className="mt-8 h-72">
+        <div className="mt-8 h-80">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
-              margin={{ top: 32, right: 8, bottom: 4, left: -10 }}
+              margin={{ top: 48, right: 8, bottom: 8, left: -10 }}
             >
               <XAxis
                 dataKey="name"
-                tick={{ fill: "hsl(215 20% 75%)", fontSize: 11, fontWeight: 600 }}
+                tick={{ fill: "hsl(215 20% 75%)", fontSize: 12, fontWeight: 500 }}
                 axisLine={{ stroke: "hsl(222 30% 22%)" }}
                 tickLine={false}
-                dy={8}
+                dy={12}
               />
               <YAxis
                 tick={{ fill: "hsl(215 20% 70%)", fontSize: 11 }}
@@ -304,13 +304,14 @@ export default function ResultsView({
                 <LabelList
                   dataKey="value"
                   position="top"
-                  offset={12}
+                  offset={16}
                   formatter={(v: number) => fmtEUR(v)}
                   style={{
                     fill: "hsl(210 40% 96%)",
-                    fontSize: 12,
-                    fontWeight: 600,
-                    textShadow: "0 2px 4px rgba(0,0,0,0.5)",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    letterSpacing: "0.3px",
+                    textShadow: "0 2px 8px rgba(0,0,0,0.8), 0 1px 3px rgba(0,0,0,0.6)",
                   }}
                 />
               </Bar>
