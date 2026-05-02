@@ -39,9 +39,9 @@ export default function Hero({ onAnalizza, onStima }: Props) {
         >
           Il prezzo è{" "}
           <span className="font-serif-display italic text-primary inline-block">
-            corretto
+            giusto
           </span>
-          ? (Test Fix)
+          ?
         </motion.h1>
 
         <motion.p
