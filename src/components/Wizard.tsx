@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import RegionSelector from "./RegionSelector";
 import {
   CATEGORIES,
   REGIONS,
@@ -376,30 +377,9 @@ export default function Wizard({
               <span className="font-semibold">{job.label}</span>
             </div>
 
-            {/* Selettore regione — Select nativa per evitare blocchi scroll su mobile */}
-            <div className="mt-6 space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
-                Regione
-              </Label>
-              <div className="relative">
-                <select
-                  value={regionId}
-                  onChange={(e) => setRegionId(e.target.value)}
-                  className="w-full h-11 px-3 rounded-md border border-border bg-card/60 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none appearance-none cursor-pointer"
-                >
-                  <option value="" disabled>Seleziona la tua regione</option>
-                  {REGIONS.map((r) => (
-                    <option key={r.id} value={r.id}>
-                      {r.label}
-                    </option>
-                  ))}
-                </select>
-                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-muted-foreground">
-                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </div>
-              </div>
+            {/* Selettore regione — Bottom drawer mobile-first con ricerca */}
+            <div className="mt-6">
+              <RegionSelector value={regionId} onChange={setRegionId} />
             </div>
 
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
