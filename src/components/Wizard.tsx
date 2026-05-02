@@ -87,13 +87,12 @@ export default function Wizard({
   // map step to displayed progress: in stima mode, the price step is skipped
   const progressIndex = step === 4 ? totalSteps : step;
 
-  // NON scrollare automaticamente quando si cambia step
-  // Questo causa il problema di abbassamento delle schermate su mobile
-  // useEffect(() => {
-  //   requestAnimationFrame(() => {
-  //     window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
-  //   });
-  // }, [step]);
+  // scroll to top on every step change — instant to avoid the "dip" caused by
+  // focus-induced auto-scroll on newly rendered inputs before smooth scroll kicks in
+  useEffect(() => {
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  }, [step]);
 
   const canStep2Next = useMemo(() => {
     if (!regionId) return false;
