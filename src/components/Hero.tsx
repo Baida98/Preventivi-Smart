@@ -28,7 +28,7 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card/70 border border-border/80 text-xs text-muted-foreground"
         >
           <Sparkles className="w-3.5 h-3.5 text-primary" />
-          Aggiornato con prezzari ISTAT 2025 e listini regionali
+          Riferimenti di mercato aggiornati al 2025 · Prezzari regionali ufficiali
         </motion.div>
 
         <motion.h1
@@ -37,11 +37,10 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.7, delay: 0.05 }}
           className="mt-6 text-balance text-[44px] sm:text-[68px] md:text-[84px] leading-[0.95] font-bold tracking-tight"
         >
-          Il prezzo è{" "}
+          Valuta il tuo{" "}
           <span className="font-serif-display italic text-primary inline-block">
-            giusto
+            preventivo
           </span>
-          ?
         </motion.h1>
 
         <motion.p
@@ -50,9 +49,9 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.7, delay: 0.15 }}
           className="mt-6 mx-auto max-w-2xl text-balance text-base sm:text-lg text-muted-foreground"
         >
-          Verifica in pochi secondi se il preventivo dell'artigiano è onesto.
-          Dati di mercato regionali, verdetto chiaro e consigli pratici per
-          trattare con sicurezza.
+          Confronta il tuo preventivo con i valori di riferimento del mercato locale.
+          Benchmark per categoria, dati regionali aggiornati e indicazioni operative
+          per una decisione consapevole.
         </motion.p>
 
         <motion.div
