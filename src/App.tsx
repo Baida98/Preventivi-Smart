@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { applySecurityHeaders } from "./lib/security";
+import { useSelectMaxHeight } from "./hooks/useSelectMaxHeight";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
 import HowItWorks from "./components/HowItWorks";
@@ -23,6 +24,9 @@ export default function App() {
   const [user, setUser] = useState<User | null>(null);
   const [presetCategoryId, setPresetCategoryId] = useState<string | null>(null);
   const wizardRef = useRef<HTMLDivElement | null>(null);
+
+  // Hook globale per applicare max-height ai SelectContent
+  useSelectMaxHeight();
 
   useEffect(() => {
     // Gestione autenticazione
