@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import RegionSelector from "./RegionSelector";
 import {
   CATEGORIES,
   REGIONS,
@@ -35,6 +36,7 @@ import { judge, type Verdict } from "@/lib/verdict";
 import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT, getClientSuggestions } from "@/lib/storage";
 import { validateWizardData } from "@/lib/validation";
 import ResultsView from "./Results";
+import { cn } from "@/lib/utils";
 
 export type Mode = "analizza" | "stima";
 
@@ -87,13 +89,15 @@ export default function Wizard({
   // map step to displayed progress: in stima mode, the price step is skipped
   const progressIndex = step === 4 ? totalSteps : step;
 
-  // scroll to top on every step change so the header never covers content
+  // scroll to top on every step change — use requestAnimationFrame to ensure
+  // the DOM has rendered before resetting scroll, preventing the "dip" caused
+  // by focus-induced auto-scroll on newly mounted inputs
   useEffect(() => {
-    // Usiamo un piccolo timeout per assicurarci che il DOM sia aggiornato e l'animazione iniziata
-    const timer = setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }, 100);
-    return () => clearTimeout(timer);
+    const raf = requestAnimationFrame(() => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+    return () => cancelAnimationFrame(raf);
   }, [step]);
 
   const canStep2Next = useMemo(() => {
@@ -225,7 +229,7 @@ export default function Wizard({
   }
 
   return (
-    <section className="relative mx-auto max-w-3xl px-5 sm:px-8 pt-6 pb-32 sm:pt-8 sm:pb-24 min-h-[80vh]">
+    <section className="relative mx-auto max-w-3xl px-5 sm:px-8 pt-6 pb-28 sm:pt-8 sm:pb-24">
       {/* progress */}
       <div className="flex items-center justify-between mb-8 wizard-header-container">
         <div className="flex items-center gap-3">
@@ -362,7 +366,6 @@ export default function Wizard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
-            className="wizard-container"
           >
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Configura i dettagli
@@ -378,25 +381,12 @@ export default function Wizard({
               <span className="font-semibold">{job.label}</span>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
-                  Regione
-                </Label>
-                <Select value={regionId} onValueChange={setRegionId}>
-                  <SelectTrigger className="h-11 bg-card/60">
-                    <SelectValue placeholder="Seleziona la regione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {REGIONS.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            {/* Selettore regione — Bottom drawer mobile-first con ricerca */}
+            <div className="mt-6">
+              <RegionSelector value={regionId} onChange={setRegionId} />
+            </div>
 
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
                   Quantità ({job.unitLabel})
@@ -427,7 +417,7 @@ export default function Wizard({
                     <SelectTrigger className="h-11 bg-card/60">
                       <SelectValue placeholder="Scegli" />
                     </SelectTrigger>
-                    <SelectContent>
+                    <SelectContent position="popper" sideOffset={8}>
                       {f.options.map((o) => (
                         <SelectItem key={o.value} value={o.value}>
                           {o.label}
@@ -439,7 +429,7 @@ export default function Wizard({
               ))}
             </div>
 
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
                   Nome Cliente (facoltativo)
@@ -530,7 +520,6 @@ export default function Wizard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
-            className="wizard-container"
           >
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Quanto ti hanno chiesto?
@@ -557,7 +546,6 @@ export default function Wizard({
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="0"
                     className="flex-1 min-w-0 bg-transparent border-0 outline-none text-5xl sm:text-6xl font-bold tabular-nums tracking-tight placeholder:text-border focus:placeholder:text-transparent"
-                    autoFocus
                   />
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">
