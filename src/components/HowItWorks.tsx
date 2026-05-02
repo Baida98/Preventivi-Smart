@@ -10,12 +10,12 @@ const STEPS = [
   {
     Icon: Scale,
     title: "Confronto col mercato",
-    body: "Analizziamo la fascia di prezzo media usando prezzari ISTAT 2025 e i listini della tua regione.",
+    body: "Calcoliamo la fascia di prezzo onesta usando prezzari ISTAT 2025 e i listini della tua regione.",
   },
   {
     Icon: Gavel,
-    title: "Analisi completa",
-    body: "Ricevi un report dettagliato, il posizionamento rispetto al mercato e consigli utili.",
+    title: "Verdetto chiaro",
+    body: "Ricevi un verdetto netto, una tabella dei costi e i consigli pratici per trattare bene.",
   },
 ];
 
@@ -29,7 +29,7 @@ export default function HowItWorks() {
         <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">
           Tre passi.{" "}
           <span className="font-serif-display italic text-muted-foreground">
-            Semplice e trasparente.
+            Niente formule strane.
           </span>
         </h2>
       </div>

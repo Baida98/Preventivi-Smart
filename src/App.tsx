@@ -64,7 +64,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen text-foreground">
+    <div className="min-h-screen text-foreground overflow-x-hidden">
       <Header
         user={user}
         onLogin={signInWithGoogle}

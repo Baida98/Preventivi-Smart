@@ -16,13 +16,12 @@ export default defineConfig({
     dedupe: ["react", "react-dom"],
   },
   server: {
-    port: 5000,
-    host: "0.0.0.0",
-    allowedHosts: true,
+    port: 5173,
+    host: true,
   },
   preview: {
-    port: 5000,
-    host: "0.0.0.0",
+    port: 4173,
+    host: true,
   },
   build: {
     outDir: "dist",

@@ -7,24 +7,24 @@ import {
 
 const FAQS = [
   {
-    q: "Come viene calcolato il prezzo di mercato?",
-    a: "Combiniamo gli indici ISTAT 2025 dei costi di costruzione, i prezzari delle Camere di Commercio regionali e una banca dati interna di preventivi reali aggregati. Il risultato è una fascia di prezzo media — non un singolo valore — perché il mercato varia in base a molti fattori.",
+    q: "Come fate a sapere il prezzo giusto?",
+    a: "Combiniamo gli indici ISTAT 2025 dei costi di costruzione, i prezzari delle Camere di Commercio regionali e una banca dati interna di preventivi reali aggregati. Il risultato è una fascia di prezzo onesta — non un singolo valore — perché il mercato non è mai un numero secco.",
   },
   {
     q: "I miei dati vengono salvati o trasmessi?",
     a: "No. L'analisi avviene interamente nel tuo browser. L'archivio dei preventivi che salvi resta in locale (localStorage) sul tuo device. Non c'è registrazione, non c'è tracciamento personale, non condividiamo niente con terze parti.",
   },
   {
-    q: "Cosa significa se il prezzo è sotto la media?",
-    a: "Un prezzo inferiore alla media può indicare un'ottima offerta, ma suggeriamo sempre di verificare che il preventivo sia completo (materiali, smaltimento, oneri) e che il professionista operi con regolari certificazioni e DURC.",
+    q: "Cosa significa il verdetto \"Sospetto\"?",
+    a: "Quando un preventivo è molto sotto la media di mercato (oltre il 30%), spesso indica materiali scadenti, lavoro in nero o competenze improvvisate. Diffida sempre dei preventivi anomali al ribasso e pretendi capitolato dettagliato, fattura e garanzia.",
   },
   {
-    q: "Posso usare il report per confrontarmi con il mio fornitore?",
-    a: "Certamente. Il report serve a creare una base di discussione oggettiva. Un professionista serio è sempre disponibile a spiegare le voci di costo e il valore aggiunto del proprio servizio rispetto alle medie statistiche.",
+    q: "Posso usarlo per chiedere uno sconto al mio artigiano?",
+    a: "Sì, è uno dei suoi scopi. Mostragli la fascia di mercato della tua regione e chiedi che giustifichi gli scostamenti voce per voce. Un professionista serio non avrà problemi a farlo.",
   },
   {
     q: "Funziona per tutti i lavori di casa?",
-    a: "Copriamo le 8 categorie più richieste in Italia: edilizia, imbiancatura, idraulica, elettrico, pavimenti, climatizzazione, serramenti, pulizie e giardino. Aggiungiamo nuovi mestieri ogni mese per offrire una copertura sempre più ampia.",
+    a: "Copriamo le 8 categorie più richieste in Italia: edilizia, imbiancatura, idraulica, elettrico, pavimenti, climatizzazione, serramenti, pulizie e giardino. Aggiungiamo nuovi mestieri ogni mese — se ti manca qualcosa, scrivici.",
   },
 ];
 
@@ -38,7 +38,7 @@ export default function FAQ() {
         <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">
           Tutto quello che ti chiedi{" "}
           <span className="font-serif-display italic text-muted-foreground">
-            sul servizio
+            la prima volta
           </span>
         </h2>
       </div>

@@ -156,8 +156,7 @@
 
 @layer base {
   * { @apply border-border; }
-  html { scroll-behavior: smooth; overflow-x: hidden; }
-  body { overflow-x: hidden; }
+  html { scroll-behavior: smooth; }
   body {
     @apply font-sans antialiased text-foreground;
     background:
@@ -268,12 +267,6 @@
     min-height: 44px;
     display: flex;
     align-items: center;
-  }
-
-  /* Fix cross-browser dropdown layering (Opera, Firefox, Chrome) */
-  [data-radix-popper-content-wrapper] {
-    z-index: 9999 !important;
-    position: fixed !important;
   }
 
   @supports (-webkit-touch-callout: none) {

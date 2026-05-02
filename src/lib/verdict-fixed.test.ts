@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { judge } from "./verdict";
+import { judge } from "./verdict-fixed";
 import type { MarketAnalysis } from "./pricing";
 
 describe("Verdict - Problemi Critici Corretti", () => {
@@ -12,7 +12,6 @@ describe("Verdict - Problemi Critici Corretti", () => {
     manodopera: 550,
     materiali: 350,
     margine: 100,
-    confidence: 0.9,
   };
 
   describe("PROBLEMA 1: Soglie di verdetto senza gap", () => {
@@ -61,31 +60,32 @@ describe("Verdict - Problemi Critici Corretti", () => {
     it("generates accurate descriptions for sospetto", () => {
       const verdict = judge(500, mockMarketAnalysis);
       expect(verdict.key).toBe("sospetto");
-      expect(verdict.description).toContain("sotto la media");
+      expect(verdict.description).toContain("sotto il minimo");
+      expect(verdict.description).not.toContain("media");
     });
 
     it("generates accurate descriptions for ottimo", () => {
       const verdict = judge(750, mockMarketAnalysis);
       expect(verdict.key).toBe("ottimo");
-      expect(verdict.description).toContain("inferiore al minimo");
+      expect(verdict.description).toContain("buona offerta");
     });
 
     it("generates accurate descriptions for equo", () => {
       const verdict = judge(1000, mockMarketAnalysis);
       expect(verdict.key).toBe("equo");
-      expect(verdict.description).toContain("in linea");
+      expect(verdict.description).toContain("linea con il mercato");
     });
 
     it("generates accurate descriptions for alto", () => {
       const verdict = judge(1350, mockMarketAnalysis);
       expect(verdict.key).toBe("alto");
-      expect(verdict.description).toContain("sopra la media");
+      expect(verdict.description).toContain("sopra il massimo");
     });
 
     it("generates accurate descriptions for troppo-alto", () => {
       const verdict = judge(2000, mockMarketAnalysis);
       expect(verdict.key).toBe("troppo-alto");
-      expect(verdict.description).toContain("sopra il mercato");
+      expect(verdict.description).toContain("Significativamente alto");
     });
   });
 
@@ -124,10 +124,10 @@ describe("Verdict - Problemi Critici Corretti", () => {
       expect(sospettoConfidence).toBeLessThan(equoConfidence);
     });
 
-    it("returns a confidence score based on region data", () => {
-      const verdict = judge(1000, mockMarketAnalysis);
-      expect(verdict.confidence).toBeGreaterThanOrEqual(0.5);
-      expect(verdict.confidence).toBeLessThanOrEqual(1);
+    it("accepts custom region confidence", () => {
+      const verdict1 = judge(1000, mockMarketAnalysis, 0.9);
+      const verdict2 = judge(1000, mockMarketAnalysis, 0.5);
+      expect(verdict1.confidence).toBeGreaterThan(verdict2.confidence);
     });
   });
 

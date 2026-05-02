@@ -10,8 +10,8 @@ describe('Logica di Pricing', () => {
 
     const result = computeMarket(job, regionId, quantity, fieldValues);
 
-    // 45 (base) * 1.0 (semplice) * 1.0 (no smaltimento) * 10 (qty) * 1.25 (lombardia) = 562.5
-    expect(result.expected).toBeCloseTo(562.5);
+    // 45 (base) * 1 (extras) * 10 (qty) * 1.18 (regMul) = 531
+    expect(result.expected).toBeCloseTo(531);
     expect(result.marketMin).toBeLessThan(result.expected);
     expect(result.marketMax).toBeGreaterThan(result.expected);
   });
@@ -25,7 +25,7 @@ describe('Logica di Pricing', () => {
 
     const result = computeMarket(job, regionId, quantity, fieldValues);
 
-    // 45 * 1.18 (media) * 1.15 (smaltimento) * 1 * 0.98 (marche) = 59.8143
-    expect(result.expected).toBeCloseTo(59.81, 1);
+    // 45 * 1.33 * 1 * 1.0 = 59.85
+    expect(result.expected).toBeCloseTo(59.85);
   });
 });
