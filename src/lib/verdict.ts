@@ -81,70 +81,70 @@ export function judge(price: number, m: MarketAnalysis): Verdict {
 
   const isOutlier = price < m.marketMin * 0.5 || price > m.marketMax * 2;
   const outlierWarning = isOutlier
-    ? "⚠️ ATTENZIONE: Questo prezzo è un outlier estremo. Verifica i dati inseriti."
+    ? "⚠️ NOTA: Il prezzo indicato si discosta molto dalle medie statistiche. Verifica i dati."
     : undefined;
 
   const diffPct = (price - m.marketMid) / m.marketMid;
 
   const recommendations: Record<VerdictKey, string[]> = {
     ottimo: [
-      "Il prezzo è sotto la media di mercato. Verifica però che il preventivo sia dettagliato voce per voce.",
-      "Chiedi conferma scritta su materiali, marche e tempi di consegna.",
-      "Assicurati che l'IVA, il sopralluogo e lo smaltimento siano inclusi.",
-      "Richiedi il documento DURC e la certificazione del professionista.",
+      "Il prezzo è molto competitivo rispetto alla media. Verifica che il capitolato sia completo.",
+      "Chiedi conferma sui materiali proposti e sulle tempistiche di esecuzione.",
+      "Assicurati che oneri accessori e smaltimento siano inclusi nell'offerta.",
+      "Richiedi la documentazione tecnica e le certificazioni necessarie.",
     ],
     equo: [
-      "Il prezzo è in linea con il mercato della tua regione: puoi procedere con tranquillità.",
-      "Chiedi comunque almeno un secondo preventivo per confronto.",
-      "Verifica garanzia sui lavori (minimo 2 anni per legge) e tempi.",
-      "Inserisci nel contratto penali per ritardo e modalità di pagamento a stato avanzamento.",
+      "Il prezzo è perfettamente in linea con i valori medi di mercato della tua regione.",
+      "Puoi procedere con fiducia, valutando la professionalità e le referenze del fornitore.",
+      "Verifica le condizioni di garanzia sui lavori e le modalità di pagamento.",
+      "Definisci chiaramente i tempi di inizio e fine lavori nel contratto.",
     ],
     alto: [
-      "Il prezzo è sopra la media: c'è margine di trattativa del 10–15%.",
-      "Chiedi al professionista di dettagliare ogni singola voce per individuare gli scostamenti.",
-      "Richiedi 2 preventivi alternativi per confronto diretto.",
-      "Verifica se il prezzo è giustificato da materiali premium o tempistiche brevi.",
+      "Il prezzo è superiore alla media statistica: valuta se giustificato da materiali premium.",
+      "Chiedi al professionista di illustrare i punti di forza della sua offerta specifica.",
+      "Puoi richiedere un secondo preventivo per avere un termine di paragone aggiuntivo.",
+      "Verifica se sono inclusi servizi extra o garanzie estese che giustificano il valore.",
     ],
     "troppo-alto": [
-      "Il prezzo è significativamente sopra il mercato: non firmare prima di altri preventivi.",
-      "Richiedi obbligatoriamente 2–3 preventivi alternativi nella stessa regione.",
-      "Chiedi al professionista la giustificazione voce per voce dello scostamento.",
-      "Diffida di urgenze artificiali e sconti immediati condizionati alla firma in giornata.",
+      "Il prezzo si posiziona nella fascia alta del mercato: approfondisci le motivazioni.",
+      "Ti consigliamo di richiedere altri preventivi per confrontare diverse soluzioni tecniche.",
+      "Analizza con il professionista le voci di costo per individuare eventuali ottimizzazioni.",
+      "Valuta se l'urgenza o la complessità del lavoro giustificano lo scostamento.",
     ],
     sospetto: [
-      "Il prezzo è anomalmente basso: spesso indica materiali scadenti o lavori non a norma.",
-      "Verifica P.IVA, iscrizione CCIAA e abilitazioni del professionista.",
-      "Chiedi capitolato dettagliato e marche dei materiali per iscritto.",
-      "Diffida di pagamenti totalmente in nero o richieste di acconti elevati.",
-      "Pretendi sempre fattura, garanzia e — per impianti — la certificazione di conformità.",
+      "Il prezzo è sensibilmente basso: verifica con attenzione la qualità di materiali e manodopera.",
+      "Assicurati che il professionista operi nel pieno rispetto delle norme di sicurezza e previdenziali.",
+      "Chiedi un elenco dettagliato dei materiali e delle marche che verranno utilizzate.",
+      "Diffida di offerte eccessivamente ribassate che potrebbero nascondere costi imprevisti.",
+      "Richiedi sempre fattura e certificazioni di conformità per gli impianti realizzati.",
     ],
   };
 
   const labels: Record<VerdictKey, { label: string; short: string; description: string }> = {
     ottimo: {
-      label: "Ottimo",
+      label: "Competitivo",
       short: "Sotto la media di mercato",
-      description: `Il preventivo è inferiore al minimo del mercato locale di circa ${Math.abs(Math.round(diffPct * 100))}%. Un'occasione, se la qualità è garantita.`,
+      description: `Il preventivo è inferiore alla media locale di circa il ${Math.abs(Math.round(diffPct * 100))}%. Un'ottima proposta economica.`,
     },
     equo: {
-      label: "Equo",
-      short: "In linea col mercato",
-      description: `Il preventivo è in linea con i prezzi medi della regione (scostamento del ${Math.abs(Math.round(diffPct * 100))}%). Puoi procedere.`,
+      label: "In Linea",
+      short: "Prezzo medio di mercato",
+      description: `Il preventivo rispecchia i prezzi medi della regione (scostamento del ${Math.abs(Math.round(diffPct * 100))}%). Valore equilibrato.`,
     },
     alto: {
-      label: "Alto",
-      short: "Sopra la media, trattabile",
-      description: `Il preventivo è del ${Math.round(diffPct * 100)}% sopra la media. C'è margine di trattativa.`,
+      label: "Fascia Alta",
+      short: "Sopra la media statistica",
+      description: `Il preventivo è del ${Math.round(diffPct * 100)}% sopra la media. Valuta se i servizi inclusi giustificano il costo.`,
     },
     "troppo-alto": {
-      label: "Troppo alto",
-      short: "Significativamente sopra il mercato",
-      description: `Il preventivo è del ${Math.round(diffPct * 100)}% sopra il mercato. Non firmare senza confronti.`,
+      label: "Fuori Fascia",
+      short: "Significativamente sopra la media",
+      description: `Il preventivo è del ${Math.round(diffPct * 100)}% sopra il mercato. Consigliato un confronto tecnico.`,
     },
     sospetto: {
-      label: "Sospetto",
+      label: "Da Verificare",
       short: "Anomalmente basso",
-      description: `Il preventivo è del ${Math.abs(Math.round(diffPct * 100))}% sotto la media: prezzo troppo basso può indicare lavoro non a norma.`,
+      description: `Il preventivo è del ${Math.abs(Math.round(diffPct * 100))}% sotto la media: verifica con cura capitolato e certificazioni.`,
     },
   };
 

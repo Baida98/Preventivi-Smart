@@ -76,7 +76,7 @@ export default function ResultsView({
 
   const chartData = [
     { name: "Min", fullName: "Min mercato", value: Math.round(analysis.marketMin), kind: "neutral" as const },
-    { name: "Media", fullName: "Media onesta", value: Math.round(analysis.marketMid), kind: "neutral" as const },
+    { name: "Media", fullName: "Media mercato", value: Math.round(analysis.marketMid), kind: "neutral" as const },
     ...(mode === "analizza"
       ? [{ name: "Tuo", fullName: "Tuo prezzo", value: Math.round(price), kind: "you" as const }]
       : []),
@@ -129,7 +129,7 @@ export default function ResultsView({
             <div className="min-w-0 flex-1">
               <div className="flex items-center justify-between gap-2 flex-wrap">
                 <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
-                  Verdetto
+                  Analisi
                 </p>
                 <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-background/30 ring-1 ring-white/10 text-[10px] font-bold text-muted-foreground">
                   <ShieldCheck className="w-3 h-3" />
@@ -177,7 +177,7 @@ export default function ResultsView({
             </div>
           </div>
           <p className="mt-4 text-sm leading-relaxed">
-            Fascia onesta in <span className="font-semibold">{regionLabel}</span> per{" "}
+            Fascia di mercato in <span className="font-semibold">{regionLabel}</span> per{" "}
             <span className="font-semibold">{job.label.toLowerCase()}</span> secondo i prezzari ISTAT 2025.
           </p>
         </motion.div>
@@ -188,14 +188,14 @@ export default function ResultsView({
         <div className="grid grid-cols-2 gap-3">
           <StatCard label="Tuo prezzo" value={fmtEUR(price)} accent="text-foreground" />
           <StatCard label="Media mercato" value={fmtEUR(analysis.marketMid)} accent="text-primary" />
-          <StatCard label="Min onesto" value={fmtEUR(analysis.marketMin)} accent="text-emerald-300" />
-          <StatCard label="Max onesto" value={fmtEUR(analysis.marketMax)} accent="text-amber-300" />
+          <StatCard label="Minimo mercato" value={fmtEUR(analysis.marketMin)} accent="text-emerald-300" />
+          <StatCard label="Massimo mercato" value={fmtEUR(analysis.marketMax)} accent="text-amber-300" />
         </div>
       ) : (
         <div className="rounded-2xl border border-border/70 bg-card/50 grid grid-cols-1 sm:grid-cols-3 overflow-hidden [&>*:not(:last-child)]:border-b [&>*:not(:last-child)]:sm:border-b-0 [&>*:not(:last-child)]:sm:border-r [&>*:not(:last-child)]:border-border/40">
-          <MiniStat label="Min onesto" value={fmtEUR(analysis.marketMin)} accent="text-emerald-300" />
+          <MiniStat label="Minimo mercato" value={fmtEUR(analysis.marketMin)} accent="text-emerald-300" />
           <MiniStat label="Media mercato" value={fmtEUR(analysis.marketMid)} accent="text-primary" highlight />
-          <MiniStat label="Max onesto" value={fmtEUR(analysis.marketMax)} accent="text-amber-300" />
+          <MiniStat label="Massimo mercato" value={fmtEUR(analysis.marketMax)} accent="text-amber-300" />
         </div>
       )}
 
@@ -237,8 +237,8 @@ export default function ResultsView({
         </div>
         <p className="text-xs text-muted-foreground mb-4">
           {mode === "analizza"
-            ? "Barra colorata = tuo prezzo · barre grigie = fascia onesta"
-            : "Fascia di prezzo onesta per la tua regione"}
+            ? "Barra colorata = tuo prezzo · barre grigie = fascia di mercato"
+            : "Fascia di prezzo media per la tua regione"}
         </p>
 
         {/* Legend */}
@@ -251,142 +251,125 @@ export default function ResultsView({
             <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <span
                 className="w-3 h-3 rounded-sm inline-block"
-                style={{ background: `hsl(${youColor})` }}
+                style={{ backgroundColor: `hsl(${youColor})` }}
               />
-              Il tuo prezzo
+              Tuo prezzo
             </div>
           )}
         </div>
 
-        <div className="h-52 sm:h-60 w-full">
+        <div className="h-[180px] w-full">
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
-              margin={{ top: 28, right: 8, bottom: 4, left: 4 }}
-              barCategoryGap="28%"
+              layout="vertical"
+              margin={{ top: 5, right: 35, left: -25, bottom: 5 }}
+              barGap={0}
             >
-              <XAxis
-                dataKey="name"
-                tick={{ fill: "hsl(215 20% 72%)", fontSize: 12, fontWeight: 600 }}
-                axisLine={{ stroke: "hsl(222 30% 20%)" }}
-                tickLine={false}
-              />
+              <XAxis type="number" hide domain={[0, 'dataMax + 100']} />
               <YAxis
-                tick={{ fill: "hsl(215 20% 62%)", fontSize: 11 }}
+                dataKey="name"
+                type="category"
                 axisLine={false}
                 tickLine={false}
-                width={44}
-                tickFormatter={fmtK}
+                tick={false}
+                width={0}
               />
               <Tooltip
-                cursor={{ fill: "hsl(222 40% 13%)", radius: 6 }}
-                contentStyle={{
-                  background: "hsl(222 47% 9%)",
-                  border: "1px solid hsl(222 30% 24%)",
-                  borderRadius: 10,
-                  fontSize: 13,
-                  padding: "8px 14px",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+                cursor={{ fill: "rgba(255,255,255,0.05)" }}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const d = payload[0].payload;
+                    return (
+                      <div className="rounded-xl border border-border bg-popover p-2.5 shadow-xl">
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">
+                          {d.fullName}
+                        </p>
+                        <p className="text-sm font-bold">{fmtEUR(d.value)}</p>
+                      </div>
+                    );
+                  }
+                  return null;
                 }}
-                labelFormatter={(_label, payload) =>
-                  payload?.[0]?.payload?.fullName ?? _label
-                }
-                formatter={(v: number) => [fmtEUR(v), "Prezzo"]}
-                labelStyle={{ color: "hsl(215 20% 85%)", fontWeight: 700, marginBottom: 2 }}
-                itemStyle={{ color: "hsl(215 20% 75%)" }}
               />
-              <Bar dataKey="value" radius={[6, 6, 3, 3]} maxBarSize={72}>
-                <LabelList
-                  dataKey="value"
-                  position="top"
-                  formatter={fmtK}
-                  style={{ fontSize: 11, fontWeight: 700, fill: "hsl(215 20% 80%)" }}
-                />
-                {chartData.map((d, i) => (
+              <Bar dataKey="value" radius={[0, 6, 6, 0]} barSize={28}>
+                {chartData.map((entry, index) => (
                   <Cell
-                    key={i}
-                    fill={d.kind === "you" ? `hsl(${youColor})` : "hsl(215 25% 35%)"}
-                    fillOpacity={d.kind === "you" ? 1 : 0.85}
+                    key={`cell-${index}`}
+                    fill={entry.kind === "you" ? `hsl(${youColor})` : "hsl(215 25% 35%)"}
+                    fillOpacity={entry.kind === "you" ? 1 : 0.6}
                   />
                 ))}
+                <LabelList
+                  dataKey="value"
+                  position="right"
+                  formatter={(v: number) => `€${fmtK(v)}`}
+                  style={{
+                    fill: "hsl(var(--muted-foreground))",
+                    fontSize: "11px",
+                    fontWeight: 600,
+                    fontFamily: "var(--app-font-sans)",
+                  }}
+                  offset={10}
+                />
               </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
       </div>
 
-      {/* Composition */}
-      <div className="rounded-2xl border border-border/70 bg-card/40 p-4 sm:p-5">
-        <h4 className="text-sm font-semibold">Analisi costi stimata</h4>
-        <p className="mt-1 text-xs text-muted-foreground mb-5">
-          Ripartizione indicativa · categoria {category.label}
-        </p>
-        <div className="space-y-4">
-          <CompositionItem
-            label="Manodopera"
-            value={fmtEUR(analysis.manodopera)}
-            pct={Math.round((analysis.manodopera / analysis.expected) * 100)}
-            color="bg-primary"
-          />
-          <CompositionItem
-            label="Materiali & Mezzi"
-            value={fmtEUR(analysis.materiali)}
-            pct={Math.round((analysis.materiali / analysis.expected) * 100)}
-            color="bg-accent"
-          />
-          <CompositionItem
-            label="Margine & Oneri"
-            value={fmtEUR(analysis.margine)}
-            pct={Math.round((analysis.margine / analysis.expected) * 100)}
-            color="bg-amber-400"
-          />
+      {/* Recommendations */}
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="w-4 h-4 text-primary" />
+          <h4 className="text-sm font-semibold">Consigli pratici</h4>
+        </div>
+        <div className="grid grid-cols-1 gap-2">
+          {(verdict?.recommendations ?? [
+            "Verifica sempre i materiali e le certificazioni.",
+            "Chiedi un secondo preventivo per confronto.",
+            "Definisci i tempi di consegna nel contratto.",
+            "Controlla il DURC del professionista."
+          ]).map((r, i) => (
+            <div
+              key={i}
+              className="flex items-start gap-3 p-3.5 rounded-2xl border border-border/50 bg-card/30"
+            >
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary border border-primary/20">
+                {i + 1}
+              </span>
+              <p className="text-sm leading-relaxed text-muted-foreground">
+                {r}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Recommendations */}
-      {verdict && (
-        <div className="rounded-2xl border border-border/70 bg-card/40 p-4 sm:p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Lightbulb className="w-4 h-4 text-primary shrink-0" />
-            <h4 className="text-sm font-semibold">Cosa fare ora</h4>
-          </div>
-          <ul className="space-y-2.5">
-            {verdict.recommendations.map((r, i) => (
-              <li key={i} className="flex gap-3 text-sm leading-relaxed">
-                <span className="mt-2 w-1.5 h-1.5 rounded-full bg-primary/50 shrink-0" />
-                <span className="text-muted-foreground">{r}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
       {/* Actions */}
-      <div className="pt-2 flex flex-col sm:flex-row gap-3">
-        <Button
-          onClick={onSave}
-          disabled={savedThisRun}
-          className="flex-1 h-12 gap-2 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20"
-        >
-          <CheckCircle2 className="w-4 h-4" />
-          {savedThisRun ? "Salvato in archivio" : "Salva nell'archivio"}
-        </Button>
-        <div className="flex gap-2">
+      <div className="pt-4 flex flex-col gap-3">
+        {!savedThisRun && (
+          <Button
+            onClick={onSave}
+            className="w-full h-12 rounded-2xl font-bold bg-primary hover:bg-primary text-primary-foreground glow-azure"
+          >
+            <ShieldCheck className="w-4 h-4 mr-2" /> Salva in archivio
+          </Button>
+        )}
+        <div className="grid grid-cols-2 gap-3">
           <Button
             variant="outline"
             onClick={onEdit}
-            className="flex-1 sm:flex-none h-12 px-5 gap-2 rounded-2xl border-border/80 bg-card/50"
+            className="h-12 rounded-2xl font-semibold border-border/80 bg-card/50"
           >
-            <Pencil className="w-4 h-4" />
-            Modifica
+            <Pencil className="w-4 h-4 mr-2" /> Modifica dati
           </Button>
           <Button
             variant="outline"
             onClick={onReset}
-            className="h-12 w-12 p-0 rounded-2xl border-border/80 bg-card/50 shrink-0"
-            title="Nuova analisi"
+            className="h-12 rounded-2xl font-semibold border-border/80 bg-card/50"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-4 h-4 mr-2" /> Nuovo calcolo
           </Button>
         </div>
       </div>
@@ -394,78 +377,28 @@ export default function ResultsView({
   );
 }
 
-function MiniStat({
-  label,
-  value,
-  accent,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  accent: string;
-  highlight?: boolean;
-}) {
+function StatCard({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
-    <div className={`px-4 py-3 sm:py-4 ${highlight ? "sm:bg-white/[0.03]" : ""}`}>
-      <p className="text-[10px] font-semibold tracking-[0.12em] uppercase text-muted-foreground leading-none">
+    <div className="rounded-2xl border border-border/70 bg-card/50 p-4 min-w-0 overflow-hidden">
+      <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-1.5">
         {label}
       </p>
-      <p className={`mt-1.5 text-lg font-bold tabular-nums tracking-tight leading-none ${accent}`}>
+      <p className={`text-lg sm:text-xl font-bold tabular-nums truncate ${accent}`}>
         {value}
       </p>
     </div>
   );
 }
 
-function StatCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent: string;
-}) {
+function MiniStat({ label, value, accent, highlight }: { label: string; value: string; accent: string; highlight?: boolean }) {
   return (
-    <div className="rounded-2xl border border-border/70 bg-card/50 p-3 sm:p-4 min-w-0 overflow-hidden">
-      <p className="text-[10px] font-semibold tracking-[0.12em] uppercase text-muted-foreground leading-none truncate">
+    <div className={`p-4 flex flex-col items-center text-center ${highlight ? 'bg-primary/5' : ''}`}>
+      <p className="text-[9px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-1">
         {label}
       </p>
-      <p className={`mt-2 text-sm sm:text-base font-bold tabular-nums tracking-tight leading-none truncate ${accent}`}>
+      <p className={`text-base font-bold tabular-nums ${accent}`}>
         {value}
       </p>
-    </div>
-  );
-}
-
-function CompositionItem({
-  label,
-  value,
-  pct,
-  color,
-}: {
-  label: string;
-  value: string;
-  pct: number;
-  color: string;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold tabular-nums">{value}</span>
-          <span className="text-[11px] font-semibold text-muted-foreground w-8 text-right">{pct}%</span>
-        </div>
-      </div>
-      <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.9, delay: 0.15, ease: "easeOut" }}
-          className={`h-full rounded-full ${color}`}
-        />
-      </div>
     </div>
   );
 }

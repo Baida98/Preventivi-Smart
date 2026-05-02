@@ -37,7 +37,9 @@ export default function RegionSelector({ value, onChange }: Props) {
 
   useEffect(() => {
     if (isOpen) {
-      setTimeout(() => searchRef.current?.focus(), 50);
+      // Focus con ritardo per evitare scroll salti su mobile
+      const timer = setTimeout(() => searchRef.current?.focus(), 150);
+      return () => clearTimeout(timer);
     } else {
       setSearchQuery("");
     }
@@ -49,7 +51,7 @@ export default function RegionSelector({ value, onChange }: Props) {
         Regione
       </Label>
 
-      <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <Popover open={isOpen} onOpenChange={setIsOpen} modal={false}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -68,10 +70,11 @@ export default function RegionSelector({ value, onChange }: Props) {
         </PopoverTrigger>
 
         <PopoverContent
-          className="w-[var(--radix-popover-trigger-width)] p-0"
+          className="w-[var(--radix-popover-trigger-width)] p-0 z-[9999]"
           align="start"
           sideOffset={6}
           onOpenAutoFocus={(e) => e.preventDefault()}
+          onCloseAutoFocus={(e) => e.preventDefault()}
         >
           {/* Search */}
           <div className="px-3 py-2.5 border-b">
@@ -89,12 +92,13 @@ export default function RegionSelector({ value, onChange }: Props) {
           </div>
 
           {/* List */}
-          <div className="max-h-[260px] overflow-y-auto overscroll-contain">
+          <div className="max-h-[260px] overflow-y-auto overscroll-contain ios-scroll-fix">
             {filteredRegions.length > 0 ? (
               <div className="divide-y divide-border/50">
                 {filteredRegions.map((region) => (
                   <button
                     key={region.id}
+                    type="button"
                     onClick={() => handleSelect(region.id)}
                     className={cn(
                       "w-full px-3 py-2.5 text-left text-sm font-medium transition-colors flex items-center justify-between",

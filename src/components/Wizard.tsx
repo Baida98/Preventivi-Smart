@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
@@ -71,6 +71,8 @@ export default function Wizard({
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [savedThisRun, setSavedThisRun] = useState(false);
 
+  const containerRef = useRef<HTMLElement>(null);
+
   const job: Job | null = jobId ? findJob(jobId) ?? null : null;
   const category = categoryId ? findCategory(categoryId) ?? null : null;
 
@@ -89,15 +91,25 @@ export default function Wizard({
   // map step to displayed progress: in stima mode, the price step is skipped
   const progressIndex = step === 4 ? totalSteps : step;
 
-  // scroll to top on every step change — use requestAnimationFrame to ensure
-  // the DOM has rendered before resetting scroll, preventing the "dip" caused
-  // by focus-induced auto-scroll on newly mounted inputs
+  // Risoluzione definitiva scroll: forziamo il reset istantaneo
+  // e disabilitiamo temporaneamente lo smooth scroll se presente
   useEffect(() => {
-    const raf = requestAnimationFrame(() => {
-      document.documentElement.scrollTop = 0;
-      document.body.scrollTop = 0;
-    });
-    return () => cancelAnimationFrame(raf);
+    const originalStyle = document.documentElement.style.scrollBehavior;
+    document.documentElement.style.scrollBehavior = 'auto';
+    
+    window.scrollTo(0, 0);
+    if (document.body) document.body.scrollTop = 0;
+    if (document.documentElement) document.documentElement.scrollTop = 0;
+    
+    const timer = setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.documentElement.style.scrollBehavior = originalStyle;
+    }, 50);
+
+    return () => {
+      clearTimeout(timer);
+      document.documentElement.style.scrollBehavior = originalStyle;
+    };
   }, [step]);
 
   const canStep2Next = useMemo(() => {
@@ -229,7 +241,7 @@ export default function Wizard({
   }
 
   return (
-    <section className="relative mx-auto max-w-3xl px-5 sm:px-8 pt-6 pb-28 sm:pt-8 sm:pb-24">
+    <section ref={containerRef} className="relative mx-auto max-w-3xl px-5 sm:px-8 pt-6 pb-28 sm:pt-8 sm:pb-24 min-h-[100vh]">
       {/* progress */}
       <div className="flex items-center justify-between mb-8 wizard-header-container">
         <div className="flex items-center gap-3">
@@ -279,14 +291,14 @@ export default function Wizard({
         })}
       </div>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence mode="wait" initial={false}>
         {step === 1 && (
           <motion.div
             key="s1"
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.2 }}
           >
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
               {categoryId
@@ -313,49 +325,46 @@ export default function Wizard({
                         strokeWidth={2.2}
                       />
                     </span>
-                    <h3 className="mt-4 text-[14px] font-semibold leading-tight">
+                    <p className="mt-4 font-bold text-sm leading-tight">
                       {c.label}
-                    </h3>
-                    <p className="mt-1 text-[11px] text-muted-foreground">
-                      {c.jobs.length} lavori
                     </p>
+                    <ArrowRight className="absolute bottom-4 right-4 w-4 h-4 text-muted-foreground/0 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                   </button>
                 ))}
               </div>
             )}
 
-            {categoryId && category && (
-              <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {category.jobs.map((j) => (
-                  <button
-                    key={j.id}
-                    onClick={() => pickJob(j.id)}
-                    className="group flex items-center justify-between text-left rounded-2xl border border-border/70 bg-card/50 px-5 py-4 hover-elevate-2 transition"
-                  >
-                    <div className="min-w-0">
-                      <h3 className="text-[15px] font-semibold leading-tight">
-                        {j.label}
-                      </h3>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        Da € {j.base}/{j.unit}
-                      </p>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                  </button>
-                ))}
+            {categoryId && (
+              <div className="mt-8 space-y-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCategoryId(null)}
+                  className="-ml-2 mb-2 text-muted-foreground hover:text-primary"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" /> Cambia categoria
+                </Button>
+                <div className="grid grid-cols-1 gap-2">
+                  {category?.jobs.map((j) => (
+                    <button
+                      key={j.id}
+                      onClick={() => pickJob(j.id)}
+                      className="group flex items-center justify-between p-4 rounded-2xl border border-border/70 bg-card/50 hover:border-primary/50 hover:bg-primary/5 transition-all text-left"
+                    >
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[15px]">{j.label}</span>
+                        <span className="text-xs text-muted-foreground mt-0.5">
+                          Unità: {j.unit}
+                        </span>
+                      </div>
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
-
-            <div className="mt-10 flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => (categoryId ? setCategoryId(null) : onClose())}
-                className="gap-2"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                {categoryId ? "Cambia categoria" : "Annulla"}
-              </Button>
-            </div>
           </motion.div>
         )}
 
@@ -365,61 +374,56 @@ export default function Wizard({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-8"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Configura i dettagli
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Calcoliamo la fascia di prezzo onesta con questi dati.
-            </p>
-
-            <div className="mt-6 inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 ring-1 ring-primary/30 text-xs">
-              <Sparkles className="w-3.5 h-3.5 text-primary" />
-              <span className="font-medium">{category?.label}</span>
-              <span className="text-muted-foreground">·</span>
-              <span className="font-semibold">{job.label}</span>
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                Dettagli del lavoro
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Fornisci i dati per una stima precisa.
+              </p>
             </div>
 
-            {/* Selettore regione — Bottom drawer mobile-first con ricerca */}
-            <div className="mt-6">
+            <div className="space-y-6">
               <RegionSelector value={regionId} onChange={setRegionId} />
-            </div>
 
-            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
-                  Quantità ({job.unitLabel})
+                <Label className="text-xs font-semibold text-muted-foreground tracking-wide uppercase">
+                  Quantità ({job.unit})
                 </Label>
                 <Input
                   type="number"
                   inputMode="decimal"
-                  min="0"
-                  step="any"
+                  placeholder={`Es: ${job.defaultQty}`}
                   value={quantity}
                   onChange={(e) => setQuantity(e.target.value)}
-                  placeholder={`Es. ${job.defaultQty ?? 1}`}
-                  className="h-11 bg-card/60"
+                  className="h-11 rounded-xl bg-card/50"
                 />
               </div>
 
               {job.fields.map((f) => (
                 <div key={f.id} className="space-y-2">
-                  <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
+                  <Label className="text-xs font-semibold text-muted-foreground tracking-wide uppercase">
                     {f.label}
                   </Label>
                   <Select
-                    value={fieldValues[f.id] ?? ""}
+                    value={fieldValues[f.id]}
                     onValueChange={(v) =>
-                      setFieldValues((s) => ({ ...s, [f.id]: v }))
+                      setFieldValues((prev) => ({ ...prev, [f.id]: v }))
                     }
                   >
-                    <SelectTrigger className="h-11 bg-card/60">
-                      <SelectValue placeholder="Scegli" />
+                    <SelectTrigger className="h-11 rounded-xl bg-card/50">
+                      <SelectValue />
                     </SelectTrigger>
-                    <SelectContent position="popper" sideOffset={8}>
+                    <SelectContent className="rounded-xl">
                       {f.options.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
+                        <SelectItem
+                          key={o.value}
+                          value={o.value}
+                          className="rounded-lg"
+                        >
                           {o.label}
                         </SelectItem>
                       ))}
@@ -427,87 +431,35 @@ export default function Wizard({
                   </Select>
                 </div>
               ))}
-            </div>
 
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
-                  Nome Cliente (facoltativo)
+                <Label className="text-xs font-semibold text-muted-foreground tracking-wide uppercase">
+                  Note aggiuntive (opzionale)
                 </Label>
-                <div className="relative">
-                  <Input
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                    placeholder="Es: Mario Rossi"
-                    className="h-11 bg-card/60"
-                    list="client-suggestions"
-                  />
-                  <datalist id="client-suggestions">
-                    {getClientSuggestions().map((c, i) => (
-                      <option key={i} value={`${c.nome}${c.cognome ? ' ' + c.cognome : ''}`} />
-                    ))}
-                  </datalist>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
-                  Email Cliente (facoltativo)
-                </Label>
-                <Input
-                  type="email"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  placeholder="mario@esempio.it"
-                  className="h-11 bg-card/60"
+                <Textarea
+                  placeholder="Es: piano alto senza ascensore, materiali particolari..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="min-h-[100px] rounded-xl bg-card/50 resize-none"
                 />
               </div>
             </div>
 
-            <div className="mt-5 space-y-2">
-              <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
-                Note aggiuntive (facoltativo)
-              </Label>
-              <Textarea
-                rows={3}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                placeholder="Es: materiali di pregio, urgenza, accesso difficile..."
-                className="bg-card/60 resize-none"
-              />
-            </div>
-
-            <div className="mt-8 flex items-center gap-2">
+            <div className="pt-4 flex flex-col sm:flex-row gap-3">
               <Button
                 variant="outline"
-                onClick={() => {
-                  setJobId(null);
-                  setStep(1);
-                }}
-                className="gap-2"
+                onClick={() => setStep(1)}
+                className="h-12 px-6 rounded-2xl font-semibold border-border/80 bg-card/50"
               >
-                <ArrowLeft className="w-4 h-4" /> Indietro
+                Indietro
               </Button>
               <Button
-                disabled={!canStep2Next || loading}
-                onClick={() => {
-                  if (mode === "analizza") setStep(3);
-                  else runAnalysis();
-                }}
-                className="gap-2 ml-auto bg-primary text-primary-foreground glow-azure"
+                disabled={!canStep2Next}
+                onClick={() => setStep(mode === "analizza" ? 3 : 4)}
+                className="h-12 flex-1 rounded-2xl font-bold bg-primary hover:bg-primary text-primary-foreground glow-azure"
               >
-                {loading && mode === "stima" ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Calcolo…
-                  </>
-                ) : mode === "analizza" ? (
-                  <>
-                    Continua <ArrowRight className="w-4 h-4" />
-                  </>
-                ) : (
-                  <>
-                    Calcola stima <Sparkles className="w-4 h-4" />
-                  </>
-                )}
+                {mode === "analizza" ? "Continua" : "Vedi stima"}
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </motion.div>
@@ -519,63 +471,66 @@ export default function Wizard({
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.25 }}
+            transition={{ duration: 0.2 }}
+            className="space-y-8"
           >
-            <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Quanto ti hanno chiesto?
-            </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Scrivi il totale del preventivo che hai ricevuto, IVA inclusa.
-            </p>
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
+                Il preventivo ricevuto
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Inserisci il prezzo totale che ti è stato proposto.
+              </p>
+            </div>
 
-            <div className="mt-12 mx-auto max-w-md">
-              <div className="relative rounded-3xl border border-border/80 bg-card/40 p-8 grain glow-azure">
-                <Label className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
-                  Prezzo ricevuto
+            <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground tracking-wide uppercase">
+                  Prezzo Totale (€)
                 </Label>
-                <div className="mt-3 flex items-baseline gap-2">
-                  <span className="text-5xl sm:text-6xl font-bold text-primary">
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground font-semibold">
                     €
                   </span>
-                  <input
+                  <Input
                     type="number"
                     inputMode="decimal"
-                    min="0"
-                    step="any"
+                    placeholder="0,00"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
-                    placeholder="0"
-                    className="flex-1 min-w-0 bg-transparent border-0 outline-none text-5xl sm:text-6xl font-bold tabular-nums tracking-tight placeholder:text-border focus:placeholder:text-transparent"
+                    className="h-14 pl-9 text-xl font-bold rounded-2xl bg-card/50"
+                    autoFocus
                   />
                 </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  Inserisci la cifra finale, comprensiva di IVA e materiali.
+                <p className="text-[11px] text-muted-foreground px-1">
+                  Inserisci l'importo totale IVA inclusa.
+                </p>
+              </div>
+
+              <div className="p-5 rounded-2xl border border-primary/20 bg-primary/5 flex gap-4">
+                <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+                <p className="text-sm leading-relaxed text-muted-foreground">
+                  Analizzeremo questo prezzo confrontandolo con i listini regionali 
+                  e i prezzari ISTAT 2025 per darti un riscontro oggettivo.
                 </p>
               </div>
             </div>
 
-            <div className="mt-8 flex items-center gap-2">
+            <div className="pt-4 flex flex-col sm:flex-row gap-3">
               <Button
                 variant="outline"
                 onClick={() => setStep(2)}
-                className="gap-2"
+                className="h-12 px-6 rounded-2xl font-semibold border-border/80 bg-card/50"
               >
-                <ArrowLeft className="w-4 h-4" /> Indietro
+                Indietro
               </Button>
               <Button
-                disabled={!canStep3Next || loading}
+                disabled={!canStep3Next}
                 onClick={runAnalysis}
-                className="gap-2 ml-auto bg-primary text-primary-foreground glow-azure"
+                className="h-12 flex-1 rounded-2xl font-bold bg-primary hover:bg-primary text-primary-foreground glow-azure"
               >
-                {loading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Calcolo…
-                  </>
-                ) : (
-                  <>
-                    Avvia analisi <Sparkles className="w-4 h-4" />
-                  </>
-                )}
+                Analizza ora
+                <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </div>
           </motion.div>
@@ -584,35 +539,38 @@ export default function Wizard({
         {step === 4 && (
           <motion.div
             key="s4"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3 }}
           >
-            {loading || !analysis ? (
-              <div className="py-20 text-center">
-                <div className="mx-auto w-12 h-12 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
-                <p className="mt-6 text-sm text-muted-foreground">
-                  Confronto con i prezzari regionali in corso…
+            {loading ? (
+              <div className="py-20 flex flex-col items-center justify-center text-center">
+                <div className="relative">
+                  <Loader2 className="w-12 h-12 text-primary animate-spin" />
+                  <div className="absolute inset-0 blur-xl bg-primary/20 animate-pulse" />
+                </div>
+                <h3 className="mt-6 text-xl font-bold">Analisi in corso...</h3>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Stiamo interrogando i listini regionali 2025.
                 </p>
               </div>
             ) : (
-              <ResultsView
-                mode={mode}
-                job={job!}
-                category={category!}
-                regionLabel={
-                  REGIONS.find((r) => r.id === regionId)?.label ?? ""
-                }
-                quantity={Number(quantity)}
-                price={Number(price)}
-                analysis={analysis}
-                verdict={verdict}
-                savedThisRun={savedThisRun}
-                onSave={handleSave}
-                onReset={() => reset(1)}
-                onEdit={() => setStep(mode === "analizza" ? 3 : 2)}
-              />
+              analysis && job && category && (
+                <ResultsView
+                  mode={mode}
+                  job={job}
+                  category={category}
+                  regionLabel={REGIONS.find(r => r.id === regionId)?.label ?? ""}
+                  quantity={Number(quantity)}
+                  price={Number(price)}
+                  analysis={analysis}
+                  verdict={verdict}
+                  savedThisRun={savedThisRun}
+                  onSave={handleSave}
+                  onReset={() => reset(1)}
+                  onEdit={() => setStep(2)}
+                />
+              )
             )}
           </motion.div>
         )}

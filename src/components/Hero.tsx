@@ -39,7 +39,7 @@ export default function Hero({ onAnalizza, onStima }: Props) {
         >
           Il prezzo è{" "}
           <span className="font-serif-display italic text-primary inline-block">
-            giusto
+            corretto
           </span>
           ?
         </motion.h1>
@@ -50,9 +50,9 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.7, delay: 0.15 }}
           className="mt-6 mx-auto max-w-2xl text-balance text-base sm:text-lg text-muted-foreground"
         >
-          Verifica in pochi secondi se il preventivo dell'artigiano è onesto.
-          Dati di mercato regionali, verdetto chiaro e consigli pratici per
-          trattare con sicurezza.
+          Confronta il tuo preventivo con i prezzi medi di mercato della tua regione.
+          Analisi basata su dati ufficiali per garantirti trasparenza e consapevolezza 
+          nei tuoi lavori di casa.
         </motion.p>
 
         <motion.div
