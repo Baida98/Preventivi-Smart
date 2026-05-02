@@ -35,6 +35,7 @@ import { judge, type Verdict } from "@/lib/verdict";
 import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT, getClientSuggestions } from "@/lib/storage";
 import { validateWizardData } from "@/lib/validation";
 import ResultsView from "./Results";
+import { cn } from "@/lib/utils";
 
 export type Mode = "analizza" | "stima";
 
@@ -375,25 +376,31 @@ export default function Wizard({
               <span className="font-semibold">{job.label}</span>
             </div>
 
-            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
-                  Regione
-                </Label>
-                <Select value={regionId} onValueChange={setRegionId}>
-                  <SelectTrigger className="h-11 bg-card/60">
-                    <SelectValue placeholder="Seleziona la regione" />
-                  </SelectTrigger>
-                  <SelectContent position="popper" sideOffset={8}>
-                    {REGIONS.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Selettore regione — griglia di pulsanti, nessun dropdown */}
+            <div className="mt-6 space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
+                Regione{regionId && <span className="ml-2 text-primary font-semibold">{REGIONS.find(r => r.id === regionId)?.label}</span>}
+              </Label>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                {REGIONS.map((r) => (
+                  <button
+                    key={r.id}
+                    type="button"
+                    onClick={() => setRegionId(r.id)}
+                    className={cn(
+                      "h-9 px-2 rounded-md text-xs font-medium border transition-all truncate text-left",
+                      regionId === r.id
+                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                        : "bg-card/60 border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
+                    )}
+                  >
+                    {r.label}
+                  </button>
+                ))}
               </div>
+            </div>
 
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div className="space-y-2">
                 <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
                   Quantità ({job.unitLabel})
