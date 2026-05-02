@@ -89,7 +89,11 @@ export default function Wizard({
 
   // scroll to top on every step change so the header never covers content
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    // Usiamo un piccolo timeout per assicurarci che il DOM sia aggiornato e l'animazione iniziata
+    const timer = setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }, 100);
+    return () => clearTimeout(timer);
   }, [step]);
 
   const canStep2Next = useMemo(() => {
@@ -221,7 +225,7 @@ export default function Wizard({
   }
 
   return (
-    <section className="relative mx-auto max-w-3xl px-5 sm:px-8 pt-6 pb-28 sm:pt-8 sm:pb-24">
+    <section className="relative mx-auto max-w-3xl px-5 sm:px-8 pt-6 pb-32 sm:pt-8 sm:pb-24 min-h-[80vh]">
       {/* progress */}
       <div className="flex items-center justify-between mb-8 wizard-header-container">
         <div className="flex items-center gap-3">
@@ -358,6 +362,7 @@ export default function Wizard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
+            className="wizard-container"
           >
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Configura i dettagli
@@ -525,6 +530,7 @@ export default function Wizard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.25 }}
+            className="wizard-container"
           >
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
               Quanto ti hanno chiesto?

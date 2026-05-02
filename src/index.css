@@ -240,6 +240,20 @@
 
   .glow-azure { box-shadow: 0 0 0 1px hsl(200 95% 55% / .35), 0 12px 40px -10px hsl(200 95% 55% / .35); }
   .glow-emerald { box-shadow: 0 0 0 1px hsl(168 76% 48% / .35), 0 12px 40px -10px hsl(168 76% 48% / .35); }
+  
+  .wizard-container {
+    scroll-margin-top: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  @media (max-width: 640px) {
+    .wizard-container {
+      gap: 1.25rem;
+      padding-bottom: 5rem;
+    }
+  }
 
   .scrollbar-none::-webkit-scrollbar { display: none; }
   .scrollbar-none { scrollbar-width: none; }
