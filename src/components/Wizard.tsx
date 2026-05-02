@@ -376,27 +376,29 @@ export default function Wizard({
               <span className="font-semibold">{job.label}</span>
             </div>
 
-            {/* Selettore regione — griglia di pulsanti, nessun dropdown */}
+            {/* Selettore regione — Select nativa per evitare blocchi scroll su mobile */}
             <div className="mt-6 space-y-2">
               <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
-                Regione{regionId && <span className="ml-2 text-primary font-semibold">{REGIONS.find(r => r.id === regionId)?.label}</span>}
+                Regione
               </Label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                {REGIONS.map((r) => (
-                  <button
-                    key={r.id}
-                    type="button"
-                    onClick={() => setRegionId(r.id)}
-                    className={cn(
-                      "h-9 px-2 rounded-md text-xs font-medium border transition-all truncate text-left",
-                      regionId === r.id
-                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                        : "bg-card/60 border-border text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                    )}
-                  >
-                    {r.label}
-                  </button>
-                ))}
+              <div className="relative">
+                <select
+                  value={regionId}
+                  onChange={(e) => setRegionId(e.target.value)}
+                  className="w-full h-11 px-3 rounded-md border border-border bg-card/60 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none appearance-none cursor-pointer"
+                >
+                  <option value="" disabled>Seleziona la tua regione</option>
+                  {REGIONS.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-muted-foreground">
+                  <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2.5 4.5L6 8L9.5 4.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </div>
               </div>
             </div>
 
