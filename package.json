@@ -2,6 +2,13 @@
   "name": "preventivi-smart-pro",
   "version": "1.0.0",
   "private": true,
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@firebase/util",
+      "esbuild",
+      "protobufjs"
+    ]
+  },
   "type": "module",
   "description": "Verifica in pochi secondi se il preventivo dell'artigiano è onesto. App italiana di analisi preventivi con dati di mercato regionali.",
   "scripts": {
