@@ -89,11 +89,15 @@ export default function Wizard({
   // map step to displayed progress: in stima mode, the price step is skipped
   const progressIndex = step === 4 ? totalSteps : step;
 
-  // scroll to top on every step change — instant to avoid the "dip" caused by
-  // focus-induced auto-scroll on newly rendered inputs before smooth scroll kicks in
+  // scroll to top on every step change — use requestAnimationFrame to ensure
+  // the DOM has rendered before resetting scroll, preventing the "dip" caused
+  // by focus-induced auto-scroll on newly mounted inputs
   useEffect(() => {
-    document.documentElement.scrollTop = 0;
-    document.body.scrollTop = 0;
+    const raf = requestAnimationFrame(() => {
+      document.documentElement.scrollTop = 0;
+      document.body.scrollTop = 0;
+    });
+    return () => cancelAnimationFrame(raf);
   }, [step]);
 
   const canStep2Next = useMemo(() => {
@@ -542,7 +546,6 @@ export default function Wizard({
                     onChange={(e) => setPrice(e.target.value)}
                     placeholder="0"
                     className="flex-1 min-w-0 bg-transparent border-0 outline-none text-5xl sm:text-6xl font-bold tabular-nums tracking-tight placeholder:text-border focus:placeholder:text-transparent"
-                    autoFocus
                   />
                 </div>
                 <p className="mt-3 text-xs text-muted-foreground">

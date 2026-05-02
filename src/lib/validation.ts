@@ -82,3 +82,13 @@ export function validateWizardData(data: unknown): { success: boolean; data?: Wi
 
   return { success: true, data: validatedData };
 }
+
+/**
+ * Valida, sanitizza e restituisce i dati del wizard già trasformati,
+ * oppure null se la validazione fallisce.
+ */
+export function validateAndSanitizeWizardData(data: unknown): WizardData | null {
+  const result = validateWizardData(data);
+  if (!result.success || !result.data) return null;
+  return result.data;
+}
