@@ -4,13 +4,13 @@
  */
 
 import type { Quote } from "../quote-model";
-import { getDatasetByRegion, getDatasetBySector } from "./dataset";
+import { getDatasetByRegion, getDatasetByAmbito } from "./dataset";
 import { segmentQuotes } from "./segmenter";
 
 export interface ModelUpdate {
   timestamp: number;
-  sector: string;
-  region: string;
+  ambito: string;
+  regione: string;
   entriesProcessed: number;
   segmentsUpdated: number;
   accuracyImprovement: number; // Percentuale di miglioramento
@@ -19,15 +19,15 @@ export interface ModelUpdate {
 /**
  * Aggiorna il modello per una regione specifica
  */
-export async function updateModelForRegion(region: string): Promise<ModelUpdate> {
+export async function updateModelForRegion(regione: string): Promise<ModelUpdate> {
   try {
-    const entries = await getDatasetByRegion(region);
+    const entries = await getDatasetByRegion(regione);
 
     if (entries.length === 0) {
       return {
         timestamp: Date.now(),
-        sector: "all",
-        region,
+        ambito: "all",
+        regione,
         entriesProcessed: 0,
         segmentsUpdated: 0,
         accuracyImprovement: 0,
@@ -46,8 +46,8 @@ export async function updateModelForRegion(region: string): Promise<ModelUpdate>
 
     return {
       timestamp: Date.now(),
-      sector: "all",
-      region,
+      ambito: "all",
+      regione,
       entriesProcessed: entries.length,
       segmentsUpdated: segments.size,
       accuracyImprovement,
@@ -56,8 +56,8 @@ export async function updateModelForRegion(region: string): Promise<ModelUpdate>
     console.error("Errore nell'aggiornamento del modello per regione:", err);
     return {
       timestamp: Date.now(),
-      sector: "all",
-      region,
+      ambito: "all",
+      regione,
       entriesProcessed: 0,
       segmentsUpdated: 0,
       accuracyImprovement: 0,
@@ -66,17 +66,17 @@ export async function updateModelForRegion(region: string): Promise<ModelUpdate>
 }
 
 /**
- * Aggiorna il modello per un settore specifico
+ * Aggiorna il modello per un ambito specifico
  */
-export async function updateModelForSector(sector: string): Promise<ModelUpdate> {
+export async function updateModelForAmbito(ambito: string): Promise<ModelUpdate> {
   try {
-    const entries = await getDatasetBySector(sector);
+    const entries = await getDatasetByAmbito(ambito);
 
     if (entries.length === 0) {
       return {
         timestamp: Date.now(),
-        sector,
-        region: "all",
+        ambito,
+        regione: "all",
         entriesProcessed: 0,
         segmentsUpdated: 0,
         accuracyImprovement: 0,
@@ -95,18 +95,18 @@ export async function updateModelForSector(sector: string): Promise<ModelUpdate>
 
     return {
       timestamp: Date.now(),
-      sector,
-      region: "all",
+      ambito,
+      regione: "all",
       entriesProcessed: entries.length,
       segmentsUpdated: segments.size,
       accuracyImprovement,
     };
   } catch (err) {
-    console.error("Errore nell'aggiornamento del modello per settore:", err);
+    console.error("Errore nell'aggiornamento del modello per ambito:", err);
     return {
       timestamp: Date.now(),
-      sector,
-      region: "all",
+      ambito,
+      regione: "all",
       entriesProcessed: 0,
       segmentsUpdated: 0,
       accuracyImprovement: 0,
@@ -121,27 +121,23 @@ export async function updateAllModels(): Promise<ModelUpdate[]> {
   const updates: ModelUpdate[] = [];
 
   // Regioni
-  const regions = ["nord-ovest", "nord-est", "centro", "sud", "isole"];
-  for (const region of regions) {
-    const update = await updateModelForRegion(region);
+  const regioni = ["nord-ovest", "nord-est", "centro", "sud", "isole"];
+  for (const regione of regioni) {
+    const update = await updateModelForRegion(regione);
     updates.push(update);
   }
 
-  // Settori
-  const sectors = [
-    "idraulica",
-    "elettricista",
-    "muratura",
-    "carpenteria",
-    "pittura",
-    "piastrellista",
+  // Ambiti
+  const ambiti = [
+    "edilizia",
+    "impianti",
     "serramenti",
     "riscaldamento",
     "condizionamento",
     "fotovoltaico",
   ];
-  for (const sector of sectors) {
-    const update = await updateModelForSector(sector);
+  for (const ambito of ambiti) {
+    const update = await updateModelForAmbito(ambito);
     updates.push(update);
   }
 

@@ -45,8 +45,8 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
           description: `Quote estratto con confidenza ${pipelineResult.confidence.toFixed(0)}%`,
         });
 
-        if (pipelineResult.quote.total && onPriceDetected) {
-          onPriceDetected(pipelineResult.quote.total);
+        if (pipelineResult.quote.totale && onPriceDetected) {
+          onPriceDetected(pipelineResult.quote.totale);
         }
 
         if (onQuoteExtracted) {
@@ -163,19 +163,19 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
             <div className="grid grid-cols-2 gap-2 text-xs">
               <div>
                 <span className="text-gray-600">Quote:</span>
-                <p className="font-medium">{result.quote.quoteNumber}</p>
+                <p className="font-medium">{result.quote.numero}</p>
               </div>
               <div>
                 <span className="text-gray-600">Cliente:</span>
-                <p className="font-medium">{result.quote.clientName}</p>
+                <p className="font-medium">{result.quote.cliente?.nome}</p>
               </div>
               <div>
-                <span className="text-gray-600">Settore:</span>
-                <p className="font-medium">{result.quote.sector}</p>
+                <span className="text-gray-600">Ambito:</span>
+                <p className="font-medium">{result.quote.ambito}</p>
               </div>
               <div>
                 <span className="text-gray-600">Totale:</span>
-                <p className="font-medium">€{result.quote.total?.toFixed(2)}</p>
+                <p className="font-medium">€{result.quote.totale?.toFixed(2)}</p>
               </div>
             </div>
           </div>

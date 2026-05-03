@@ -18,7 +18,10 @@ export interface PriceEstimate {
 /**
  * Stima il prezzo di una quote basato su dati storici
  */
-export function estimatePrice(quote: Quote, historicalQuotes: Quote[]): PriceEstimate {
+export function estimatePrice(
+  quote: Partial<Quote>,
+  historicalQuotes: Partial<Quote>[]
+): PriceEstimate {
   // Se non ci sono dati storici, usa il prezzo di mercato
   if (historicalQuotes.length === 0) {
     return estimatePriceFromMarket(quote);
@@ -51,16 +54,16 @@ export function estimatePrice(quote: Quote, historicalQuotes: Quote[]): PriceEst
     maxPrice: Math.round(segment.priceRange.max * 1.1),
     confidence: segment.confidence,
     method: "segment",
-    reasoning: `Stima basata su ${segment.sampleSize} preventivi simili nel ${quote.sector} in ${quote.region}`,
+    reasoning: `Stima basata su ${segment.sampleSize} preventivi simili nel ${quote.ambito} in ${quote.regionLabel}`,
   };
 }
 
 /**
  * Stima il prezzo basato su dati di mercato
  */
-function estimatePriceFromMarket(quote: Quote): PriceEstimate {
+function estimatePriceFromMarket(quote: Partial<Quote>): PriceEstimate {
   // Calcola stima base dal numero di servizi
-  const basePrice = quote.services.reduce((sum, service) => sum + service.price, 0);
+  const basePrice = (quote.servizi || []).reduce((sum, service) => sum + (service.totale || 0), 0);
 
   // Applica margini di mercato
   const minPrice = Math.round(basePrice * 0.7);
@@ -81,7 +84,7 @@ function estimatePriceFromMarket(quote: Quote): PriceEstimate {
  * Valuta se il prezzo della quote è ragionevole
  */
 export function evaluatePriceReasonableness(
-  quote: Quote,
+  quote: Partial<Quote>,
   estimate: PriceEstimate
 ): {
   isReasonable: boolean;
@@ -89,7 +92,7 @@ export function evaluatePriceReasonableness(
   percentage: number; // Differenza percentuale dal prezzo stimato
   advice: string;
 } {
-  const actualPrice = quote.total;
+  const actualPrice = quote.totale || 0;
   const percentage = ((actualPrice - estimate.estimatedPrice) / estimate.estimatedPrice) * 100;
 
   let verdict: "too_low" | "fair" | "too_high" | "unknown";
@@ -121,7 +124,7 @@ export function evaluatePriceReasonableness(
  * Calcola il punteggio di convenienza (0-100)
  */
 export function calculateValueScore(
-  quote: Quote,
+  quote: Partial<Quote>,
   estimate: PriceEstimate
 ): number {
   const evaluation = evaluatePriceReasonableness(quote, estimate);

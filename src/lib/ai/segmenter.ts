@@ -1,13 +1,13 @@
 /**
  * Data Segmenter - Segmenta i dati per migliorare la stima dei prezzi
- * Raggruppa quote per settore, regione e complessità
+ * Raggruppa quote per ambito, regione e complessità
  */
 
 import type { Quote } from "../quote-model";
 
 export interface DataSegment {
-  sector: string;
-  region: string;
+  ambito: string;
+  regione: string;
   complexity: "low" | "medium" | "high";
   priceRange: {
     min: number;
@@ -21,8 +21,8 @@ export interface DataSegment {
 /**
  * Determina la complessità di una quote basata sul numero di servizi
  */
-export function determineComplexity(quote: Quote): "low" | "medium" | "high" {
-  const serviceCount = quote.services.length;
+export function determineComplexity(quote: Partial<Quote>): "low" | "medium" | "high" {
+  const serviceCount = quote.servizi?.length || 0;
 
   if (serviceCount <= 2) return "low";
   if (serviceCount <= 5) return "medium";
@@ -30,34 +30,38 @@ export function determineComplexity(quote: Quote): "low" | "medium" | "high" {
 }
 
 /**
- * Segmenta un array di quote per settore, regione e complessità
+ * Segmenta un array di quote per ambito, regione e complessità
  */
-export function segmentQuotes(quotes: Quote[]): Map<string, DataSegment> {
+export function segmentQuotes(quotes: Partial<Quote>[]): Map<string, DataSegment> {
   const segments = new Map<string, DataSegment>();
 
   quotes.forEach((quote) => {
     const complexity = determineComplexity(quote);
-    const key = `${quote.sector}|${quote.region}|${complexity}`;
+    const ambito = quote.ambito || "unknown";
+    const regione = quote.regionLabel || "unknown";
+    const key = `${ambito}|${regione}|${complexity}`;
+
+    const total = quote.totale || 0;
 
     if (!segments.has(key)) {
       segments.set(key, {
-        sector: quote.sector,
-        region: quote.region,
+        ambito,
+        regione,
         complexity,
         priceRange: {
-          min: quote.total,
-          max: quote.total,
-          average: quote.total,
+          min: total,
+          max: total,
+          average: total,
         },
         sampleSize: 1,
         confidence: 50,
       });
     } else {
       const segment = segments.get(key)!;
-      segment.priceRange.min = Math.min(segment.priceRange.min, quote.total);
-      segment.priceRange.max = Math.max(segment.priceRange.max, quote.total);
+      segment.priceRange.min = Math.min(segment.priceRange.min, total);
+      segment.priceRange.max = Math.max(segment.priceRange.max, total);
       segment.priceRange.average =
-        (segment.priceRange.average * segment.sampleSize + quote.total) / (segment.sampleSize + 1);
+        (segment.priceRange.average * segment.sampleSize + total) / (segment.sampleSize + 1);
       segment.sampleSize++;
 
       // Aumenta confidence con più campioni
@@ -72,26 +76,28 @@ export function segmentQuotes(quotes: Quote[]): Map<string, DataSegment> {
  * Trova il segmento più appropriato per una quote
  */
 export function findBestSegment(
-  quote: Quote,
+  quote: Partial<Quote>,
   segments: Map<string, DataSegment>
 ): DataSegment | null {
   const complexity = determineComplexity(quote);
-  const key = `${quote.sector}|${quote.region}|${complexity}`;
+  const ambito = quote.ambito || "unknown";
+  const regione = quote.regionLabel || "unknown";
+  const key = `${ambito}|${regione}|${complexity}`;
 
   if (segments.has(key)) {
     return segments.get(key)!;
   }
 
-  // Se non trovato, cerca per settore e regione (ignora complessità)
+  // Se non trovato, cerca per ambito e regione (ignora complessità)
   for (const [, segment] of segments) {
-    if (segment.sector === quote.sector && segment.region === quote.region) {
+    if (segment.ambito === ambito && segment.regione === regione) {
       return segment;
     }
   }
 
-  // Se ancora non trovato, cerca per settore
+  // Se ancora non trovato, cerca per ambito
   for (const [, segment] of segments) {
-    if (segment.sector === quote.sector) {
+    if (segment.ambito === ambito) {
       return segment;
     }
   }

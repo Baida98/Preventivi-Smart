@@ -4,7 +4,7 @@
  */
 
 import type { Quote } from "../quote-model";
-import { db } from "../firebase-service";
+import { getFirestoreInstance } from "../firebase-service";
 import { collection, addDoc, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
 
 export interface DatasetEntry {
@@ -13,12 +13,12 @@ export interface DatasetEntry {
   userId: string;
   extractedText: string;
   parsedData: Record<string, any>;
-  actualQuote: Quote;
+  actualQuote: Partial<Quote>;
   confidence: number;
   accuracy: number; // 0-100, quanto bene il parsing ha riconosciuto i dati
   timestamp: number;
-  sector: string;
-  region: string;
+  ambito: string;
+  regione: string;
   validated: boolean;
 }
 
@@ -30,10 +30,16 @@ export async function saveToDataset(
   userId: string,
   extractedText: string,
   parsedData: Record<string, any>,
-  actualQuote: Quote,
+  actualQuote: Partial<Quote>,
   confidence: number
 ): Promise<string | null> {
   try {
+    const db = getFirestoreInstance();
+    if (!db) {
+      console.error("Firebase non configurato");
+      return null;
+    }
+
     const entry: DatasetEntry = {
       quoteId,
       userId,
@@ -43,8 +49,8 @@ export async function saveToDataset(
       confidence,
       accuracy: 0, // Calcolato dopo la validazione
       timestamp: Date.now(),
-      sector: actualQuote.sector,
-      region: actualQuote.region,
+      ambito: actualQuote.ambito || "unknown",
+      regione: actualQuote.regionLabel || "unknown",
       validated: true,
     };
 
@@ -57,11 +63,14 @@ export async function saveToDataset(
 }
 
 /**
- * Recupera dataset entries per un settore specifico
+ * Recupera dataset entries per una regione specifica
  */
-export async function getDatasetByRegion(region: string): Promise<DatasetEntry[]> {
+export async function getDatasetByRegion(regione: string): Promise<DatasetEntry[]> {
   try {
-    const q = query(collection(db, "datasets"), where("region", "==", region));
+    const db = getFirestoreInstance();
+    if (!db) return [];
+
+    const q = query(collection(db, "datasets"), where("regione", "==", regione));
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -74,11 +83,14 @@ export async function getDatasetByRegion(region: string): Promise<DatasetEntry[]
 }
 
 /**
- * Recupera dataset entries per un settore
+ * Recupera dataset entries per un ambito
  */
-export async function getDatasetBySector(sector: string): Promise<DatasetEntry[]> {
+export async function getDatasetByAmbito(ambito: string): Promise<DatasetEntry[]> {
   try {
-    const q = query(collection(db, "datasets"), where("sector", "==", sector));
+    const db = getFirestoreInstance();
+    if (!db) return [];
+
+    const q = query(collection(db, "datasets"), where("ambito", "==", ambito));
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -98,6 +110,9 @@ export async function updateDatasetAccuracy(
   accuracy: number
 ): Promise<boolean> {
   try {
+    const db = getFirestoreInstance();
+    if (!db) return false;
+
     await updateDoc(doc(db, "datasets", entryId), {
       accuracy: Math.min(100, Math.max(0, accuracy)),
     });
@@ -111,16 +126,26 @@ export async function updateDatasetAccuracy(
 /**
  * Calcola statistiche del dataset
  */
-export async function getDatasetStats(sector?: string): Promise<{
+export async function getDatasetStats(ambito?: string): Promise<{
   totalEntries: number;
   averageConfidence: number;
   averageAccuracy: number;
-  entriesBySector: Record<string, number>;
+  entriesByAmbito: Record<string, number>;
 }> {
   try {
+    const db = getFirestoreInstance();
+    if (!db) {
+      return {
+        totalEntries: 0,
+        averageConfidence: 0,
+        averageAccuracy: 0,
+        entriesByAmbito: {},
+      };
+    }
+
     let q;
-    if (sector) {
-      q = query(collection(db, "datasets"), where("sector", "==", sector));
+    if (ambito) {
+      q = query(collection(db, "datasets"), where("ambito", "==", ambito));
     } else {
       q = query(collection(db, "datasets"));
     }
@@ -133,16 +158,16 @@ export async function getDatasetStats(sector?: string): Promise<{
       entries.reduce((sum, e) => sum + e.confidence, 0) / totalEntries || 0;
     const averageAccuracy = entries.reduce((sum, e) => sum + e.accuracy, 0) / totalEntries || 0;
 
-    const entriesBySector: Record<string, number> = {};
+    const entriesByAmbito: Record<string, number> = {};
     entries.forEach((e) => {
-      entriesBySector[e.sector] = (entriesBySector[e.sector] || 0) + 1;
+      entriesByAmbito[e.ambito] = (entriesByAmbito[e.ambito] || 0) + 1;
     });
 
     return {
       totalEntries,
       averageConfidence,
       averageAccuracy,
-      entriesBySector,
+      entriesByAmbito,
     };
   } catch (err) {
     console.error("Errore nel calcolo delle statistiche:", err);
@@ -150,7 +175,7 @@ export async function getDatasetStats(sector?: string): Promise<{
       totalEntries: 0,
       averageConfidence: 0,
       averageAccuracy: 0,
-      entriesBySector: {},
+      entriesByAmbito: {},
     };
   }
 }

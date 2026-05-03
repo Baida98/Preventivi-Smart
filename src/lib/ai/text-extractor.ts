@@ -108,8 +108,9 @@ async function renderPagesForOCR(file: File, maxPages: number = 3): Promise<HTML
  */
 async function performOCROnCanvas(canvas: HTMLCanvasElement): Promise<string> {
   try {
-    const { Tesseract } = await import("tesseract.js");
-
+    const Tesseract = await import("tesseract.js");
+    const worker = await Tesseract.createWorker(["ita", "eng"]);
+    
     // Converti canvas in blob
     return new Promise((resolve, reject) => {
       canvas.toBlob(async (blob) => {
@@ -119,7 +120,6 @@ async function performOCROnCanvas(canvas: HTMLCanvasElement): Promise<string> {
         }
 
         try {
-          const worker = await Tesseract.createWorker(["ita", "eng"]);
           const result = await worker.recognize(blob);
           await worker.terminate();
           resolve(result.data.text);

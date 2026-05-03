@@ -17,17 +17,16 @@ export interface QualityScoreResult {
 /**
  * Calcola il punteggio di completezza
  */
-function calculateCompletenessScore(quote: Quote): number {
+function calculateCompletenessScore(quote: Partial<Quote>): number {
   let filledFields = 0;
   let totalFields = 0;
 
   // Campi obbligatori
   const requiredFields = [
-    quote.quoteNumber,
-    quote.clientName,
-    quote.sector,
-    quote.region,
-    quote.total,
+    quote.numero,
+    quote.cliente?.nome,
+    quote.ambito,
+    quote.totale,
   ];
 
   requiredFields.forEach((field) => {
@@ -37,7 +36,7 @@ function calculateCompletenessScore(quote: Quote): number {
 
   // Servizi
   totalFields += 5; // Min 5 servizi per completezza
-  filledFields += Math.min(5, quote.services.length);
+  filledFields += Math.min(5, quote.servizi?.length || 0);
 
   return (filledFields / totalFields) * 100;
 }
@@ -45,27 +44,29 @@ function calculateCompletenessScore(quote: Quote): number {
 /**
  * Calcola il punteggio di coerenza
  */
-function calculateConsistencyScore(quote: Quote): number {
+function calculateConsistencyScore(quote: Partial<Quote>): number {
   let issues = 0;
 
   // Controlla che il totale corrisponda alla somma dei servizi
-  const servicesTotal = quote.services.reduce((sum, s) => sum + s.price, 0);
-  if (Math.abs(servicesTotal - quote.total) > 1) {
+  const servicesTotal = (quote.servizi || []).reduce((sum, s) => sum + (s.totale || 0), 0);
+  if (Math.abs(servicesTotal - (quote.totale || 0)) > 1) {
     issues++;
   }
 
   // Controlla che i servizi abbiano prezzi positivi
-  quote.services.forEach((service) => {
-    if (service.price <= 0) issues++;
+  (quote.servizi || []).forEach((service) => {
+    if ((service.totale || 0) <= 0) issues++;
   });
 
   // Controlla che il numero di servizi sia ragionevole
-  if (quote.services.length === 0 || quote.services.length > 50) {
+  const serviceCount = quote.servizi?.length || 0;
+  if (serviceCount === 0 || serviceCount > 50) {
     issues++;
   }
 
   // Controlla che il totale sia ragionevole
-  if (quote.total < 50 || quote.total > 1000000) {
+  const total = quote.totale || 0;
+  if (total < 50 || total > 1000000) {
     issues++;
   }
 
@@ -75,53 +76,39 @@ function calculateConsistencyScore(quote: Quote): number {
 /**
  * Calcola il punteggio di validità
  */
-function calculateValidityScore(quote: Quote): number {
+function calculateValidityScore(quote: Partial<Quote>): number {
   let issues = 0;
 
   // Controlla formato del numero di preventivo
-  if (!quote.quoteNumber || quote.quoteNumber.length < 3) {
+  if (!quote.numero || quote.numero.length < 3) {
     issues++;
   }
 
   // Controlla lunghezza del nome cliente
-  if (!quote.clientName || quote.clientName.length < 2) {
+  if (!quote.cliente?.nome || quote.cliente.nome.length < 2) {
     issues++;
   }
 
-  // Controlla settore valido
-  const validSectors = [
-    "idraulica",
-    "elettricista",
-    "muratura",
-    "carpenteria",
-    "pittura",
-    "piastrellista",
+  // Controlla ambito valido
+  const validAmbiti = [
+    "edilizia",
+    "impianti",
     "serramenti",
     "riscaldamento",
     "condizionamento",
     "fotovoltaico",
     "altro",
   ];
-  if (!validSectors.includes(quote.sector.toLowerCase())) {
-    issues++;
-  }
-
-  // Controlla regione valida
-  const validRegions = [
-    "nord-ovest",
-    "nord-est",
-    "centro",
-    "sud",
-    "isole",
-  ];
-  if (!validRegions.includes(quote.region.toLowerCase())) {
+  if (!validAmbiti.includes((quote.ambito || "").toLowerCase())) {
     issues++;
   }
 
   // Controlla data
-  const quoteDate = new Date(quote.createdAt);
-  if (isNaN(quoteDate.getTime())) {
-    issues++;
+  if (quote.data) {
+    const quoteDate = new Date(quote.data);
+    if (isNaN(quoteDate.getTime())) {
+      issues++;
+    }
   }
 
   return Math.max(0, 100 - issues * 15);
@@ -130,7 +117,7 @@ function calculateValidityScore(quote: Quote): number {
 /**
  * Calcola il punteggio di qualità complessivo
  */
-export function calculateQualityScore(quote: Quote): QualityScoreResult {
+export function calculateQualityScore(quote: Partial<Quote>): QualityScoreResult {
   const completeness = calculateCompletenessScore(quote);
   const consistency = calculateConsistencyScore(quote);
   const validity = calculateValidityScore(quote);
@@ -156,12 +143,12 @@ export function calculateQualityScore(quote: Quote): QualityScoreResult {
     recommendations.push("Verificare il formato dei dati inseriti");
   }
 
-  if (quote.services.length === 0) {
+  if ((quote.servizi?.length || 0) === 0) {
     issues.push("Nessun servizio specificato");
     recommendations.push("Aggiungere almeno un servizio alla quote");
   }
 
-  if (quote.total === 0) {
+  if ((quote.totale || 0) === 0) {
     issues.push("Prezzo totale non specificato");
     recommendations.push("Inserire il prezzo totale del preventivo");
   }
