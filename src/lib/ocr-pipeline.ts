@@ -109,6 +109,20 @@ export async function runOCRPipeline(file: File, userId: string): Promise<OCRPip
     // Step 4: Crea Quote
     const quoteNumber = `${new Date().getFullYear()}-DRAFT`;
     const quote = createQuoteFromParsedData(parsingResult, userId, quoteNumber);
+    
+    // HARDENING: Se il documento è invalido, rifiuta subito
+    if (!quote) {
+      return {
+        success: false,
+        classification: classificationResult.classification,
+        quote: undefined,
+        extractedText: extractionResult.text.slice(0, 1000),
+        parsingResult,
+        confidence: 0,
+        warnings: [...warnings, "Documento rifiutato: dati invalidi o incoerenti"],
+        steps,
+      };
+    }
 
     // Step 5: Validazione qualità
     steps.push("✅ Valida qualità...");

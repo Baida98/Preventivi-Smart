@@ -1,11 +1,13 @@
 /**
- * PHASE 3: OCR Parsing — Estrazione strutturata dai preventivi
+ * COMMIT 3: OCR Parsing — Validazione hardening
  * 
  * Dalla stringa OCR/estratta al modello Quote strutturato.
  * Estrae: cliente, data, servizi, quantità, prezzo unitario, totale.
  * 
- * Regola fondamentale: il totale deve coerere con le righe.
- * Se non torna, il documento va in revisione o viene scartato.
+ * HARDENING: Blocca dati sporchi all'ingresso
+ * - Totale deve essere presente e > 0
+ * - Coerenza numerica severa
+ * - Anomaly detection per outlier
  */
 
 import type { Service, Quote } from "./quote-model";
@@ -21,7 +23,7 @@ export type ParsedQuoteData = {
   totale: number;
   mq?: number;
   note?: string;
-  confidenceScore: number; // 0-100
+  confidenceScore: number; // 0-1 (standardizzato)
   warnings: string[];
   invalid?: boolean;
 };
@@ -208,23 +210,31 @@ function extractTotal(text: string): number | null {
 }
 
 /**
- * Valida coerenza: totale deve corrispondere a somma servizi (±5%)
+ * COMMIT 3: Validazione severa della coerenza numerica
+ * Tolleranza ridotta per proteggere il dataset
  */
 function validateTotalCoherence(servizi: Service[], totale: number): {
   valid: boolean;
   warning?: string;
 } {
+  // HARDENING: Totale deve essere presente e positivo
+  if (!totale || totale <= 0) {
+    return { valid: false, warning: "Totale non valido o negativo" };
+  }
+
   if (servizi.length === 0) {
     return { valid: false, warning: "Nessun servizio trovato" };
   }
 
   const sumServices = servizi.reduce((s, svc) => s + svc.totale, 0);
-  const tolerance = Math.max(totale * 0.05, 5); // 5% o €5
+  
+  // HARDENING: Tolleranza stretta (3% o €2 minimo)
+  const tolerance = Math.max(totale * 0.03, 2);
 
   if (Math.abs(sumServices - totale) > tolerance) {
     return {
       valid: false,
-      warning: `Totale non coerente: servizi €${sumServices.toFixed(2)}, dichiarato €${totale.toFixed(2)}`,
+      warning: `Totale incoerente: servizi €${sumServices.toFixed(2)}, dichiarato €${totale.toFixed(2)}`,
     };
   }
 
@@ -232,24 +242,56 @@ function validateTotalCoherence(servizi: Service[], totale: number): {
 }
 
 /**
- * Pipeline principale di parsing
+ * COMMIT 3: Anomaly Detection
+ * Rileva outlier e prezzi sospetti
+ */
+function detectAnomalies(servizi: Service[], totale: number): string[] {
+  const anomalies: string[] = [];
+
+  // Prezzo unitario sospettosamente basso (<€1)
+  const lowPrices = servizi.filter(s => s.prezzoUnitario < 1);
+  if (lowPrices.length > servizi.length * 0.5) {
+    anomalies.push("Molti prezzi unitari inferiori a €1 (sospetto)");
+  }
+
+  // Prezzo unitario sospettosamente alto (>€10.000)
+  const highPrices = servizi.filter(s => s.prezzoUnitario > 10000);
+  if (highPrices.length > 0) {
+    anomalies.push("Prezzi unitari molto alti (>€10.000) richiede verifica");
+  }
+
+  // Totale molto piccolo (<€50)
+  if (totale < 50) {
+    anomalies.push("Totale molto basso (<€50) potrebbe essere incompleto");
+  }
+
+  // Totale molto grande (>€500.000)
+  if (totale > 500000) {
+    anomalies.push("Totale molto alto (>€500.000) richiede verifica");
+  }
+
+  return anomalies;
+}
+
+/**
+ * COMMIT 3: Pipeline principale di parsing con validazione hardening
  */
 export function parseQuoteFromText(text: string, source: "ocr" | "pdf" = "ocr"): ParsedQuoteData {
   const warnings: string[] = [];
-  let confidenceScore = 100;
+  let confidenceScore = 1.0; // Standardizzato: 0-1
   let invalid = false;
 
   // Estrai campi
   const clientData = extractClientName(text);
   if (!clientData) {
     warnings.push("Nome cliente non trovato o poco chiaro");
-    confidenceScore -= 15;
+    confidenceScore -= 0.15;
   }
 
   const data = extractDate(text);
   if (!data) {
     warnings.push("Data non trovata");
-    confidenceScore -= 10;
+    confidenceScore -= 0.10;
   }
 
   const mq = extractSquareMeters(text);
@@ -257,33 +299,45 @@ export function parseQuoteFromText(text: string, source: "ocr" | "pdf" = "ocr"):
   const servizi = extractServices(text);
   if (servizi.length === 0) {
     warnings.push("Nessun servizio trovato nella struttura attesa");
-    confidenceScore -= 25;
+    confidenceScore -= 0.25;
+    invalid = true; // HARDENING: Blocca se nessun servizio
   }
 
   const totalPrice = extractTotal(text);
-  // Fix: Controlla sempre totale
+  
+  // HARDENING: Controllo severo del totale
   if (totalPrice === null || totalPrice <= 0) {
-    warnings.push("Totale non trovato o non valido");
-    confidenceScore -= 20;
-    invalid = true;
+    warnings.push("Totale non trovato, non valido o negativo");
+    confidenceScore -= 0.30;
+    invalid = true; // HARDENING: Blocca se totale invalido
   }
 
-  // Valida coerenza
-  if (servizi.length > 0 && totalPrice) {
+  // HARDENING: Valida coerenza con tolleranza stretta
+  if (servizi.length > 0 && totalPrice && totalPrice > 0) {
     const coherenceCheck = validateTotalCoherence(servizi, totalPrice);
     if (!coherenceCheck.valid && coherenceCheck.warning) {
       warnings.push(coherenceCheck.warning);
-      confidenceScore -= 20;
+      confidenceScore -= 0.25;
+      invalid = true; // HARDENING: Blocca se incoerente
+    }
+  }
+
+  // HARDENING: Anomaly detection
+  if (servizi.length > 0 && totalPrice && totalPrice > 0) {
+    const anomalies = detectAnomalies(servizi, totalPrice);
+    if (anomalies.length > 0) {
+      warnings.push(...anomalies);
+      confidenceScore -= anomalies.length * 0.10;
     }
   }
 
   // Source impact
   if (source === "ocr") {
-    confidenceScore -= 10; // OCR è meno affidabile di PDF nativo
+    confidenceScore -= 0.10; // OCR è meno affidabile di PDF nativo
   }
 
   // Applica peso warning
-  confidenceScore = Math.max(0, Math.min(100, confidenceScore));
+  confidenceScore = Math.max(0, Math.min(1.0, confidenceScore));
 
   return {
     cliente: clientData || { nome: "Non identificato" },
@@ -298,17 +352,22 @@ export function parseQuoteFromText(text: string, source: "ocr" | "pdf" = "ocr"):
 }
 
 /**
- * Converte ParsedQuoteData a Quote (parziale, serve ancora uid, numero, etc.)
+ * COMMIT 3: Converte ParsedQuoteData a Quote con validazione hardening
  */
 export function createQuoteFromParsedData(
   parsed: ParsedQuoteData,
   userId: string,
   quoteNumber: string
-): Partial<Quote> {
+): Partial<Quote> | null {
+  // HARDENING: Rifiuta documenti invalidi
+  if (parsed.invalid) {
+    console.warn("Documento rifiutato: dati invalidi", parsed.warnings);
+    return null;
+  }
+
   const now = new Date().toISOString();
   const today = now.split("T")[0];
 
-  // Fix: Distinzione reale tra sorgente PDF e OCR e standardizzazione qualityScore
   return {
     uid: userId,
     numero: quoteNumber,
@@ -322,9 +381,9 @@ export function createQuoteFromParsedData(
     servizi: parsed.servizi,
     totale: parsed.totale,
     stato: "bozza",
-    source: "pdf", // Assumiamo PDF se estratto tramite questa pipeline
+    source: "pdf",
     note: parsed.warnings.length > 0 ? `Avvertimenti: ${parsed.warnings.join("; ")}` : undefined,
-    qualityScore: parsed.confidenceScore / 100, // Standardizza 0-1
-    validated: parsed.confidenceScore >= 70 && !parsed.invalid,
+    qualityScore: parsed.confidenceScore, // Già 0-1
+    validated: parsed.confidenceScore >= 0.7 && !parsed.invalid,
   };
 }
