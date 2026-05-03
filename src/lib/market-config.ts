@@ -1,43 +1,79 @@
 /**
- * Configurazione globale dei parametri di mercato e inflazione.
- * Questi dati dovrebbero essere aggiornati periodicamente in base ai dati ISTAT e CRESME.
+ * Configurazione globale dei parametri di mercato, inflazione e logistica.
+ * Dati aggiornati al Maggio 2026 basati su indici ISTAT, PricePedia e Prezzari Regionali.
  */
 
 export const MARKET_INDICATORS = {
-  // Ultimo aggiornamento: Maggio 2026
   lastUpdate: "2026-05-03",
   
-  // Indici di inflazione annui (basati su dati ISTAT 2024-2026)
+  // Indici di inflazione annui
   inflation: {
-    "2024": 0.010, // 1.0%
-    "2025": 0.015, // 1.5%
-    "2026": 0.026, // 2.6% (proiezione Banca d'Italia/OCSE)
+    "2024": 0.010,
+    "2025": 0.015,
+    "2026": 0.026, // Proiezione corrente
   },
 
-  // Indice cumulativo dal 2024 (base del software) ad oggi
-  // Calcolato come: (1 + inf2024) * (1 + inf2025) * (1 + inf2026_pro_rata)
-  cumulativeInflationFactor: 1.042, // ~4.2% totale di aumento costi stimato
+  cumulativeInflationFactor: 1.042,
 
-  // Volatilità specifica per settore (moltiplicatore di rischio/incertezza)
+  // Volatilità specifica per settore (aggiornata 2026)
   sectorVolatility: {
-    edilizia: 1.12,      // Alta volatilità materiali
-    imbiancatura: 1.05,  // Stabile, guidata da manodopera
-    idraulica: 1.10,     // Volatilità componenti in rame/metallo
-    elettrico: 1.08,     // Componentistica elettronica
-    climatizzazione: 1.15, // Fortemente influenzata da normative e logistica
-    serramenti: 1.20,    // Crisi materie prime (vetro/alluminio)
-    pulizie: 1.02,       // Molto stabile
-    pavimenti: 1.10,
+    edilizia: 1.15,      // Rialzo dovuto a commodity (acciaio/cemento)
+    imbiancatura: 1.06,
+    idraulica: 1.12,     // Rame e componentistica in rialzo
+    elettrico: 1.10,
+    climatizzazione: 1.18,
+    serramenti: 1.25,    // Alluminio e vetro in forte tensione
+    pulizie: 1.03,
+    pavimenti: 1.12,
+  },
+
+  // Driver Logistici (Micro-Localizzazione)
+  logistics: {
+    zones: {
+      "centro-storico": { label: "Centro Storico / ZTL", multiplier: 1.25, note: "Difficoltà accesso, orari ridotti, permessi" },
+      "urbana": { label: "Area Urbana Standard", multiplier: 1.00, note: "Accesso normale" },
+      "periferia": { label: "Periferia / Extraurbana", multiplier: 0.95, note: "Facilità parcheggio e scarico" },
+      "remota": { label: "Area Remota / Montagna", multiplier: 1.15, note: "Costi trasporto e trasferta" }
+    },
+    propertyType: {
+      "appartamento-piano-alto": { label: "Appartamento Piano Alto (no ascensore)", multiplier: 1.15 },
+      "appartamento-standard": { label: "Appartamento Standard", multiplier: 1.00 },
+      "villa-indipendente": { label: "Villa / Casa Indipendente", multiplier: 0.90 }, // Più spazio di manovra
+      "negozio-ufficio": { label: "Locale Commerciale", multiplier: 1.10 }
+    }
+  },
+
+  // Validità del preventivo (giorni) in base alla volatilità
+  quoteValidityDays: {
+    low: 60,
+    medium: 30,
+    high: 15,
+    critical: 7
   }
 };
 
-/**
- * Calcola il fattore di inflazione dinamico in base alla data corrente
- */
 export function getDynamicInflationFactor(): number {
-  const currentYear = new Date().getFullYear();
-  if (currentYear <= 2024) return 1.0;
-  
-  // Logica semplificata per il calcolo cumulativo
   return MARKET_INDICATORS.cumulativeInflationFactor;
+}
+
+/**
+ * Determina la classe di volatilità di un settore
+ */
+export function getSectorVolatilityClass(categoryId: string): 'low' | 'medium' | 'high' | 'critical' {
+  const v = MARKET_INDICATORS.sectorVolatility[categoryId as keyof typeof MARKET_INDICATORS.sectorVolatility] || 1.05;
+  if (v > 1.20) return 'critical';
+  if (v > 1.12) return 'high';
+  if (v > 1.07) return 'medium';
+  return 'low';
+}
+
+/**
+ * Calcola la data di scadenza suggerita per il preventivo
+ */
+export function getQuoteExpiryDate(categoryId: string): Date {
+  const vClass = getSectorVolatilityClass(categoryId);
+  const days = MARKET_INDICATORS.quoteValidityDays[vClass];
+  const expiry = new Date();
+  expiry.setDate(expiry.getDate() + days);
+  return expiry;
 }

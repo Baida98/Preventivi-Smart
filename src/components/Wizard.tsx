@@ -32,6 +32,7 @@ import {
   type Job,
   type MarketAnalysis,
 } from "@/lib/pricing";
+import { MARKET_INDICATORS } from "@/lib/market-config";
 import { judge, type Verdict } from "@/lib/verdict";
 import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT, getClientSuggestions } from "@/lib/storage";
 import { validateWizardData } from "@/lib/validation";
@@ -65,6 +66,8 @@ export default function Wizard({
   const [clientName, setClientName] = useState<string>("");
   const [clientEmail, setClientEmail] = useState<string>("");
   const [price, setPrice] = useState<string>("");
+  const [zoneId, setZoneId] = useState<string>("urbana");
+  const [propertyTypeId, setPropertyTypeId] = useState<string>("appartamento-standard");
 
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<MarketAnalysis | null>(null);
@@ -158,7 +161,7 @@ export default function Wizard({
 
     setLoading(true);
     try {
-      const m = computeMarket(job, regionId, Number(quantity), fieldValues);
+      const m = computeMarket(job, regionId, Number(quantity), fieldValues, { zoneId, propertyTypeId });
       let v: Verdict | null = null;
       if (mode === "analizza") {
         v = judge(Number(price), m);
@@ -381,7 +384,44 @@ export default function Wizard({
               <span className="font-semibold">{job.label}</span>
             </div>
 
-            <div className="mt-6 space-y-2">
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
+                  Zona Logistica
+                </Label>
+                <Select value={zoneId} onValueChange={setZoneId}>
+                  <SelectTrigger className="h-11 bg-card/60">
+                    <SelectValue placeholder="Seleziona zona" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" sideOffset={8}>
+                    {Object.entries(MARKET_INDICATORS.logistics.zones).map(([id, zone]) => (
+                      <SelectItem key={id} value={id}>
+                        {zone.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
+                  Tipo Immobile
+                </Label>
+                <Select value={propertyTypeId} onValueChange={setPropertyTypeId}>
+                  <SelectTrigger className="h-11 bg-card/60">
+                    <SelectValue placeholder="Seleziona tipo" />
+                  </SelectTrigger>
+                  <SelectContent position="popper" sideOffset={8}>
+                    {Object.entries(MARKET_INDICATORS.logistics.propertyType).map(([id, type]) => (
+                      <SelectItem key={id} value={id}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="mt-4 space-y-2">
               <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
                 Regione
               </Label>

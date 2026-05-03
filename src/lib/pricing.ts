@@ -9,7 +9,7 @@ import {
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
-import { MARKET_INDICATORS, getDynamicInflationFactor } from "./market-config";
+import { MARKET_INDICATORS, getDynamicInflationFactor, getQuoteExpiryDate, getSectorVolatilityClass } from "./market-config";
 
 export type FieldOption = { value: string; label: string; multiplier: number };
 export type Field = {
@@ -681,7 +681,10 @@ export type MarketAnalysis = {
   materiali: number;
   margine: number;
   confidence: number;
-  inflationImpact: number; // Nuovo campo: impatto inflazione in Euro
+  inflationImpact: number;
+  logisticsImpact: number; // Impatto logistica in Euro
+  expiryDate: Date;        // Data scadenza suggerita
+  volatilityClass: 'low' | 'medium' | 'high' | 'critical';
 };
 
 export function computeMarket(
@@ -689,6 +692,7 @@ export function computeMarket(
   regionId: string,
   quantity: number,
   fieldValues: Record<string, string>,
+  logisticsData?: { zoneId?: string; propertyTypeId?: string }
 ): MarketAnalysis {
   const region = REGIONS.find((r) => r.id === regionId);
   const regMul = region?.multiplier ?? 1;
@@ -710,17 +714,31 @@ export function computeMarket(
   // Il prezzo base viene corretto per l'inflazione e la volatilità del settore
   const adjustedBase = job.base * inflationFactor;
   
-  // 3. Calcolo finale
-  const expected = adjustedBase * extrasMul * Math.max(1, quantity) * regMul;
-  const inflationImpact = expected - (job.base * extrasMul * Math.max(1, quantity) * regMul);
+  // 3. Calcolo Impatto Logistica
+  let logisticsMul = 1.0;
+  if (logisticsData) {
+    if (logisticsData.zoneId) {
+      logisticsMul *= MARKET_INDICATORS.logistics.zones[logisticsData.zoneId as keyof typeof MARKET_INDICATORS.logistics.zones]?.multiplier ?? 1.0;
+    }
+    if (logisticsData.propertyTypeId) {
+      logisticsMul *= MARKET_INDICATORS.logistics.propertyType[logisticsData.propertyTypeId as keyof typeof MARKET_INDICATORS.logistics.propertyType]?.multiplier ?? 1.0;
+    }
+  }
+
+  // 4. Calcolo finale
+  const baseExpected = adjustedBase * extrasMul * Math.max(1, quantity) * regMul;
+  const expected = baseExpected * logisticsMul;
+  
+  const inflationImpact = (adjustedBase - job.base) * extrasMul * Math.max(1, quantity) * regMul * logisticsMul;
+  const logisticsImpact = expected - baseExpected;
   
   const composition = COMPOSITION_BY_CATEGORY[job.categoryId] || { labor: 0.55, materials: 0.35, margin: 0.1 };
   
-  // 4. Calcolo Range di Mercato (corretto per volatilità settore)
+  // 5. Calcolo Range di Mercato (corretto per volatilità settore)
   const baseRange = MARKET_RANGES[job.categoryId] || { minVariance: 0.78, maxVariance: 1.28 };
   const range = {
     minVariance: baseRange.minVariance,
-    maxVariance: baseRange.maxVariance * (1 + (sectorVolatility - 1) * 0.5) // Aumenta il range superiore se il settore è volatile
+    maxVariance: baseRange.maxVariance * (1 + (sectorVolatility - 1) * 0.5)
   };
 
   return {
@@ -728,11 +746,14 @@ export function computeMarket(
     marketMin: expected * range.minVariance,
     marketMid: expected,
     marketMax: expected * range.maxVariance,
-    pricePerUnit: (adjustedBase * extrasMul * regMul),
+    pricePerUnit: (adjustedBase * extrasMul * regMul * logisticsMul),
     manodopera: expected * composition.labor,
     materiali: expected * composition.materials,
     margine: expected * composition.margin,
     confidence: regionConfidence,
     inflationImpact,
+    logisticsImpact,
+    expiryDate: getQuoteExpiryDate(job.categoryId),
+    volatilityClass: getSectorVolatilityClass(job.categoryId),
   };
 }

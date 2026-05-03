@@ -21,6 +21,8 @@ import {
   ShieldCheck,
   RotateCcw,
   Pencil,
+  Calendar,
+  Truck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fmtEUR } from "@/lib/format";
@@ -230,18 +232,50 @@ export default function ResultsView({
         </div>
       )}
 
-      {/* Inflation Impact Info */}
+      {/* Advanced Insights: Inflation, Logistics & Expiry */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <motion.div
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-start gap-3 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 text-blue-200/80 text-[11px] leading-relaxed"
+        >
+          <TrendingUp className="w-4 h-4 shrink-0 text-blue-400" />
+          <div>
+            <p className="font-semibold text-blue-300 mb-0.5">Inflazione & Mercato</p>
+            <p>
+              Adeguamento ISTAT: <span className="text-blue-300 font-bold">+{fmtEUR(analysis.inflationImpact)}</span>. 
+              Settore con volatilità <span className="font-bold uppercase">{analysis.volatilityClass}</span>.
+            </p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-amber-200/80 text-[11px] leading-relaxed"
+        >
+          <Truck className="w-4 h-4 shrink-0 text-amber-400" />
+          <div>
+            <p className="font-semibold text-amber-300 mb-0.5">Logistica & Accesso</p>
+            <p>
+              Impatto logistico stimato: <span className="text-amber-300 font-bold">{analysis.logisticsImpact >= 0 ? "+" : ""}{fmtEUR(analysis.logisticsImpact)}</span>.
+            </p>
+          </div>
+        </motion.div>
+      </div>
+
       <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        className="flex items-start gap-3 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 text-blue-200/80 text-[11px] leading-relaxed"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between p-3 px-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-[11px]"
       >
-        <TrendingUp className="w-4 h-4 shrink-0 text-blue-400" />
-        <div>
-          <p className="font-semibold text-blue-300 mb-0.5">Aggiornamento Inflazione & Mercato 2026</p>
-          <p>
-            Il calcolo include un adeguamento di <span className="text-blue-300 font-bold">+{fmtEUR(analysis.inflationImpact)}</span> dovuto all'inflazione ISTAT e alla volatilità del settore <span className="italic">{category.label}</span>. I prezzi sono allineati agli indici di costo correnti.
-          </p>
+        <div className="flex items-center gap-2 text-emerald-200/70">
+          <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+          <span>Validità stima suggerita:</span>
+          <span className="font-bold text-emerald-300">{analysis.expiryDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+        </div>
+        <div className="text-[10px] uppercase tracking-wider font-bold text-emerald-500/60">
+          Prezzo Protetto
         </div>
       </motion.div>
 
