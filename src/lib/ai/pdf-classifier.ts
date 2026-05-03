@@ -67,16 +67,22 @@ export async function classifyPDF(file: File): Promise<ClassificationResult> {
     const hasText = avgTextPerPage > 50;
     const hasImages = pagesWithImages > 0;
 
-    // Calcola densità di testo
+    // Calcola densità di testo (normalizzata 0-100)
     const textDensity = hasText ? Math.min(100, (avgTextPerPage / 500) * 100) : 0;
+    const imageRatio = pagesWithImages / pagesAnalyzed;
 
     let classification: PDFClassification;
-    if (hasText && !hasImages) {
+    
+    // Fix: Fallback "mixed" basato su densità e ratio immagini
+    if (textDensity > 50 && imageRatio > 0.3) {
+      classification = "mixed";
+    } else if (hasText && !hasImages) {
       classification = "text";
     } else if (!hasText && hasImages) {
       classification = "scanned";
     } else if (hasText && hasImages) {
-      classification = "mixed";
+      // Se ha testo ma poche immagini, lo consideriamo testo per performance
+      classification = imageRatio > 0.1 ? "mixed" : "text";
     } else {
       classification = "error";
     }

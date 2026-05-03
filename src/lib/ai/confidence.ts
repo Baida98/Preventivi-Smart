@@ -1,6 +1,7 @@
 /**
  * Confidence Calculator - Calcola il livello di confidenza dei risultati
  * Combina multiple fonti di confidenza per un punteggio finale
+ * Standardizzato su scala 0.0 - 1.0
  */
 
 export interface ConfidenceFactors {
@@ -11,7 +12,7 @@ export interface ConfidenceFactors {
 }
 
 export interface ConfidenceResult {
-  overall: number; // 0-100
+  overall: number; // 0.0 - 1.0
   factors: ConfidenceFactors;
   level: "very_low" | "low" | "medium" | "high" | "very_high";
   trustworthy: boolean;
@@ -30,11 +31,16 @@ export function calculateConfidence(factors: ConfidenceFactors): ConfidenceResul
     datasetConfidence: 0.15,
   };
 
-  const overall =
+  // Calcolo in base 100
+  let overall =
     factors.extractionConfidence * weights.extractionConfidence +
     factors.parsingConfidence * weights.parsingConfidence +
     factors.qualityConfidence * weights.qualityConfidence +
     factors.datasetConfidence * weights.datasetConfidence;
+
+  // Penalità se un fattore critico è molto basso
+  if (factors.qualityConfidence < 50) overall *= 0.8;
+  if (factors.parsingConfidence < 40) overall *= 0.7;
 
   let level: "very_low" | "low" | "medium" | "high" | "very_high";
   if (overall >= 85) level = "very_high";
@@ -46,25 +52,13 @@ export function calculateConfidence(factors: ConfidenceFactors): ConfidenceResul
   const trustworthy = level === "high" || level === "very_high";
 
   const warnings: string[] = [];
-
-  if (factors.extractionConfidence < 50) {
-    warnings.push("Estrazione testo di bassa qualità");
-  }
-
-  if (factors.parsingConfidence < 50) {
-    warnings.push("Parsing dei dati incerto");
-  }
-
-  if (factors.qualityConfidence < 50) {
-    warnings.push("Qualità dei dati insufficiente");
-  }
-
-  if (factors.datasetConfidence < 30) {
-    warnings.push("Dati storici insufficienti per una stima accurata");
-  }
+  if (factors.extractionConfidence < 50) warnings.push("Estrazione testo di bassa qualità");
+  if (factors.parsingConfidence < 50) warnings.push("Parsing dei dati incerto");
+  if (factors.qualityConfidence < 50) warnings.push("Qualità dei dati insufficiente");
+  if (factors.datasetConfidence < 30) warnings.push("Dati storici insufficienti per una stima accurata");
 
   return {
-    overall: Math.round(overall),
+    overall: Math.max(0, Math.min(1, overall / 100)), // Standardizzazione 0-1
     factors,
     level,
     trustworthy,
@@ -82,7 +76,7 @@ export function combineConfidences(confidences: number[]): number {
   const product = confidences.reduce((p, c) => p * (c / 100), 1);
   const geometricMean = Math.pow(product, 1 / confidences.length);
 
-  return Math.round(geometricMean * 100);
+  return geometricMean; // Restituisce 0-1
 }
 
 /**
@@ -91,36 +85,29 @@ export function combineConfidences(confidences: number[]): number {
 export function adjustConfidence(
   baseConfidence: number,
   adjustments: {
-    pdfQuality?: number; // -50 a +50
-    userFeedback?: number; // -30 a +30
-    dataAvailability?: number; // -20 a +20
+    pdfQuality?: number; // -0.5 a +0.5
+    userFeedback?: number; // -0.3 a +0.3
+    dataAvailability?: number; // -0.2 a +0.2
   }
 ): number {
   let adjusted = baseConfidence;
 
-  if (adjustments.pdfQuality) {
-    adjusted += adjustments.pdfQuality;
-  }
+  if (adjustments.pdfQuality) adjusted += adjustments.pdfQuality;
+  if (adjustments.userFeedback) adjusted += adjustments.userFeedback;
+  if (adjustments.dataAvailability) adjusted += adjustments.dataAvailability;
 
-  if (adjustments.userFeedback) {
-    adjusted += adjustments.userFeedback;
-  }
-
-  if (adjustments.dataAvailability) {
-    adjusted += adjustments.dataAvailability;
-  }
-
-  return Math.max(0, Math.min(100, adjusted));
+  return Math.max(0, Math.min(1, adjusted));
 }
 
 /**
  * Determina il livello di fiducia descrittivo
  */
 export function getConfidenceDescription(confidence: number): string {
-  if (confidence >= 85) return "Molto affidabile";
-  if (confidence >= 70) return "Affidabile";
-  if (confidence >= 50) return "Moderatamente affidabile";
-  if (confidence >= 30) return "Poco affidabile";
+  const c = confidence > 1 ? confidence / 100 : confidence;
+  if (c >= 0.85) return "Molto affidabile";
+  if (c >= 0.70) return "Affidabile";
+  if (c >= 0.50) return "Moderatamente affidabile";
+  if (c >= 0.30) return "Poco affidabile";
   return "Non affidabile";
 }
 
@@ -128,9 +115,10 @@ export function getConfidenceDescription(confidence: number): string {
  * Consiglia azioni basate sul livello di confidenza
  */
 export function getConfidenceRecommendation(confidence: number): string {
-  if (confidence >= 85) return "Puoi fidarti di questo risultato";
-  if (confidence >= 70) return "Il risultato è generalmente affidabile, ma verifica i dettagli";
-  if (confidence >= 50) return "Prendi questo risultato con cautela e verifica";
-  if (confidence >= 30) return "Questo risultato è incerto, verifica accuratamente";
+  const c = confidence > 1 ? confidence / 100 : confidence;
+  if (c >= 0.85) return "Puoi fidarti di questo risultato";
+  if (c >= 0.70) return "Il risultato è generalmente affidabile, ma verifica i dettagli";
+  if (c >= 0.50) return "Prendi questo risultato con cautela e verifica";
+  if (c >= 0.30) return "Questo risultato è incerto, verifica accuratamente";
   return "Non fidarti di questo risultato, riprova con un PDF di migliore qualità";
 }

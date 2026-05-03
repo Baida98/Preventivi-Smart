@@ -1,4 +1,6 @@
 import type { VerdictKey } from "./verdict";
+import { getFirestoreInstance, getCurrentUser } from "./firebase-service";
+import { doc, collection, addDoc, setDoc, getDocs, query, orderBy, limit, Timestamp } from "firebase/firestore";
 
 const KEY = "preventivi-smart-archive-v1";
 export const GUEST_QUOTE_LIMIT = 5;
@@ -46,12 +48,12 @@ export type SavedQuote = {
   anomalyScore?: number;
   validated?: boolean;
 
-  // Tracking & Analytics (Nuovo)
+  // Tracking & Analytics (Nuovo - Standardizzato 0-1)
   prezzo_suggerito?: number;
   prezzo_finale?: number;
   range_min?: number;
   range_max?: number;
-  confidence?: number;
+  confidence?: number; // 0.0 - 1.0
   model_version?: string;
   segmento?: string;
   outcome?: "bozza" | "inviato" | "accettato" | "rifiutato" | "modificato";
@@ -60,6 +62,7 @@ export type SavedQuote = {
   dentro_range?: boolean;
   ocrConfidence?: number;
   parserConfidence?: number;
+  uid?: string;
 };
 
 export type QuoteEvent = {
@@ -101,6 +104,16 @@ const EVENTS_KEY = "preventivi-smart-events-v1";
 const ANALYTICS_KEY = "preventivi-smart-analytics-v1";
 const AGGREGATES_KEY = "preventivi-smart-aggregates-v1";
 
+/**
+ * Ottiene il riferimento alla collezione dell'utente corrente su Firestore
+ */
+export function getUserCollection(path: string) {
+  const db = getFirestoreInstance();
+  const user = getCurrentUser();
+  if (!db || !user) return null;
+  return collection(db, "users", user.uid, path);
+}
+
 export function loadArchive(): SavedQuote[] {
   if (typeof window === "undefined") return [];
   try {
@@ -110,38 +123,85 @@ export function loadArchive(): SavedQuote[] {
     if (!Array.isArray(arr)) return [];
     return arr;
   } catch (error) {
-    console.error("Errore nel caricamento dell'archivio:", error);
+    console.error("Errore nel caricamento dell'archivio locale:", error);
     return [];
   }
 }
 
-export function saveQuote(q: SavedQuote) {
+/**
+ * Salva un preventivo (LocalStorage per guest, Firestore per auth)
+ */
+export async function saveQuote(q: SavedQuote) {
+  const user = getCurrentUser();
+  const quoteWithUid = { ...q, uid: user?.uid || "guest" };
+
   try {
+    // 1. Sempre LocalStorage (per persistenza offline/guest)
     const all = loadArchive();
-    all.unshift(q);
+    const existingIdx = all.findIndex(item => item.id === q.id);
+    if (existingIdx >= 0) {
+      all[existingIdx] = quoteWithUid;
+    } else {
+      all.unshift(quoteWithUid);
+    }
     window.localStorage.setItem(KEY, JSON.stringify(all.slice(0, 100)));
+
+    // 2. Se loggato, salva su Firestore
+    const col = getUserCollection("preventivi");
+    if (col) {
+      const quoteRef = doc(col, q.id);
+      await setDoc(quoteRef, {
+        ...quoteWithUid,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
+    }
+    
+    // Log evento
+    logEvent(existingIdx >= 0 ? "UPDATED" : "CREATED", q.id);
+    
   } catch (error) {
     console.error("Errore nel salvataggio del preventivo:", error);
-    throw new Error("Impossibile salvare il preventivo. Verifica lo spazio disponibile.");
+    throw new Error("Impossibile salvare il preventivo.");
   }
 }
 
-export function deleteQuote(id: string) {
+/**
+ * Sincronizza l'archivio locale con Firestore per l'utente loggato
+ */
+export async function syncArchiveWithCloud(): Promise<SavedQuote[]> {
+  const col = getUserCollection("preventivi");
+  if (!col) return loadArchive();
+
   try {
+    const q = query(col, orderBy("data", "desc"), limit(100));
+    const snap = await getDocs(q);
+    const cloudQuotes = snap.docs.map(d => d.data() as SavedQuote);
+    
+    if (cloudQuotes.length > 0) {
+      window.localStorage.setItem(KEY, JSON.stringify(cloudQuotes));
+    }
+    return cloudQuotes;
+  } catch (error) {
+    console.error("Errore sincronizzazione cloud:", error);
+    return loadArchive();
+  }
+}
+
+export async function deleteQuote(id: string) {
+  try {
+    // 1. Local
     const all = loadArchive().filter((q) => q.id !== id);
     window.localStorage.setItem(KEY, JSON.stringify(all));
+
+    // 2. Firestore
+    const col = getUserCollection("preventivi");
+    if (col) {
+      const { deleteDoc, doc } = await import("firebase/firestore");
+      await deleteDoc(doc(col, id));
+    }
   } catch (error) {
     console.error("Errore nell'eliminazione del preventivo:", error);
     throw new Error("Impossibile eliminare il preventivo.");
-  }
-}
-
-export function clearArchive() {
-  try {
-    window.localStorage.removeItem(KEY);
-  } catch (error) {
-    console.error("Errore nella cancellazione dell'archivio:", error);
-    throw new Error("Impossibile cancellare l'archivio.");
   }
 }
 
@@ -153,117 +213,71 @@ export function newId() {
   );
 }
 
-/**
- * Conta il numero di preventivi salvati
- */
 export function getQuoteCount(): number {
-  try {
-    return loadArchive().length;
-  } catch (error) {
-    console.error("Errore nel conteggio dei preventivi:", error);
-    return 0;
-  }
+  return loadArchive().length;
 }
 
-/**
- * Verifica se l'utente ospite ha raggiunto il limite di preventivi
- */
 export function isGuestLimitReached(): boolean {
-  try {
-    return getQuoteCount() >= GUEST_QUOTE_LIMIT;
-  } catch (error) {
-    console.error("Errore nella verifica del limite ospite:", error);
-    return false;
-  }
+  const user = getCurrentUser();
+  if (user) return false; // Nessun limite per utenti loggati
+  return getQuoteCount() >= GUEST_QUOTE_LIMIT;
 }
 
-/**
- * Calcola il totale economico di tutti i preventivi salvati
- */
 export function calculateTotalArchive(): number {
-  try {
-    const quotes = loadArchive();
-    return quotes.reduce((sum, q) => {
-      const value = q.mode === "analizza" && q.receivedPrice 
-        ? q.receivedPrice 
-        : q.marketMid;
-      return sum + value;
-    }, 0);
-  } catch (error) {
-    console.error("Errore nel calcolo del totale archivio:", error);
-    return 0;
-  }
-}
-
-/**
- * Ottiene una lista di clienti unici dai preventivi salvati per l'autocompletamento
- */
-export function getClientSuggestions() {
-  try {
-    const quotes = loadArchive();
-    const clients = quotes
-      .filter(q => q.cliente && q.cliente.nome)
-      .map(q => q.cliente!);
-    
-    // Rimuovi duplicati basati su nome e cognome
-    const uniqueClients = Array.from(
-      new Map(clients.map(c => [`${c.nome}-${c.cognome || ""}`, c])).values()
-    );
-    
-    return uniqueClients;
-  } catch (error) {
-    console.error("Errore nel recupero suggerimenti clienti:", error);
-    return [];
-  }
+  const quotes = loadArchive();
+  return quotes.reduce((sum, q) => {
+    const value = q.mode === "analizza" && q.receivedPrice 
+      ? q.receivedPrice 
+      : q.marketMid;
+    return sum + value;
+  }, 0);
 }
 
 // ⸻ TRACKING & ANALYTICS ⸻
 
 /**
- * Salva un evento di tracking
+ * Salva un evento di tracking (Cloud-first se loggato)
  */
-export function logEvent(type: QuoteEvent["type"], preventivoId: string, payload: Record<string, any> = {}) {
+export async function logEvent(type: QuoteEvent["type"], preventivoId: string, payload: Record<string, any> = {}) {
+  const user = getCurrentUser();
+  const event: QuoteEvent = {
+    preventivoId,
+    type,
+    payload,
+    timestamp: Date.now(),
+    uid: user?.uid || "guest",
+  };
+
   try {
+    // 1. Cloud (collezione globale events per aggregazione admin)
+    const db = getFirestoreInstance();
+    if (db) {
+      await addDoc(collection(db, "events"), event);
+    }
+
+    // 2. Local fallback per guest
     const events = loadEvents();
-    const event: QuoteEvent = {
-      id: newId(),
-      preventivoId,
-      type,
-      payload,
-      timestamp: Date.now(),
-      uid: "guest",
-    };
     events.unshift(event);
     window.localStorage.setItem(EVENTS_KEY, JSON.stringify(events.slice(0, 500)));
   } catch (error) {
-    console.error("Errore nel salvataggio dell'evento:", error);
+    console.error("Errore nel logging evento:", error);
   }
 }
 
-/**
- * Carica gli eventi di tracking
- */
 export function loadEvents(): QuoteEvent[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(EVENTS_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) return [];
-    return arr;
-  } catch (error) {
-    console.error("Errore nel caricamento degli eventi:", error);
-    return [];
-  }
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
 }
 
 /**
- * Chiude un preventivo e genera un record analytics
+ * Chiude un preventivo e genera un record analytics (Standardizzato)
  */
-export function closePreventivo(preventivo: SavedQuote) {
+export async function closePreventivo(preventivo: SavedQuote) {
   try {
     if (!preventivo.prezzo_suggerito || !preventivo.prezzo_finale || !preventivo.segmento) {
-      console.warn("Preventivo incompleto per chiusura:", preventivo.id);
       return;
     }
 
@@ -275,7 +289,7 @@ export function closePreventivo(preventivo: SavedQuote) {
 
     const record: AnalyticsRecord = {
       preventivoId: preventivo.id,
-      uid: "guest",
+      uid: getCurrentUser()?.uid || "guest",
       segmento: preventivo.segmento,
       prezzo_suggerito: preventivo.prezzo_suggerito,
       prezzo_finale: preventivo.prezzo_finale,
@@ -284,11 +298,21 @@ export function closePreventivo(preventivo: SavedQuote) {
       dentro_range,
       outcome: preventivo.outcome || "bozza",
       confidence: preventivo.confidence || 0.5,
-      model_version: preventivo.model_version || "v1",
+      model_version: preventivo.model_version || "v1.0",
       createdAt: Date.now(),
     };
 
-    saveAnalyticsRecord(record);
+    // Salva record
+    const db = getFirestoreInstance();
+    if (db) {
+      await setDoc(doc(db, "analytics", preventivo.id), record);
+    }
+
+    // Local update
+    const analytics = loadAnalytics();
+    analytics.unshift(record);
+    window.localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics.slice(0, 1000)));
+
     logEvent("CLOSED", preventivo.id, { outcome: preventivo.outcome });
     updateAggregates(preventivo.segmento);
   } catch (error) {
@@ -296,39 +320,14 @@ export function closePreventivo(preventivo: SavedQuote) {
   }
 }
 
-/**
- * Salva un record analytics
- */
-export function saveAnalyticsRecord(record: AnalyticsRecord) {
-  try {
-    const analytics = loadAnalytics();
-    analytics.unshift(record);
-    window.localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics.slice(0, 1000)));
-  } catch (error) {
-    console.error("Errore nel salvataggio del record analytics:", error);
-  }
-}
-
-/**
- * Carica i record analytics
- */
 export function loadAnalytics(): AnalyticsRecord[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(ANALYTICS_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) return [];
-    return arr;
-  } catch (error) {
-    console.error("Errore nel caricamento degli analytics:", error);
-    return [];
-  }
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
 }
 
-/**
- * Aggiorna gli aggregati per un segmento
- */
 export function updateAggregates(segmento: string) {
   try {
     const analytics = loadAnalytics();
@@ -337,6 +336,7 @@ export function updateAggregates(segmento: string) {
     if (segmentData.length === 0) return;
 
     const count = segmentData.length;
+    // Protezione divisione per zero garantita dal check sopra
     const errore_medio = segmentData.reduce((a, x) => a + x.errore_assoluto, 0) / count;
     const errore_percentuale_medio = segmentData.reduce((a, x) => a + x.errore_percentuale, 0) / count;
     const accuracy_range = segmentData.filter(x => x.dentro_range).length / count;
@@ -354,56 +354,24 @@ export function updateAggregates(segmento: string) {
       lastUpdated: Date.now(),
     };
 
-    saveAggregates(metrics);
+    // Save
+    const aggregates = loadAggregates();
+    const idx = aggregates.findIndex(a => a.segmento === metrics.segmento);
+    if (idx >= 0) aggregates[idx] = metrics;
+    else aggregates.push(metrics);
+    window.localStorage.setItem(AGGREGATES_KEY, JSON.stringify(aggregates));
+    
   } catch (error) {
     console.error("Errore nell'aggiornamento degli aggregati:", error);
   }
 }
 
-/**
- * Salva le metriche aggregate
- */
-export function saveAggregates(metrics: AggregateMetrics) {
-  try {
-    const aggregates = loadAggregates();
-    const idx = aggregates.findIndex(a => a.segmento === metrics.segmento);
-    if (idx >= 0) {
-      aggregates[idx] = metrics;
-    } else {
-      aggregates.push(metrics);
-    }
-    window.localStorage.setItem(AGGREGATES_KEY, JSON.stringify(aggregates));
-  } catch (error) {
-    console.error("Errore nel salvataggio degli aggregati:", error);
-  }
-}
-
-/**
- * Carica le metriche aggregate
- */
 export function loadAggregates(): AggregateMetrics[] {
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(AGGREGATES_KEY);
-    if (!raw) return [];
-    const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) return [];
-    return arr;
-  } catch (error) {
-    console.error("Errore nel caricamento degli aggregati:", error);
-    return [];
-  }
-}
-
-/**
- * Calcola il peso di un record analytics per il feedback loop
- */
-export function computeWeight(record: AnalyticsRecord): number {
-  let weight = 1;
-  if (record.outcome === "accettato") weight *= 1.5;
-  if (record.outcome === "rifiutato") weight *= 0.5;
-  if (record.confidence < 0.5) weight *= 0.7;
-  return weight;
+    return raw ? JSON.parse(raw) : [];
+  } catch { return []; }
 }
 
 /**

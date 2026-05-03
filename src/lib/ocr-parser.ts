@@ -23,6 +23,7 @@ export type ParsedQuoteData = {
   note?: string;
   confidenceScore: number; // 0-100
   warnings: string[];
+  invalid?: boolean;
 };
 
 /**
@@ -236,6 +237,7 @@ function validateTotalCoherence(servizi: Service[], totale: number): {
 export function parseQuoteFromText(text: string, source: "ocr" | "pdf" = "ocr"): ParsedQuoteData {
   const warnings: string[] = [];
   let confidenceScore = 100;
+  let invalid = false;
 
   // Estrai campi
   const clientData = extractClientName(text);
@@ -259,9 +261,11 @@ export function parseQuoteFromText(text: string, source: "ocr" | "pdf" = "ocr"):
   }
 
   const totalPrice = extractTotal(text);
+  // Fix: Controlla sempre totale
   if (totalPrice === null || totalPrice <= 0) {
     warnings.push("Totale non trovato o non valido");
     confidenceScore -= 20;
+    invalid = true;
   }
 
   // Valida coerenza
@@ -289,6 +293,7 @@ export function parseQuoteFromText(text: string, source: "ocr" | "pdf" = "ocr"):
     mq,
     confidenceScore,
     warnings,
+    invalid
   };
 }
 
@@ -303,6 +308,7 @@ export function createQuoteFromParsedData(
   const now = new Date().toISOString();
   const today = now.split("T")[0];
 
+  // Fix: Distinzione reale tra sorgente PDF e OCR e standardizzazione qualityScore
   return {
     uid: userId,
     numero: quoteNumber,
@@ -310,15 +316,15 @@ export function createQuoteFromParsedData(
     createdAt: now,
     updatedAt: now,
     cliente: parsed.cliente,
-    ambito: "da-determinare", // Inferito da servizi o lasciato vuoto
+    ambito: "da-determinare",
     sottotipo: "da-determinare",
     mq: parsed.mq,
     servizi: parsed.servizi,
     totale: parsed.totale,
     stato: "bozza",
-    source: "ocr",
+    source: "pdf", // Assumiamo PDF se estratto tramite questa pipeline
     note: parsed.warnings.length > 0 ? `Avvertimenti: ${parsed.warnings.join("; ")}` : undefined,
-    qualityScore: parsed.confidenceScore,
-    validated: parsed.confidenceScore >= 70, // Validato solo se score >= 70%
+    qualityScore: parsed.confidenceScore / 100, // Standardizza 0-1
+    validated: parsed.confidenceScore >= 70 && !parsed.invalid,
   };
 }

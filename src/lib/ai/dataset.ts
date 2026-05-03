@@ -5,7 +5,8 @@
 
 import type { Quote } from "../quote-model";
 import { getFirestoreInstance } from "../firebase-service";
-import { collection, addDoc, query, where, getDocs, updateDoc, doc } from "firebase/firestore";
+import { collection, addDoc, query, where, getDocs, updateDoc, doc, Timestamp, orderBy, limit } from "firebase/firestore";
+import type { SavedQuote } from "../storage";
 
 export interface DatasetEntry {
   id?: string;
@@ -20,38 +21,52 @@ export interface DatasetEntry {
   ambito: string;
   regione: string;
   validated: boolean;
+  source: string;
+  qualityScore: number;
+  model_version: string;
 }
 
 /**
  * Salva una quote validata nel dataset
+ * Implementa i fix critici di filtraggio suggeriti
  */
 export async function saveToDataset(
-  quoteId: string,
-  userId: string,
+  quote: SavedQuote,
   extractedText: string,
-  parsedData: Record<string, any>,
-  actualQuote: Partial<Quote>,
-  confidence: number
+  parsedData: Record<string, any>
 ): Promise<string | null> {
+  // Fix CRITICI: Filtra dati non idonei al training
+  if (quote.source !== "pdf") return null; // Solo dati "puri" da PDF
+  if (!quote.validated) return null; // Solo dati validati
+  
+  // Standardizziamo qualityScore su 0-1 se arriva come 0-100
+  const qScore = (quote.qualityScore || 0) > 1 ? (quote.qualityScore || 0) / 100 : (quote.qualityScore || 0);
+  if (qScore < 0.7) return null; // Solo alta qualità
+
   try {
     const db = getFirestoreInstance();
-    if (!db) {
-      console.error("Firebase non configurato");
-      return null;
-    }
+    if (!db) return null;
 
-    const entry: DatasetEntry = {
-      quoteId,
-      userId,
-      extractedText,
+    const entry: Omit<DatasetEntry, "id"> = {
+      quoteId: quote.id,
+      userId: quote.uid || "guest",
+      extractedText: extractedText.slice(0, 5000),
       parsedData,
-      actualQuote,
-      confidence,
-      accuracy: 0, // Calcolato dopo la validazione
+      actualQuote: {
+        ambito: quote.ambito,
+        regionLabel: quote.regionLabel,
+        totale: quote.totale,
+        servizi: quote.servizi
+      },
+      confidence: quote.confidence || 0,
+      accuracy: 100, // Inizialmente 100, verrà aggiornato dal feedback loop
       timestamp: Date.now(),
-      ambito: actualQuote.ambito || "unknown",
-      regione: actualQuote.regionLabel || "unknown",
+      ambito: quote.ambito || "unknown",
+      regione: quote.regionLabel || "unknown",
       validated: true,
+      source: "pdf",
+      qualityScore: qScore,
+      model_version: quote.model_version || "v1.0"
     };
 
     const docRef = await addDoc(collection(db, "datasets"), entry);
@@ -70,7 +85,12 @@ export async function getDatasetByRegion(regione: string): Promise<DatasetEntry[
     const db = getFirestoreInstance();
     if (!db) return [];
 
-    const q = query(collection(db, "datasets"), where("regione", "==", regione));
+    const q = query(
+      collection(db, "datasets"), 
+      where("regione", "==", regione),
+      where("source", "==", "pdf"),
+      where("validated", "==", true)
+    );
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({
       id: doc.id,
@@ -90,7 +110,12 @@ export async function getDatasetByAmbito(ambito: string): Promise<DatasetEntry[]
     const db = getFirestoreInstance();
     if (!db) return [];
 
-    const q = query(collection(db, "datasets"), where("ambito", "==", ambito));
+    const q = query(
+      collection(db, "datasets"), 
+      where("ambito", "==", ambito),
+      where("source", "==", "pdf"),
+      where("validated", "==", true)
+    );
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => ({
       id: doc.id,

@@ -35,8 +35,15 @@ function calculateCompletenessScore(quote: Partial<Quote>): number {
   });
 
   // Servizi
-  totalFields += 5; // Min 5 servizi per completezza
-  filledFields += Math.min(5, quote.servizi?.length || 0);
+  // Fix: meno rigida sui piccoli lavori (almeno 1 servizio valido dà punteggio pieno)
+  const serviceCount = quote.servizi?.length || 0;
+  if (serviceCount >= 1 && quote.totale && quote.totale > 0) {
+    totalFields += 1;
+    filledFields += 1;
+  } else {
+    totalFields += 5; // Min 5 servizi per completezza se non ha totale
+    filledFields += Math.min(5, serviceCount);
+  }
 
   return (filledFields / totalFields) * 100;
 }

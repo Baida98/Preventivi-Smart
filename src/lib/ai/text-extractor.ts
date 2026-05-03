@@ -187,30 +187,37 @@ export async function extractTextFromScannedPDF(file: File): Promise<ExtractionR
  */
 export async function extractText(
   file: File,
-  classification: "text" | "scanned" | "mixed"
+  classification: "text" | "scanned" | "mixed" | "error"
 ): Promise<ExtractionResult> {
+  let result: ExtractionResult;
+
   if (classification === "text") {
-    return extractTextFromNativePDF(file);
+    result = await extractTextFromNativePDF(file);
   } else if (classification === "scanned") {
-    return extractTextFromScannedPDF(file);
-  } else {
+    result = await extractTextFromScannedPDF(file);
+  } else if (classification === "mixed") {
     // Mixed: prova prima nativo, poi OCR se insufficiente
     const nativeResult = await extractTextFromNativePDF(file);
-    if (nativeResult.text.length > 100) {
-      return nativeResult;
+    if (nativeResult.text.length > 200) {
+      result = nativeResult;
+    } else {
+      const ocrResult = await extractTextFromScannedPDF(file);
+      result = {
+        text: nativeResult.text + "\n" + ocrResult.text,
+        method: "hybrid",
+        confidence: Math.min(nativeResult.confidence, ocrResult.confidence),
+        pagesProcessed: nativeResult.pagesProcessed + ocrResult.pagesProcessed,
+        warnings: [...nativeResult.warnings, ...ocrResult.warnings],
+      };
     }
-
-    const ocrResult = await extractTextFromScannedPDF(file);
-    if (ocrResult.text.length > nativeResult.text.length) {
-      return ocrResult;
-    }
-
-    return {
-      text: nativeResult.text + "\n" + ocrResult.text,
-      method: "hybrid",
-      confidence: Math.min(nativeResult.confidence, ocrResult.confidence),
-      pagesProcessed: nativeResult.pagesProcessed + ocrResult.pagesProcessed,
-      warnings: [...nativeResult.warnings, ...ocrResult.warnings],
-    };
+  } else {
+    throw new Error("Classificazione PDF non valida per estrazione");
   }
+
+  // Fix: NON restituire testo vuoto o troppo corto
+  if (!result.text || result.text.trim().length < 50) {
+    throw new Error("Estrazione testo fallita: il documento non contiene testo sufficiente per l'analisi tecnica.");
+  }
+
+  return result;
 }
