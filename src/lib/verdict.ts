@@ -40,7 +40,7 @@ const COLORS: Record<VerdictKey, Verdict["color"]> = {
     border: "border-amber-500/40",
     bg: "bg-amber-500/10",
     chartHsl: "38 92% 60%",
-    glow: "shadow-[0_0_60px_-10px_rgba(251,191,36,0.45)]",
+    glow: "shadow-[0_0_60_px_-10px_rgba(251,191,36,0.45)]",
   },
   "troppo-alto": {
     text: "text-rose-300",
@@ -58,7 +58,41 @@ const COLORS: Record<VerdictKey, Verdict["color"]> = {
   },
 };
 
-export function judge(price: number, m: MarketAnalysis): Verdict {
+/**
+ * Garanzie legali specifiche per categoria di lavoro
+ */
+const LEGAL_WARRANTIES: Record<string, string[]> = {
+  edilizia: [
+    "Garanzia Decennale (Art. 1669 C.C.): Copre gravi difetti costruttivi o rovina dell'opera per 10 anni.",
+    "Garanzia Biennale (Art. 1667 C.C.): Copre difetti minori o non conformità per 2 anni dalla consegna.",
+    "Obbligo DURC: Verifica che l'impresa sia in regola con i contributi INPS/INAIL."
+  ],
+  impianti: [
+    "Certificazione di Conformità (DM 37/08): Obbligatoria per legge per impianti elettrici, idraulici e gas.",
+    "Garanzia Prodotto: Minimo 2 anni sui componenti (caldaie, condizionatori, inverter).",
+    "Responsabilità Civile: Assicurati che l'installatore abbia una polizza RC per danni a terzi."
+  ],
+  imbiancatura: [
+    "Garanzia Biennale (Art. 1667 C.C.): Copre vizi e difetti di esecuzione per 2 anni.",
+    "Scheda Tecnica: Hai diritto a conoscere marca e tipo di pittura usata per future manutenzioni.",
+    "Pulizia e Ripristino: Il preventivo deve specificare la protezione di mobili e pavimenti."
+  ],
+  carpenteria: [
+    "Certificazione Energetica: Per gli infissi, necessaria per le detrazioni fiscali (Ecobonus).",
+    "Garanzia 10 anni su installazione: Molti produttori offrono estensioni sulla posa in opera.",
+    "Marcatura CE: Obbligatoria per tutti i serramenti e porte esterne."
+  ],
+  finiture: [
+    "Garanzia Biennale (Art. 1667 C.C.): Copre difetti di posa o materiali per 24 mesi.",
+    "Certificazione Materiali: Verifica la classe di resistenza o tossicità (es. formaldeide nel parquet)."
+  ],
+  pavimenti: [
+    "Garanzia Biennale (Art. 1667 C.C.): Copre difetti di posa o materiali per 24 mesi.",
+    "Certificazione Materiali: Verifica la classe di resistenza o tossicità (es. formaldeide nel parquet)."
+  ]
+};
+
+export function judge(price: number, m: MarketAnalysis, categoryId: string = "edilizia"): Verdict {
   const minThreshold = m.marketMin * 0.8;
   const maxThreshold = m.marketMax * 1.15;
   
@@ -86,37 +120,34 @@ export function judge(price: number, m: MarketAnalysis): Verdict {
 
   const diffPct = (price - m.marketMid) / m.marketMid;
 
+  // Garanzie legali specifiche
+  const warranties = LEGAL_WARRANTIES[categoryId] || LEGAL_WARRANTIES.edilizia;
+
   const recommendations: Record<VerdictKey, string[]> = {
     ottimo: [
-      "Il prezzo è sotto la media di mercato. Verifica però che il preventivo sia dettagliato voce per voce.",
-      "Chiedi conferma scritta su materiali, marche e tempi di consegna.",
-      "Assicurati che l'IVA, il sopralluogo e lo smaltimento siano inclusi.",
-      "Richiedi il documento DURC e la certificazione del professionista.",
+      "Il prezzo è sotto la media. Verifica che il preventivo sia dettagliato voce per voce.",
+      ...warranties.slice(0, 2),
+      "Richiedi il documento DURC e la certificazione del professionista."
     ],
     equo: [
-      "Il prezzo è in linea con il mercato della tua regione: puoi procedere con tranquillità.",
-      "Chiedi comunque almeno un secondo preventivo per confronto.",
-      "Verifica garanzia sui lavori (minimo 2 anni per legge) e tempi.",
-      "Inserisci nel contratto penali per ritardo e modalità di pagamento a stato avanzamento.",
+      "Il prezzo è in linea con il mercato: puoi procedere con tranquillità.",
+      ...warranties.slice(0, 2),
+      "Inserisci nel contratto penali per ritardo e modalità di pagamento a SAL."
     ],
     alto: [
       "Il prezzo è sopra la media: c'è margine di trattativa del 10–15%.",
-      "Chiedi al professionista di dettagliare ogni singola voce per individuare gli scostamenti.",
-      "Richiedi 2 preventivi alternativi per confronto diretto.",
-      "Verifica se il prezzo è giustificato da materiali premium o tempistiche brevi.",
+      ...warranties.slice(0, 2),
+      "Chiedi al professionista di dettagliare ogni singola voce per individuare gli scostamenti."
     ],
     "troppo-alto": [
-      "Il prezzo è significativamente sopra il mercato: non firmare prima di altri preventivi.",
-      "Richiedi obbligatoriamente 2–3 preventivi alternativi nella stessa regione.",
-      "Chiedi al professionista la giustificazione voce per voce dello scostamento.",
-      "Presta attenzione a urgenze artificiali o sconti immediati che condizionano la firma in giornata.",
+      "Prezzo significativamente sopra il mercato: non firmare senza confronti.",
+      ...warranties.slice(0, 2),
+      "Chiedi la giustificazione voce per voce dello scostamento."
     ],
     sospetto: [
-      "Il prezzo è anomalmente basso: è consigliabile verificare attentamente la qualità dei materiali e la conformità dei lavori alle normative.",
-      "Verifica P.IVA, iscrizione CCIAA e abilitazioni del professionista.",
-      "Chiedi capitolato dettagliato e marche dei materiali per iscritto.",
-      "Sii cauto con richieste di pagamenti non tracciabili o acconti eccessivamente elevati.",
-      "Pretendi sempre fattura, garanzia e — per impianti — la certificazione di conformità.",
+      "Prezzo anomalmente basso: verifica qualità materiali e conformità normative.",
+      ...warranties,
+      "Pretendi sempre fattura, garanzia e certificazione di conformità."
     ],
   };
 

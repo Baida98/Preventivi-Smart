@@ -117,10 +117,10 @@ export default function Wizard({
           setLoading(false);
           return;
         }
-        const v = judge(Number(price), marketAnalysis);
+        const v = judge(Number(price), marketAnalysis, categoryId ?? "edilizia");
         setVerdict(v);
       } else {
-        const v = judge(marketAnalysis.marketMid, marketAnalysis);
+        const v = judge(marketAnalysis.marketMid, marketAnalysis, categoryId ?? "edilizia");
         setVerdict(v);
       }
 
@@ -448,35 +448,31 @@ export default function Wizard({
               {/* Logistics - Collapsible Advanced */}
               <details className="group">
                 <summary className="cursor-pointer text-xs font-black uppercase tracking-wider text-muted-foreground/60 hover:text-muted-foreground transition-colors py-2">
-                  ⚙️ Dettagli Logistica (opzionale)
+                  Dettagli logistici (Opzionali)
                 </summary>
-                <div className="mt-4 space-y-4 pl-2 border-l border-white/5">
+                <div className="mt-4 space-y-5 pb-4">
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-muted-foreground/70">Zona</Label>
+                    <Label className="text-xs font-bold text-muted-foreground">Zona di lavoro</Label>
                     <Select value={zoneId} onValueChange={setZoneId}>
-                      <SelectTrigger className="h-10 bg-card/40 border-white/5 rounded-xl text-sm">
+                      <SelectTrigger className="h-12 bg-card/40 border-white/5 rounded-2xl">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent position="popper" sideOffset={8}>
-                        {Object.entries(MARKET_INDICATORS.logistics.zones).map(([id, zone]) => (
-                          <SelectItem key={id} value={id}>
-                            {zone.label}
-                          </SelectItem>
+                      <SelectContent>
+                        {Object.entries(MARKET_INDICATORS.logistics.zones).map(([id, z]) => (
+                          <SelectItem key={id} value={id}>{z.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-muted-foreground/70">Tipo Immobile</Label>
+                    <Label className="text-xs font-bold text-muted-foreground">Tipo immobile</Label>
                     <Select value={propertyTypeId} onValueChange={setPropertyTypeId}>
-                      <SelectTrigger className="h-10 bg-card/40 border-white/5 rounded-xl text-sm">
+                      <SelectTrigger className="h-12 bg-card/40 border-white/5 rounded-2xl">
                         <SelectValue />
                       </SelectTrigger>
-                      <SelectContent position="popper" sideOffset={8}>
-                        {Object.entries(MARKET_INDICATORS.logistics.propertyType).map(([id, type]) => (
-                          <SelectItem key={id} value={id}>
-                            {type.label}
-                          </SelectItem>
+                      <SelectContent>
+                        {Object.entries(MARKET_INDICATORS.logistics.propertyType).map(([id, p]) => (
+                          <SelectItem key={id} value={id}>{p.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -488,33 +484,23 @@ export default function Wizard({
             <div className="mt-10 flex items-center gap-2">
               <Button
                 variant="outline"
-                onClick={() => {
-                  setJobId(null);
-                  setStep(1);
-                }}
+                onClick={() => setStep(1)}
                 className="gap-2 h-12 px-6 font-bold"
               >
                 <ArrowLeft className="w-4 h-4" /> Indietro
               </Button>
               <Button
-                disabled={!canStep2Next || loading}
-                onClick={() => {
-                  if (mode === "analizza") setStep(3 as Step);
-                  else runAnalysis();
-                }}
+                disabled={!canStep2Next}
+                onClick={() => (mode === "analizza" ? setStep(3) : runAnalysis())}
                 className="gap-2 ml-auto h-12 px-8 bg-primary text-primary-foreground glow-azure font-black"
               >
-                {loading && mode === "stima" ? (
+                {mode === "analizza" ? (
                   <>
-                    <Loader2 className="w-4 h-4 animate-spin" /> Calcolo…
-                  </>
-                ) : mode === "analizza" ? (
-                  <>
-                    Continua <ArrowRight className="w-4 h-4" />
+                    Avanti <ArrowRight className="w-4 h-4" />
                   </>
                 ) : (
                   <>
-                    Calcola <Sparkles className="w-4 h-4" />
+                    Calcola Stima <Calculator className="w-4 h-4" />
                   </>
                 )}
               </Button>
@@ -522,7 +508,7 @@ export default function Wizard({
           </motion.div>
         )}
 
-        {/* Step 3: Price Input (analizza) or Results (stima) */}
+        {/* Step 3: Analysis (Only for mode === "analizza") */}
         {step === 3 && (
           <motion.div
             key="s3"
@@ -531,21 +517,21 @@ export default function Wizard({
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3 }}
           >
-            {mode === "analizza" && !analysis ? (
+            {!analysis ? (
               <>
                 <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-                  Quanto ti hanno chiesto?
+                  Prezzo del preventivo
                 </h2>
                 <p className="mt-3 text-base text-muted-foreground/80 font-medium">
-                  Inserisci il totale del preventivo oppure carica il PDF.
+                  Inserisci l'importo totale ricevuto o carica il PDF.
                 </p>
 
-                {/* PDF Upload */}
+                {/* PDF Upload Zone Toggle */}
                 <div className="mt-8">
                   <AnimatePresence mode="wait">
                     {showPdfUpload ? (
                       <motion.div
-                        key="pdf"
+                        key="pdf-zone"
                         initial={{ opacity: 0, y: 6 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 6 }}
