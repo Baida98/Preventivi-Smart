@@ -9,6 +9,7 @@ import {
   X,
   AlertCircle,
   Loader2,
+  FileUp,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,10 +35,14 @@ import {
 } from "@/lib/pricing";
 import { MARKET_INDICATORS } from "@/lib/market-config";
 import { judge, type Verdict } from "@/lib/verdict";
-import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT, getClientSuggestions } from "@/lib/storage";
+import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT } from "@/lib/storage";
 import { validateWizardData } from "@/lib/validation";
+import { validateQuoteMultiLevel } from "@/lib/validation-rules";
+import { validationContext } from "@/lib/validation-context";
 import ResultsView from "./Results";
+import PdfUploadZone from "./PdfUploadZone";
 import { cn } from "@/lib/utils";
+import { User as UserIcon } from "lucide-react";
 
 export type Mode = "analizza" | "stima";
 
@@ -63,16 +68,19 @@ export default function Wizard({
   const [quantity, setQuantity] = useState<string>("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [notes, setNotes] = useState<string>("");
-  const [clientName, setClientName] = useState<string>("");
-  const [clientEmail, setClientEmail] = useState<string>("");
   const [price, setPrice] = useState<string>("");
   const [zoneId, setZoneId] = useState<string>("urbana");
   const [propertyTypeId, setPropertyTypeId] = useState<string>("appartamento-standard");
+
+  const [clienteNome, setClienteNome] = useState<string>("");
+  const [clienteEmail, setClienteEmail] = useState<string>("");
+  const [clienteTelefono, setClienteTelefono] = useState<string>("");
 
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<MarketAnalysis | null>(null);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [savedThisRun, setSavedThisRun] = useState(false);
+  const [showPdfUpload, setShowPdfUpload] = useState(false);
 
   const job: Job | null = jobId ? findJob(jobId) ?? null : null;
   const category = categoryId ? findCategory(categoryId) ?? null : null;
@@ -129,12 +137,13 @@ export default function Wizard({
       setQuantity("");
       setFieldValues({});
       setNotes("");
-      setClientName("");
-      setClientEmail("");
       setPrice("");
       setAnalysis(null);
       setVerdict(null);
       setSavedThisRun(false);
+      setClienteNome("");
+      setClienteEmail("");
+      setClienteTelefono("");
     }
   }
 
@@ -161,7 +170,7 @@ export default function Wizard({
 
     setLoading(true);
     try {
-      const m = computeMarket(job, regionId, Number(quantity), fieldValues, { zoneId, propertyTypeId });
+      const m = computeMarket(job, regionId, Number(quantity), fieldValues);
       let v: Verdict | null = null;
       if (mode === "analizza") {
         v = judge(Number(price), m);
@@ -191,9 +200,43 @@ export default function Wizard({
     
     const region = REGIONS.find((r) => r.id === regionId);
     if (!region) return;
-    const quote: SavedQuote = {
+    
+    const now = new Date().toISOString();
+    const today = now.split("T")[0];
+    const totale = mode === "analizza" ? Number(price) : analysis.marketMid;
+
+    // Phase 5: Validazione multi-livello prima del salvataggio
+    const partialQuote = {
       id: newId(),
-      createdAt: new Date().toISOString(),
+      numero: "DRAFT",
+      uid: "guest",
+      data: today,
+      createdAt: now,
+      updatedAt: now,
+      cliente: { nome: clienteNome || "Ospite" },
+      ambito: category?.id ?? "",
+      sottotipo: job.id,
+      servizi: [{
+        id: "svc-1",
+        descrizione: job.label,
+        quantita: Number(quantity),
+        unitaMisura: job.unitLabel,
+        prezzoUnitario: totale / Math.max(Number(quantity), 1),
+        totale,
+      }],
+      totale,
+      stato: "finalizzato" as const,
+      source: "manuale" as const,
+    };
+
+    const statCtx = validationContext.getContext(category?.id ?? "", job.id);
+    const validationResult = validateQuoteMultiLevel(partialQuote, statCtx ?? undefined);
+
+    const quote: SavedQuote = {
+      id: partialQuote.id,
+      createdAt: now,
+      updatedAt: now,
+      data: today,
       jobId: job.id,
       jobLabel: job.label,
       categoryLabel: category?.label ?? "",
@@ -208,9 +251,10 @@ export default function Wizard({
           f.options.find((o) => o.value === fieldValues[f.id])?.label ?? "",
       })),
       notes: notes || undefined,
-      cliente: clientName ? {
-        nome: clientName,
-        email: clientEmail || undefined,
+      cliente: clienteNome ? {
+        nome: clienteNome,
+        email: clienteEmail || undefined,
+        telefono: clienteTelefono || undefined,
       } : undefined,
       receivedPrice: mode === "analizza" ? Number(price) : undefined,
       marketMin: analysis.marketMin,
@@ -219,11 +263,27 @@ export default function Wizard({
       verdict: verdict?.key,
       verdictLabel: verdict?.label,
       mode,
+      ambito: category?.id ?? "",
+      sottotipo: job.id,
+      stato: "finalizzato",
+      source: "manuale",
+      totale,
+      qualityScore: validationResult.qualityScore,
+      anomalyScore: validationResult.anomalyScore,
+      validated: validationResult.valid,
     };
+
     try {
       saveQuote(quote);
       setSavedThisRun(true);
-      toast.success("✅ Preventivo salvato in archivio.");
+      const qScore = validationResult.qualityScore;
+      if (qScore >= 80) {
+        toast.success(`✅ Preventivo salvato · Qualità ${qScore}/100`);
+      } else if (qScore >= 50) {
+        toast.success(`✅ Preventivo salvato · Qualità ${qScore}/100 — controlla i dati`);
+      } else {
+        toast.success(`✅ Preventivo salvato · Qualità ${qScore}/100 — dati incompleti`);
+      }
       onSaved();
     } catch (error) {
       console.error("Errore nel salvataggio:", error);
@@ -484,40 +544,6 @@ export default function Wizard({
               ))}
             </div>
 
-            <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
-                  Nome Cliente (facoltativo)
-                </Label>
-                <div className="relative">
-                  <Input
-                    value={clientName}
-                    onChange={(e) => setClientName(e.target.value)}
-                    placeholder="Es: Mario Rossi"
-                    className="h-11 bg-card/60"
-                    list="client-suggestions"
-                  />
-                  <datalist id="client-suggestions">
-                    {getClientSuggestions().map((c, i) => (
-                      <option key={i} value={`${c.nome}${c.cognome ? ' ' + c.cognome : ''}`} />
-                    ))}
-                  </datalist>
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
-                  Email Cliente (facoltativo)
-                </Label>
-                <Input
-                  type="email"
-                  value={clientEmail}
-                  onChange={(e) => setClientEmail(e.target.value)}
-                  placeholder="mario@esempio.it"
-                  className="h-11 bg-card/60"
-                />
-              </div>
-            </div>
-
             <div className="mt-5 space-y-2">
               <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
                 Note aggiuntive (facoltativo)
@@ -529,6 +555,50 @@ export default function Wizard({
                 placeholder="Es: materiali di pregio, urgenza, accesso difficile..."
                 className="bg-card/60 resize-none"
               />
+            </div>
+
+            {/* Phase 5: Dati cliente opzionali */}
+            <div className="mt-6 rounded-xl border border-border/60 bg-card/30 p-4 space-y-3">
+              <div className="flex items-center gap-2 mb-1">
+                <UserIcon className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-xs font-semibold text-muted-foreground tracking-wide uppercase">
+                  Dati cliente (facoltativo)
+                </span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] text-muted-foreground">Nome</Label>
+                  <Input
+                    value={clienteNome}
+                    onChange={(e) => setClienteNome(e.target.value)}
+                    placeholder="Mario Rossi"
+                    className="h-9 bg-card/60 text-sm"
+                    maxLength={100}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] text-muted-foreground">Email</Label>
+                  <Input
+                    type="email"
+                    value={clienteEmail}
+                    onChange={(e) => setClienteEmail(e.target.value)}
+                    placeholder="mario@esempio.it"
+                    className="h-9 bg-card/60 text-sm"
+                    maxLength={200}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-[11px] text-muted-foreground">Telefono</Label>
+                  <Input
+                    type="tel"
+                    value={clienteTelefono}
+                    onChange={(e) => setClienteTelefono(e.target.value)}
+                    placeholder="+39 333 1234567"
+                    className="h-9 bg-card/60 text-sm"
+                    maxLength={20}
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="mt-8 flex items-center gap-2">
@@ -577,13 +647,50 @@ export default function Wizard({
             transition={{ duration: 0.25 }}
           >
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Inserisci l'importo del preventivo
+              Quanto ti hanno chiesto?
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Inserisci l'importo totale del preventivo ricevuto, inclusa IVA e materiali.
+              Scrivi il totale del preventivo che hai ricevuto, oppure carica il PDF.
             </p>
 
-            <div className="mt-12 mx-auto max-w-md">
+            {/* PDF Upload toggle */}
+            <div className="mt-6">
+              <AnimatePresence mode="wait">
+                {showPdfUpload ? (
+                  <motion.div
+                    key="pdf"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 6 }}
+                  >
+                    <PdfUploadZone
+                      onPriceDetected={(p) => {
+                        setPrice(String(p));
+                        setShowPdfUpload(false);
+                      }}
+                      onDismiss={() => setShowPdfUpload(false)}
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.button
+                    key="pdf-toggle"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    onClick={() => setShowPdfUpload(true)}
+                    className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-colors text-left"
+                  >
+                    <FileUp className="w-4 h-4 text-primary shrink-0" />
+                    <div>
+                      <p className="text-sm font-medium text-primary">Carica PDF preventivo</p>
+                      <p className="text-[11px] text-muted-foreground">Estraiamo il prezzo automaticamente</p>
+                    </div>
+                  </motion.button>
+                )}
+              </AnimatePresence>
+            </div>
+
+            <div className="mt-6 mx-auto max-w-md">
               <div className="relative rounded-3xl border border-border/80 bg-card/40 p-8 grain glow-azure">
                 <Label className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
                   Prezzo ricevuto

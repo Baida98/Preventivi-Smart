@@ -113,7 +113,7 @@ export function getCurrentUser(): User | null {
 
 export async function createQuote(
   userId: string,
-  quoteData: Omit<Quote, "id" | "numero" | "createdAt">
+  quoteData: Omit<Quote, "id" | "numero" | "createdAt" | "updatedAt" | "uid">
 ): Promise<CreateQuoteResponse> {
   const dbInstance = getFirestoreInstance();
   if (!dbInstance) throw new Error("Firebase non configurato.");
@@ -148,12 +148,14 @@ export async function createQuote(
 
     const quoteId = generateDocumentId();
     const now = Timestamp.now();
+    const nowIso = now.toDate().toISOString();
     const newQuote: Quote = {
       ...quoteData,
       id: quoteId,
+      uid: userId,
       numero,
-      createdAt: now.toDate().toISOString(),
-      updatedAt: now.toDate().toISOString(),
+      createdAt: nowIso,
+      updatedAt: nowIso,
     };
 
     const quoteRef = doc(userRef, "quotes", quoteId);

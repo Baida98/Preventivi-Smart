@@ -38,6 +38,7 @@ export class QuoteDuplication {
     // Crea il nuovo preventivo
     const duplicatedQuote: Omit<Quote, "numero" | "createdAt"> = {
       id: generateQuoteId(),
+      uid: quote.uid,
       data: resetDate ? new Date().toISOString().split("T")[0] : quote.data,
       cliente: resetClient
         ? {
@@ -46,12 +47,15 @@ export class QuoteDuplication {
         : {
             ...quote.cliente,
           },
+      ambito: quote.ambito,
+      sottotipo: quote.sottotipo,
+      mq: quote.mq,
       servizi: duplicatedServices,
       totale: ServiceManager.calculateTotal(duplicatedServices),
+      stato: "bozza",
+      source: quote.source,
       note: keepNotes ? quote.note : undefined,
       jobId: quote.jobId,
-      jobLabel: quote.jobLabel,
-      categoryLabel: quote.categoryLabel,
       regionLabel: quote.regionLabel,
       verdict: quote.verdict,
       verdictLabel: quote.verdictLabel,
@@ -60,6 +64,9 @@ export class QuoteDuplication {
       marketMid: quote.marketMid,
       marketMax: quote.marketMax,
       receivedPrice: quote.receivedPrice,
+      qualityScore: quote.qualityScore,
+      anomalyScore: quote.anomalyScore,
+      validated: quote.validated,
       fieldValues: quote.fieldValues ? { ...quote.fieldValues } : undefined,
       fieldLabels: quote.fieldLabels
         ? quote.fieldLabels.map((f) => ({ ...f }))
@@ -235,10 +242,16 @@ export class QuoteDuplication {
 
     return {
       id: generateQuoteId(),
+      uid: quote1.uid,
       data: new Date().toISOString().split("T")[0],
       cliente: clienteFromFirst ? quote1.cliente : quote2.cliente,
+      ambito: quote1.ambito,
+      sottotipo: quote1.sottotipo,
+      mq: clienteFromFirst ? quote1.mq : quote2.mq,
       servizi: mergedServices,
       totale: ServiceManager.calculateTotal(mergedServices),
+      stato: "bozza",
+      source: "manuale",
       note: `Merge di preventivo ${quote1.numero} e ${quote2.numero}`,
       updatedAt: new Date().toISOString(),
     };

@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { judge } from '../lib/verdict';
-import { MarketAnalysis } from '../lib/pricing';
+import type { MarketAnalysis } from '../lib/pricing';
 
 describe('Logica di Verdetto', () => {
   const mockMarket: MarketAnalysis = {
@@ -12,6 +12,11 @@ describe('Logica di Verdetto', () => {
     manodopera: 550,
     materiali: 350,
     margine: 100,
+    confidence: 0.9,
+    inflationImpact: 0.05,
+    logisticsImpact: 0.02,
+    expiryDate: new Date("2024-12-31"),
+    volatilityClass: "low",
   };
 
   it('restituisce "equo" per un prezzo vicino alla media', () => {

@@ -5,7 +5,10 @@ export const GUEST_QUOTE_LIMIT = 5;
 
 export type SavedQuote = {
   id: string;
+  numero?: string;
   createdAt: string;
+  updatedAt: string;
+  data: string;
   jobId: string;
   jobLabel: string;
   categoryLabel: string;
@@ -28,6 +31,20 @@ export type SavedQuote = {
   verdict?: VerdictKey;
   verdictLabel?: string;
   mode: "analizza" | "stima";
+  
+  // Campi nuovi per Phase 1
+  ambito: string;
+  sottotipo: string;
+  mq?: number;
+  stato: "bozza" | "finalizzato";
+  source: "manuale" | "import";
+  servizi?: { id: string; descrizione: string; quantita: number; unitaMisura: string; prezzoUnitario: number; totale: number }[];
+  totale?: number;
+
+  // Phase 5: Qualità e validazione
+  qualityScore?: number;
+  anomalyScore?: number;
+  validated?: boolean;
 };
 
 export function loadArchive(): SavedQuote[] {

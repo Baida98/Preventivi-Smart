@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import {
   validateWizardData,
-  validateQuoteInput,
   sanitizeString,
   validateAndSanitizeWizardData,
 } from '../lib/validation';
@@ -19,7 +18,7 @@ describe('Validazione con Zod', () => {
 
     const result = validateWizardData(validData);
     expect(result.success).toBe(true);
-    if (result.success) {
+    if (result.success && result.data) {
       expect(result.data.quantity).toBe(10);
     }
   });
