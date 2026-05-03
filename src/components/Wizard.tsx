@@ -22,7 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import RegionSelector from "./RegionSelector";
+// import RegionSelector from "./RegionSelector";
 import {
   CATEGORIES,
   REGIONS,
@@ -381,9 +381,24 @@ export default function Wizard({
               <span className="font-semibold">{job.label}</span>
             </div>
 
-            {/* Selettore regione — Bottom drawer mobile-first con ricerca */}
-            <div className="mt-6">
-              <RegionSelector value={regionId} onChange={setRegionId} />
+            <div className="mt-6 space-y-2">
+              <Label className="text-xs font-semibold text-muted-foreground tracking-wide">
+                Regione
+              </Label>
+              <Select value={regionId} onValueChange={setRegionId}>
+                <SelectTrigger className="h-11 bg-card/60">
+                  <SelectValue placeholder="Seleziona la tua regione" />
+                </SelectTrigger>
+                <SelectContent position="popper" sideOffset={8}>
+                  <div className="max-h-[300px] overflow-y-auto">
+                    {REGIONS.map((r) => (
+                      <SelectItem key={r.id} value={r.id}>
+                        {r.label}
+                      </SelectItem>
+                    ))}
+                  </div>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">

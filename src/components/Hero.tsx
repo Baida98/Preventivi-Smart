@@ -37,11 +37,10 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.7, delay: 0.05 }}
           className="mt-6 text-balance text-[44px] sm:text-[68px] md:text-[84px] leading-[0.95] font-bold tracking-tight"
         >
-          Il prezzo è{" "}
+          Analisi Prezzi{" "}
           <span className="font-serif-display italic text-primary inline-block">
-            giusto
+            Intelligente
           </span>
-          ?
         </motion.h1>
 
         <motion.p
