@@ -210,41 +210,55 @@ export default function ResultsView({
 
       {/* AI Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <MetricCard 
-          icon={ShieldCheck} 
-          label="Confidenza Analisi" 
-          value={`${Math.round(verdict?.confidence ? verdict.confidence * 100 : analysis.confidence * 100)}%`}
-          description="Precisione dei dati regionali"
-          color="text-sky-400"
-          bg="bg-sky-400/10"
-        />
-        <MetricCard 
-          icon={Activity} 
-          label="Qualità Documento" 
-          value={`${qualityScore}%`}
-          description="Completezza dei dati estratti"
-          color="text-emerald-400"
-          bg="bg-emerald-400/10"
-        />
-        <MetricCard 
-          icon={Zap} 
-          label="Volatilità Settore" 
-          value={analysis.volatilityClass.toUpperCase()}
-          description="Rischio variazione prezzi"
-          color="text-amber-400"
-          bg="bg-amber-400/10"
-        />
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
+          <MetricCard 
+            icon={ShieldCheck} 
+            label="Confidenza Analisi" 
+            value={`${Math.round(verdict?.confidence ? verdict.confidence * 100 : analysis.confidence * 100)}%`}
+            description="Precisione dei dati regionali"
+            color="text-sky-400"
+            bg="bg-sky-400/10"
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}>
+          <MetricCard 
+            icon={Activity} 
+            label="Qualità Documento" 
+            value={`${qualityScore}%`}
+            description="Completezza dei dati estratti"
+            color="text-emerald-400"
+            bg="bg-emerald-400/10"
+          />
+        </motion.div>
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
+          <MetricCard 
+            icon={Zap} 
+            label="Volatilità Settore" 
+            value={analysis.volatilityClass.toUpperCase()}
+            description="Rischio variazione prezzi"
+            color="text-amber-400"
+            bg="bg-amber-400/10"
+          />
+        </motion.div>
       </div>
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
         {/* Main Bar Chart - Market Comparison */}
-        <div className="lg:col-span-3 rounded-[2rem] border border-border/60 bg-card/30 p-6 shadow-xl">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.20 }}
+          className="lg:col-span-3 rounded-[2rem] border border-border/60 bg-card/30 p-6 shadow-xl card-hover-glow"
+        >
           <div className="flex items-center justify-between mb-6">
             <div>
               <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Benchmark di Mercato</h4>
               <p className="text-xs text-muted-foreground mt-1">Confronto tra il tuo preventivo e la fascia onesta locale</p>
             </div>
+            <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 ring-1 ring-primary/20 text-[10px] font-bold text-primary uppercase tracking-wider">
+              ISTAT 2026
+            </span>
           </div>
           
           <div className="h-64 w-full">
@@ -296,10 +310,15 @@ export default function ResultsView({
               </BarChart>
             </ResponsiveContainer>
           </div>
-        </div>
+        </motion.div>
 
         {/* Cost Breakdown Pie Chart */}
-        <div className="lg:col-span-2 rounded-[2rem] border border-border/60 bg-card/30 p-6 shadow-xl flex flex-col">
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="lg:col-span-2 rounded-[2rem] border border-border/60 bg-card/30 p-6 shadow-xl flex flex-col card-hover-glow"
+        >
           <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80 mb-1">Ripartizione Costi</h4>
           <p className="text-xs text-muted-foreground mb-4">Stima dei costi interni del professionista</p>
           
@@ -350,13 +369,18 @@ export default function ResultsView({
               </div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Detailed Insights Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Market Context Card */}
-        <div className="rounded-3xl border border-border/40 bg-card/20 p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.30 }}
+          className="rounded-3xl border border-border/40 bg-card/20 p-6 card-hover-glow"
+        >
           <div className="flex items-center gap-2 mb-4">
             <Info className="w-4 h-4 text-sky-400" />
             <h4 className="text-sm font-bold uppercase tracking-wider">Dettagli di Mercato</h4>
@@ -384,23 +408,34 @@ export default function ResultsView({
               <span className="text-xs font-black text-emerald-300">{analysis.expiryDate.toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })}</span>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Action Recommendations */}
-        <div className="rounded-3xl border border-border/40 bg-card/20 p-6">
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="rounded-3xl border border-border/40 bg-card/20 p-6 card-hover-glow"
+        >
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="w-4 h-4 text-primary" />
             <h4 className="text-sm font-bold uppercase tracking-wider">Strategia Consigliata</h4>
           </div>
           <div className="space-y-3">
             {verdict?.recommendations.slice(0, 3).map((r, i) => (
-              <div key={i} className="flex gap-3 items-start">
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.35 + i * 0.07 }}
+                className="flex gap-3 items-start"
+              >
                 <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0 shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
                 <p className="text-xs leading-relaxed text-muted-foreground/90 font-medium">{r}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
-        </div>
+        </motion.div>
       </div>
 
       {/* Main Action Buttons */}

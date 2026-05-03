@@ -10,7 +10,7 @@ import type { StatisticalContext } from "./validation-rules";
 /**
  * Baseline data: ISTAT 2026 (8 macro-categorie × 20 regioni)
  * 
- * Fonte indicativa: CRESME, ISTAT, Osservatori costruzioni 2025
+ * Fonte indicativa: CRESME, ISTAT, Osservatori costruzioni 2026
  * Prezzi in EUR, IVA esclusa
  * 
  * Aggiornato periodicamente da validated quotes (quality ≥ 75%)

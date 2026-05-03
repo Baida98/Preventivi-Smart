@@ -1,9 +1,20 @@
 import React, { useRef, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { runOCRPipeline, type OCRPipelineResult } from '../lib/ocr-pipeline';
-import { Spinner } from './ui/spinner';
 import { Button } from './ui/button';
-import { AlertCircle, CheckCircle2, FileUp, Loader2 } from 'lucide-react';
-import { useToast } from '../hooks/use-toast';
+import {
+  AlertCircle,
+  CheckCircle2,
+  FileUp,
+  Loader2,
+  X,
+  ShieldCheck,
+  FileText,
+  Zap,
+  RotateCcw,
+} from 'lucide-react';
+import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 
 interface PdfUploadZoneProps {
   onPriceDetected?: (price: number) => void;
@@ -22,15 +33,10 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<OCRPipelineResult | null>(null);
   const [dragActive, setDragActive] = useState(false);
-  const { toast } = useToast();
 
   const handleFile = async (file: File) => {
     if (!file.type.includes('pdf')) {
-      toast({
-        title: 'Errore',
-        description: 'Per favore carica un file PDF',
-        variant: 'destructive',
-      });
+      toast.error('Per favore carica un file PDF');
       return;
     }
 
@@ -40,32 +46,20 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
       setResult(pipelineResult);
 
       if (pipelineResult.success && pipelineResult.quote) {
-        toast({
-          title: 'Successo',
-          description: `Quote estratto con confidenza ${pipelineResult.confidence.toFixed(0)}%`,
-        });
+        toast.success(`Preventivo estratto · Confidenza ${pipelineResult.confidence.toFixed(0)}%`);
 
         if (pipelineResult.quote.totale && onPriceDetected) {
           onPriceDetected(pipelineResult.quote.totale);
         }
-
         if (onQuoteExtracted) {
           onQuoteExtracted(pipelineResult.quote);
         }
       } else {
-        toast({
-          title: 'Avvertenza',
-          description: pipelineResult.error || 'Impossibile estrarre il quote dal PDF',
-          variant: 'destructive',
-        });
+        toast.error(pipelineResult.error || 'Impossibile estrarre il preventivo dal PDF');
       }
     } catch (error) {
       console.error('Errore nella pipeline OCR:', error);
-      toast({
-        title: 'Errore',
-        description: 'Si è verificato un errore durante l\'elaborazione del PDF',
-        variant: 'destructive',
-      });
+      toast.error("Errore durante l'elaborazione del PDF");
     } finally {
       setIsLoading(false);
     }
@@ -74,144 +68,175 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (e.type === 'dragenter' || e.type === 'dragover') {
-      setDragActive(true);
-    } else if (e.type === 'dragleave') {
-      setDragActive(false);
-    }
+    if (e.type === 'dragenter' || e.type === 'dragover') setDragActive(true);
+    else if (e.type === 'dragleave') setDragActive(false);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setDragActive(false);
-
     const files = e.dataTransfer.files;
-    if (files && files.length > 0) {
-      handleFile(files[0]);
-    }
+    if (files && files.length > 0) handleFile(files[0]);
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
-    if (files && files.length > 0) {
-      handleFile(files[0]);
-    }
+    if (files && files.length > 0) handleFile(files[0]);
   };
 
+  /* ── Loading State ── */
   if (isLoading) {
     return (
-      <div className="p-8 border-2 border-dashed border-blue-300 rounded-lg bg-blue-50 flex flex-col items-center justify-center gap-4">
-        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
-        <p className="text-sm font-medium text-gray-700">Elaborazione PDF in corso...</p>
-        <div className="w-full max-w-md space-y-2">
-          {result?.steps.map((step, idx) => (
-            <div key={idx} className="text-xs text-gray-600 flex items-start gap-2">
-              <span className="flex-shrink-0">{step.split(' ')[0]}</span>
-              <span>{step.substring(step.indexOf(' ') + 1)}</span>
-            </div>
-          ))}
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 to-card/30 p-8 flex flex-col items-center justify-center gap-5 shadow-xl"
+      >
+        <div className="relative flex items-center justify-center w-16 h-16">
+          <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
+          <div className="relative flex items-center justify-center w-14 h-14 rounded-full bg-primary/15 ring-1 ring-primary/30">
+            <Loader2 className="w-7 h-7 animate-spin text-primary" />
+          </div>
         </div>
-      </div>
+        <div className="text-center">
+          <p className="text-sm font-black text-foreground">Analisi PDF in corso…</p>
+          <p className="text-xs text-muted-foreground mt-1">Estrazione e classificazione automatica</p>
+        </div>
+        {result?.steps && result.steps.length > 0 && (
+          <div className="w-full max-w-xs space-y-1.5">
+            {result.steps.map((step, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-[11px] text-muted-foreground/80">
+                <div className="w-1 h-1 rounded-full bg-primary/60 shrink-0" />
+                <span>{step}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </motion.div>
     );
   }
 
+  /* ── Result State ── */
   if (result) {
     return (
-      <div className="p-6 border-2 rounded-lg bg-white space-y-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.97 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className={cn(
+          'rounded-3xl border p-6 space-y-4 shadow-xl',
+          result.success
+            ? 'border-emerald-500/25 bg-emerald-500/5'
+            : 'border-rose-500/25 bg-rose-500/5'
+        )}
+      >
+        {/* Header */}
         <div className="flex items-start gap-3">
-          {result.success ? (
-            <CheckCircle2 className="w-6 h-6 text-green-600 flex-shrink-0 mt-1" />
-          ) : (
-            <AlertCircle className="w-6 h-6 text-red-600 flex-shrink-0 mt-1" />
-          )}
-          <div className="flex-1">
-            <h3 className="font-semibold text-gray-900">
-              {result.success ? 'Quote estratto con successo' : 'Errore nell\'estrazione'}
+          <div className={cn(
+            'shrink-0 flex items-center justify-center w-10 h-10 rounded-2xl',
+            result.success ? 'bg-emerald-500/15 ring-1 ring-emerald-500/30' : 'bg-rose-500/15 ring-1 ring-rose-500/30'
+          )}>
+            {result.success
+              ? <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+              : <AlertCircle className="w-5 h-5 text-rose-400" />}
+          </div>
+          <div>
+            <h3 className="text-sm font-black text-foreground">
+              {result.success ? 'Preventivo estratto con successo' : "Errore nell'estrazione"}
             </h3>
-            <p className="text-sm text-gray-600 mt-1">
-              Confidenza: {result.confidence.toFixed(0)}% ({result.classification})
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Confidenza: <span className={cn('font-bold', result.success ? 'text-emerald-400' : 'text-rose-400')}>
+                {result.confidence.toFixed(0)}%
+              </span>
+              {result.classification && (
+                <span className="ml-2 px-1.5 py-0.5 rounded-full bg-white/5 text-muted-foreground/70 text-[10px] font-medium">
+                  {result.classification}
+                </span>
+              )}
             </p>
           </div>
         </div>
 
-        {result.steps.length > 0 && (
-          <div className="bg-gray-50 p-4 rounded space-y-2">
-            <p className="text-xs font-semibold text-gray-700">Passaggi eseguiti:</p>
-            {result.steps.map((step, idx) => (
-              <div key={idx} className="text-xs text-gray-600">
-                {step}
-              </div>
-            ))}
-          </div>
-        )}
-
-        {result.warnings.length > 0 && (
-          <div className="bg-yellow-50 border border-yellow-200 p-4 rounded space-y-2">
-            <p className="text-xs font-semibold text-yellow-800">Avvertenze:</p>
-            {result.warnings.map((warning, idx) => (
-              <div key={idx} className="text-xs text-yellow-700">
-                • {warning}
-              </div>
-            ))}
-          </div>
-        )}
-
+        {/* Extracted Data */}
         {result.quote && (
-          <div className="bg-blue-50 border border-blue-200 p-4 rounded space-y-2">
-            <p className="text-xs font-semibold text-blue-900">Dati estratti:</p>
-            <div className="grid grid-cols-2 gap-2 text-xs">
+          <div className="rounded-2xl border border-white/8 bg-card/30 p-4 grid grid-cols-2 gap-3">
+            {result.quote.numero && (
               <div>
-                <span className="text-gray-600">Quote:</span>
-                <p className="font-medium">{result.quote.numero}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Numero</p>
+                <p className="text-xs font-bold text-foreground mt-0.5">{result.quote.numero}</p>
               </div>
+            )}
+            {result.quote.cliente?.nome && (
               <div>
-                <span className="text-gray-600">Cliente:</span>
-                <p className="font-medium">{result.quote.cliente?.nome}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Cliente</p>
+                <p className="text-xs font-bold text-foreground mt-0.5">{result.quote.cliente.nome}</p>
               </div>
+            )}
+            {result.quote.ambito && (
               <div>
-                <span className="text-gray-600">Ambito:</span>
-                <p className="font-medium">{result.quote.ambito}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Ambito</p>
+                <p className="text-xs font-bold text-foreground mt-0.5">{result.quote.ambito}</p>
               </div>
+            )}
+            {result.quote.totale != null && (
               <div>
-                <span className="text-gray-600">Totale:</span>
-                <p className="font-medium">€{result.quote.totale?.toFixed(2)}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Totale</p>
+                <p className="text-sm font-black text-primary mt-0.5">€{result.quote.totale.toFixed(2)}</p>
               </div>
-            </div>
+            )}
           </div>
         )}
 
-        <div className="flex gap-2">
+        {/* Warnings */}
+        {result.warnings.length > 0 && (
+          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 space-y-1">
+            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400/80">Avvertenze</p>
+            {result.warnings.map((w, i) => (
+              <p key={i} className="text-[11px] text-amber-300/80 font-medium">· {w}</p>
+            ))}
+          </div>
+        )}
+
+        {/* Actions */}
+        <div className="flex gap-2 pt-1">
           <Button
+            variant="outline"
             onClick={() => {
               setResult(null);
               if (fileInputRef.current) fileInputRef.current.value = '';
             }}
-            variant="outline"
-            className="flex-1"
+            className="flex-1 h-10 gap-2 rounded-2xl text-xs font-bold border-white/10 bg-white/5 hover:bg-white/10"
           >
-            Carica un altro PDF
+            <RotateCcw className="w-3.5 h-3.5" /> Carica altro
           </Button>
-          <Button onClick={onDismiss} variant="outline" className="flex-1">
-            Chiudi
+          <Button
+            variant="outline"
+            onClick={onDismiss}
+            className="h-10 w-10 p-0 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 shrink-0"
+          >
+            <X className="w-4 h-4" />
           </Button>
         </div>
-      </div>
+      </motion.div>
     );
   }
 
+  /* ── Upload State ── */
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
       onDragEnter={handleDrag}
       onDragLeave={handleDrag}
       onDragOver={handleDrag}
       onDrop={handleDrop}
-      className={`p-8 border-2 border-dashed rounded-lg transition-colors cursor-pointer ${
-        dragActive
-          ? 'border-blue-500 bg-blue-50'
-          : 'border-gray-300 bg-gray-50 hover:border-gray-400'
-      }`}
       onClick={() => fileInputRef.current?.click()}
+      className={cn(
+        'relative rounded-3xl border-2 border-dashed p-8 cursor-pointer transition-all duration-300 group',
+        dragActive
+          ? 'border-primary/60 bg-primary/8 shadow-[0_0_30px_-10px_hsl(200_95%_55%/0.3)]'
+          : 'border-white/10 bg-gradient-to-br from-card/40 to-card/20 hover:border-primary/30 hover:bg-primary/5'
+      )}
     >
       <input
         ref={fileInputRef}
@@ -221,36 +246,52 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
         className="hidden"
       />
 
-      <div className="flex flex-col items-center justify-center gap-3">
-        <FileUp className="w-12 h-12 text-gray-400" />
-        <div className="text-center">
-          <p className="font-semibold text-gray-900">Carica un preventivo PDF</p>
-          <p className="text-sm text-gray-600 mt-1">
-            Trascina il file qui o clicca per selezionarlo
+      <div className="flex flex-col items-center justify-center gap-4 text-center">
+        {/* Icon */}
+        <div className={cn(
+          'flex items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300',
+          dragActive
+            ? 'bg-primary/20 ring-1 ring-primary/40 scale-110'
+            : 'bg-white/5 ring-1 ring-white/10 group-hover:bg-primary/10 group-hover:ring-primary/25'
+        )}>
+          <FileUp className={cn(
+            'w-7 h-7 transition-colors duration-300',
+            dragActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'
+          )} />
+        </div>
+
+        <div>
+          <p className="text-sm font-black text-foreground">
+            {dragActive ? 'Rilascia il PDF qui' : 'Carica il preventivo PDF'}
           </p>
-          <p className="text-xs text-gray-500 mt-2">
-            Supportati: PDF nativi e scansionati (con OCR)
+          <p className="text-xs text-muted-foreground mt-1">
+            Trascina il file oppure clicca per selezionarlo
           </p>
+        </div>
+
+        {/* Feature Pills */}
+        <div className="flex flex-wrap justify-center gap-2 mt-1">
+          {[
+            { icon: FileText, label: 'PDF nativo' },
+            { icon: Zap, label: 'OCR automatico' },
+            { icon: ShieldCheck, label: 'Estrazione sicura' },
+          ].map(({ icon: Icon, label }) => (
+            <span key={label} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/8 text-[10px] font-bold text-muted-foreground/80 uppercase tracking-wider">
+              <Icon className="w-3 h-3" />
+              {label}
+            </span>
+          ))}
         </div>
       </div>
 
-      <div className="mt-6 pt-6 border-t border-gray-300 space-y-2">
-        <p className="text-xs font-semibold text-gray-700">Cosa faremo:</p>
-        <ul className="text-xs text-gray-600 space-y-1">
-          <li>✓ Classificazione del PDF (nativo vs scansionato)</li>
-          <li>✓ Estrazione testo con OCR se necessario</li>
-          <li>✓ Parsing strutturato dei dati</li>
-          <li>✓ Validazione qualità e confidenza</li>
-          <li>✓ Estrazione prezzi e servizi</li>
-        </ul>
-      </div>
-
-      <div className="mt-4 flex gap-2">
-        <Button onClick={onDismiss} variant="outline" className="w-full">
-          Chiudi
-        </Button>
-      </div>
-    </div>
+      {/* Dismiss */}
+      <button
+        onClick={(e) => { e.stopPropagation(); onDismiss(); }}
+        className="absolute top-3 right-3 flex items-center justify-center w-7 h-7 rounded-xl bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <X className="w-3.5 h-3.5" />
+      </button>
+    </motion.div>
   );
 };
 
