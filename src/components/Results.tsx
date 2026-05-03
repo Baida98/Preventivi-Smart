@@ -29,6 +29,7 @@ import {
   Activity,
   Target,
   Info,
+  TrendingUp as TrendingUpIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fmtEUR, fmtPct } from "@/lib/format";
@@ -82,8 +83,8 @@ export default function ResultsView({
   onSave,
   onReset,
   onEdit,
-  qualityScore = 85, // Default for demo if not provided
-  confidenceScore = 92, // Default for demo if not provided
+  qualityScore = 85,
+  confidenceScore = 92,
 }: Props) {
   const VerdictIcon = verdict ? VERDICT_ICON[verdict.key] ?? CheckCircle2 : CheckCircle2;
 
@@ -121,8 +122,8 @@ export default function ResultsView({
         <span className="text-muted-foreground font-medium">{quantity} {job.unitLabel}</span>
       </div>
 
-      {/* Outlier Warning */}
-      {verdict?.outlierWarning && (
+      {/* Outlier Warning (Solo per Analizza) */}
+      {mode === "analizza" && verdict?.outlierWarning && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -133,7 +134,7 @@ export default function ResultsView({
         </motion.div>
       )}
 
-      {/* Main Verdict Card - Visual Overhaul */}
+      {/* Main Verdict/Range Card */}
       <div className="grid grid-cols-1 gap-4">
         {mode === "analizza" && verdict ? (
           <motion.div
@@ -199,37 +200,49 @@ export default function ResultsView({
                     {fmtEUR(analysis.marketMin)} <span className="text-muted-foreground/30 mx-1">/</span> {fmtEUR(analysis.marketMax)}
                   </h3>
                   <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground max-w-md">
-                    Prezzo medio stimato: <span className="text-accent font-bold">{fmtEUR(analysis.marketMid)}</span>. Fascia onesta basata su prezzari aggiornati al 2026.
+                    Prezzo medio suggerito: <span className="text-accent font-bold">{fmtEUR(analysis.marketMid)}</span>. Fascia onesta basata su prezzari aggiornati al 2026.
                   </p>
                 </div>
+              </div>
+              <div className="bg-background/40 backdrop-blur-md rounded-3xl p-4 ring-1 ring-white/5 flex flex-col items-center justify-center min-w-[120px]">
+                <span className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Media Unitiva</span>
+                <div className="text-2xl font-black tabular-nums tracking-tighter text-accent">
+                  {fmtEUR(analysis.marketMid / Math.max(quantity, 1))}/{job.unit}
+                </div>
+                <div className="text-[10px] font-medium text-muted-foreground mt-1">Benchmark {regionLabel}</div>
               </div>
             </div>
           </motion.div>
         )}
       </div>
 
-      {/* AI Metrics Row */}
+      {/* AI Metrics Row - Semplificato per Stima */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <MetricCard 
             icon={ShieldCheck} 
-            label="Confidenza Analisi" 
-            value={`${Math.round(verdict?.confidence ? verdict.confidence * 100 : analysis.confidence * 100)}%`}
-            description="Precisione dei dati regionali"
+            label="Affidabilità Dati" 
+            value={`${Math.round(analysis.confidence * 100)}%`}
+            description="Precisione prezzari regionali"
             color="text-sky-400"
             bg="bg-sky-400/10"
           />
         </motion.div>
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}>
-          <MetricCard 
-            icon={Activity} 
-            label="Qualità Documento" 
-            value={`${qualityScore}%`}
-            description="Completezza dei dati estratti"
-            color="text-emerald-400"
-            bg="bg-emerald-400/10"
-          />
-        </motion.div>
+        
+        {/* Mostriamo la qualità solo se c'è stata un'analisi (OCR o manuale) */}
+        {mode === "analizza" && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}>
+            <MetricCard 
+              icon={Activity} 
+              label="Qualità Documento" 
+              value={`${qualityScore}%`}
+              description="Completezza dati estratti"
+              color="text-emerald-400"
+              bg="bg-emerald-400/10"
+            />
+          </motion.div>
+        )}
+
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}>
           <MetricCard 
             icon={Zap} 
@@ -240,6 +253,20 @@ export default function ResultsView({
             bg="bg-amber-400/10"
           />
         </motion.div>
+
+        {/* Se siamo in stima, aggiungiamo un dato sulla validità temporale */}
+        {mode === "stima" && (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }}>
+            <MetricCard 
+              icon={Calendar} 
+              label="Validità Stima" 
+              value={analysis.expiryDate.toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })}
+              description="Aggiornamento prezzari"
+              color="text-emerald-400"
+              bg="bg-emerald-400/10"
+            />
+          </motion.div>
+        )}
       </div>
 
       {/* Charts Section */}
@@ -254,7 +281,9 @@ export default function ResultsView({
           <div className="flex items-center justify-between mb-6">
             <div>
               <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Benchmark di Mercato</h4>
-              <p className="text-xs text-muted-foreground mt-1">Confronto tra il tuo preventivo e la fascia onesta locale</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {mode === "analizza" ? "Confronto tra il tuo preventivo e la fascia locale" : "Posizionamento della stima nel range regionale"}
+              </p>
             </div>
             <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 ring-1 ring-primary/20 text-[10px] font-bold text-primary uppercase tracking-wider">
               ISTAT 2026
@@ -279,7 +308,7 @@ export default function ResultsView({
                       return (
                         <div className="bg-background/90 backdrop-blur-xl border border-white/10 p-3 rounded-2xl shadow-2xl">
                           <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{payload[0].payload.fullName}</p>
-                          <p className="text-lg font-black tracking-tight text-foreground">{fmtEUR(payload[0].value as number)}</p>
+                          <p className="text-sm font-black text-foreground">{fmtEUR(payload[0].value as number)}</p>
                         </div>
                       );
                     }
@@ -324,7 +353,7 @@ export default function ResultsView({
           
           <div className="flex-1 flex items-center justify-center relative">
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-              <span className="text-[10px] font-bold uppercase text-muted-foreground">Totale Stima</span>
+              <span className="text-[10px] font-bold uppercase text-muted-foreground">Media Stima</span>
               <span className="text-lg font-black tracking-tighter">{fmtK(analysis.marketMid)}</span>
             </div>
             <ResponsiveContainer width="100%" height={200}>
@@ -383,12 +412,12 @@ export default function ResultsView({
         >
           <div className="flex items-center gap-2 mb-4">
             <Info className="w-4 h-4 text-sky-400" />
-            <h4 className="text-sm font-bold uppercase tracking-wider">Dettagli di Mercato</h4>
+            <h4 className="text-sm font-bold uppercase tracking-wider">Dettagli Regionali</h4>
           </div>
           <div className="space-y-4">
             <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5">
               <div className="flex items-center gap-3">
-                <TrendingUp className="w-4 h-4 text-blue-400" />
+                <TrendingUpIcon className="w-4 h-4 text-blue-400" />
                 <span className="text-xs font-medium text-muted-foreground">Impatto Inflazione 2026</span>
               </div>
               <span className="text-xs font-black text-blue-300">+{fmtEUR(analysis.inflationImpact)}</span>
@@ -402,15 +431,15 @@ export default function ResultsView({
             </div>
             <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5">
               <div className="flex items-center gap-3">
-                <Calendar className="w-4 h-4 text-emerald-400" />
-                <span className="text-xs font-medium text-muted-foreground">Validità Stima</span>
+                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-medium text-muted-foreground">Copertura Dati {regionLabel}</span>
               </div>
-              <span className="text-xs font-black text-emerald-300">{analysis.expiryDate.toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })}</span>
+              <span className="text-xs font-black text-emerald-300">Capillare</span>
             </div>
           </div>
         </motion.div>
 
-        {/* Action Recommendations */}
+        {/* Action Recommendations / Strategia */}
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -419,10 +448,17 @@ export default function ResultsView({
         >
           <div className="flex items-center gap-2 mb-4">
             <Lightbulb className="w-4 h-4 text-primary" />
-            <h4 className="text-sm font-bold uppercase tracking-wider">Strategia Consigliata</h4>
+            <h4 className="text-sm font-bold uppercase tracking-wider">
+              {mode === "analizza" ? "Strategia Consigliata" : "Consigli per il Preventivo"}
+            </h4>
           </div>
           <div className="space-y-3">
-            {verdict?.recommendations.slice(0, 3).map((r, i) => (
+            {(mode === "analizza" ? verdict?.recommendations : [
+              "Usa questa stima come base per negoziare con il professionista.",
+              "Richiedi sempre un capitolato dettagliato dei materiali.",
+              "Verifica la validità dei prezzi per almeno 30 giorni.",
+              "Assicurati che il preventivo includa oneri di sicurezza e smaltimento."
+            ])?.slice(0, 4).map((r, i) => (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, x: -8 }}
@@ -492,7 +528,7 @@ function MetricCard({
   bg: string 
 }) {
   return (
-    <div className="rounded-3xl border border-border/50 bg-card/30 p-4 flex flex-col gap-1 shadow-lg">
+    <div className="rounded-3xl border border-border/50 bg-card/30 p-4 flex flex-col gap-1 shadow-lg h-full">
       <div className="flex items-center gap-2 mb-1">
         <div className={cn("p-1.5 rounded-lg", bg)}>
           <Icon className={cn("w-3.5 h-3.5", color)} />

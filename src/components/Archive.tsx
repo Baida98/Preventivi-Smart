@@ -16,7 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Trash2, Inbox, FileText, FileDown, BarChart3, TrendingDown, ShieldCheck, AlertTriangle, Star, User } from "lucide-react";
+import { Trash2, Inbox, FileText, FileDown, BarChart3, TrendingDown, ShieldCheck, AlertTriangle, Star, User, Activity, Target } from "lucide-react";
 import { fmtEUR, fmtDate } from "@/lib/format";
 import type { SavedQuote } from "@/lib/storage";
 import { PDFGenerator } from "@/lib/pdf-generator";
@@ -154,13 +154,6 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
                     );
                   })}
                 </div>
-                <div className="flex flex-wrap gap-x-3 gap-y-1">
-                  {Object.entries(stats.verdictCounts).map(([v, count]) => (
-                    <span key={v} className="text-[10px] text-muted-foreground">
-                      {VERDICT_LABEL[v] ?? v}: {count}
-                    </span>
-                  ))}
-                </div>
               </div>
             )}
           </div>
@@ -228,26 +221,16 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
                     {q.regionLabel} · {q.quantity} {q.unitLabel} · {fmtDate(q.createdAt)}
                   </p>
                 </div>
-                {q.verdict && q.verdictLabel && (
+                {q.mode === "analizza" && q.verdict && q.verdictLabel ? (
                   <span className={`shrink-0 inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full border ${VERDICT_BADGE[q.verdict] || ""}`}>
                     {q.verdictLabel}
                   </span>
-                )}
-                {q.mode === "stima" && !q.verdict && (
-                  <span className="shrink-0 inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full border bg-muted/20 text-muted-foreground border-border/40">
+                ) : (
+                  <span className="shrink-0 inline-flex items-center px-2 py-0.5 text-[10px] font-semibold rounded-full border bg-accent/15 text-accent border-accent/30">
                     Stima
                   </span>
                 )}
               </div>
-
-              {q.notes && (
-                <div className="mt-3 border-t border-border/40 pt-3">
-                  <div className="flex items-start gap-1.5 text-[11px] text-muted-foreground">
-                    <FileText className="w-3 h-3 mt-0.5 shrink-0" />
-                    <p className="italic line-clamp-2">{q.notes}</p>
-                  </div>
-                </div>
-              )}
 
               <div className="mt-3 grid grid-cols-2 gap-3 text-xs">
                 {q.mode === "analizza" && q.receivedPrice ? (
@@ -267,60 +250,48 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
                   </div>
                 ) : (
                   <div>
-                    <p className="text-muted-foreground">Stima</p>
-                    <p className="font-semibold tabular-nums">{fmtEUR(q.marketMid)}</p>
+                    <p className="text-muted-foreground">Media stimata</p>
+                    <p className="font-semibold tabular-nums text-accent">{fmtEUR(q.marketMid)}</p>
                   </div>
                 )}
                 <div>
-                  <p className="text-muted-foreground">Fascia onesta</p>
+                  <p className="text-muted-foreground">Range mercato</p>
                   <p className="font-semibold tabular-nums">
-                    {fmtEUR(q.marketMin)} – {fmtEUR(q.marketMax)}
+                    {fmtEUR(q.marketMin)} - {fmtEUR(q.marketMax)}
                   </p>
                 </div>
               </div>
 
-              {/* Phase 5: Quality score + cliente */}
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                {q.qualityScore !== undefined && (
-                  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                    q.qualityScore >= 80
-                      ? "bg-emerald-500/10 text-emerald-300 border-emerald-500/20"
-                      : q.qualityScore >= 50
-                      ? "bg-amber-500/10 text-amber-300 border-amber-500/20"
-                      : "bg-rose-500/10 text-rose-300 border-rose-500/20"
-                  }`}>
-                    <Star className="w-2.5 h-2.5" />
-                    Qualità {q.qualityScore}/100
-                  </span>
+              {/* Badges tecnici - Solo se presenti e rilevanti */}
+              <div className="mt-3 flex flex-wrap gap-2">
+                {q.mode === "analizza" && q.qualityScore != null && (
+                  <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/8 text-[9px] font-bold text-muted-foreground uppercase">
+                    <Activity className="w-2.5 h-2.5" />
+                    Qualità: {q.qualityScore}%
+                  </div>
                 )}
-                {q.validated && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-sky-500/10 text-sky-300 border-sky-500/20">
-                    <ShieldCheck className="w-2.5 h-2.5" /> Validato
-                  </span>
-                )}
-                {q.cliente?.nome && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium border bg-muted/20 text-muted-foreground border-border/40">
-                    <User className="w-2.5 h-2.5" /> {q.cliente.nome}
-                  </span>
-                )}
+                <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-white/5 border border-white/8 text-[9px] font-bold text-muted-foreground uppercase">
+                  <Target className="w-2.5 h-2.5" />
+                  ISTAT 2026
+                </div>
               </div>
 
-              <div className="mt-2 flex justify-between items-center">
+              <div className="mt-4 flex items-center gap-2">
                 <Button
                   size="sm"
-                  variant="ghost"
+                  variant="outline"
+                  className="flex-1 h-8 text-[11px] font-bold gap-1.5"
                   onClick={() => handleExportPDF(q)}
-                  className="h-7 px-2 text-xs text-primary hover:text-primary/80"
                 >
-                  <FileDown className="w-3.5 h-3.5 mr-1" /> PDF
+                  <FileDown className="w-3 h-3" /> PDF
                 </Button>
                 <Button
                   size="sm"
                   variant="ghost"
+                  className="h-8 w-8 p-0 text-muted-foreground hover:text-rose-400"
                   onClick={() => handleDeleteClick(q.id)}
-                  className="h-7 px-2 text-xs text-muted-foreground hover:text-rose-300"
                 >
-                  <Trash2 className="w-3.5 h-3.5 mr-1" /> Elimina
+                  <Trash2 className="w-3.5 h-3.5" />
                 </Button>
               </div>
             </div>
@@ -328,17 +299,17 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
         </div>
       </SheetContent>
 
-      <AlertDialog open={deleteConfirm !== null} onOpenChange={(open) => !open && setDeleteConfirm(null)}>
-        <AlertDialogContent>
+      <AlertDialog open={!!deleteConfirm} onOpenChange={(b) => !b && setDeleteConfirm(null)}>
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Elimina preventivo?</AlertDialogTitle>
             <AlertDialogDescription>
-              Questa azione non può essere annullata. Il preventivo sarà rimosso dall'archivio.
+              Questa azione non può essere annullata. Il preventivo verrà rimosso permanentemente dall'archivio locale.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Annulla</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="bg-rose-600 hover:bg-rose-700">
+            <AlertDialogCancel className="border-border">Annulla</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-rose-500 text-white hover:bg-rose-600">
               Elimina
             </AlertDialogAction>
           </AlertDialogFooter>
@@ -348,23 +319,15 @@ export default function Archive({ open, onOpenChange, quotes, onDelete }: Props)
   );
 }
 
-function StatCard({
-  label, value, sub, icon, accent,
-}: {
-  label: string;
-  value: string;
-  sub: string;
-  icon: React.ReactNode;
-  accent: string;
-}) {
+function StatCard({ label, value, sub, icon, accent }: { label: string; value: string; sub: string; icon: React.ReactNode; accent: string }) {
   return (
-    <div className="rounded-xl bg-card/50 border border-border/60 px-3 py-2.5">
-      <div className="flex items-center gap-1.5 mb-1">
+    <div className="bg-background/40 border border-border/60 rounded-xl p-3">
+      <div className="flex items-center gap-2 mb-1.5">
         {icon}
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</p>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/80">{label}</span>
       </div>
-      <p className={`text-base font-bold tabular-nums ${accent}`}>{value}</p>
-      <p className="text-[10px] text-muted-foreground mt-0.5">{sub}</p>
+      <p className={`text-lg font-black tracking-tighter ${accent}`}>{value}</p>
+      <p className="text-[9px] font-medium text-muted-foreground/70">{sub}</p>
     </div>
   );
 }
