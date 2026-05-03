@@ -92,6 +92,10 @@ export const CATEGORIES: Category[] = [
             { value: "no", label: "Non incluso", multiplier: 1.0 },
             { value: "si", label: "Incluso", multiplier: 1.15 },
           ]),
+          F("materiale", "Materiale", [
+            { value: "standard", label: "Standard (Laterizio)", multiplier: 1.0 },
+            { value: "premium", label: "Premium (Ytong/Termico)", multiplier: 1.25 },
+          ]),
         ],
       },
       {
@@ -103,14 +107,15 @@ export const CATEGORIES: Category[] = [
         unitLabel: "metri quadri",
         defaultQty: 15,
         fields: [
-          F("isolamento", "Isolamento integrato", [
-            { value: "no", label: "No", multiplier: 1.0 },
-            { value: "si", label: "Sì", multiplier: 1.25 },
-          ]),
           F("tipo", "Tipo struttura", [
             { value: "parete", label: "Parete", multiplier: 1.0 },
             { value: "controsoffitto", label: "Controsoffitto", multiplier: 1.15 },
             { value: "ribassato", label: "Ribassato decorativo", multiplier: 1.35 },
+          ]),
+          F("isolamento", "Isolamento termoacustico", [
+            { value: "no", label: "No", multiplier: 1.0 },
+            { value: "lana", label: "Lana di roccia", multiplier: 1.25 },
+            { value: "premium", label: "Fibra poliestere", multiplier: 1.4 },
           ]),
         ],
       },
@@ -135,6 +140,11 @@ export const CATEGORIES: Category[] = [
             { value: "9000", label: "9000 BTU", multiplier: 1.0 },
             { value: "12000", label: "12000 BTU", multiplier: 1.15 },
             { value: "18000", label: "18000 BTU", multiplier: 1.4 },
+          ]),
+          F("distanza", "Distanza Unità Int/Est", [
+            { value: "spalla", label: "Spalla a spalla", multiplier: 1.0 },
+            { value: "media", label: "Fino a 5 metri", multiplier: 1.3 },
+            { value: "lunga", label: "Oltre 5 metri", multiplier: 1.6 },
           ]),
           F("predisposizione", "Predisposizione", [
             { value: "si", label: "Esistente", multiplier: 1.0 },
@@ -168,6 +178,10 @@ export const CATEGORIES: Category[] = [
             { value: "vasistas", label: "Anta Ribalta", multiplier: 1.1 },
             { value: "scorrevole", label: "Scorrevole", multiplier: 1.35 },
           ]),
+          F("posa", "Tipo di Posa", [
+            { value: "standard", label: "Standard (Schiuma)", multiplier: 1.0 },
+            { value: "clima", label: "Posa Clima (Nastri)", multiplier: 1.2 },
+          ]),
         ],
       },
     ],
@@ -196,6 +210,10 @@ export const CATEGORIES: Category[] = [
             { value: "falda", label: "Falda inclinata", multiplier: 1.0 },
             { value: "piano", label: "Tetto piano", multiplier: 1.15 },
           ]),
+          F("ottimizzatori", "Ottimizzatori", [
+            { value: "no", label: "No", multiplier: 1.0 },
+            { value: "si", label: "Sì (per pannello)", multiplier: 1.2 },
+          ]),
         ],
       },
     ],
@@ -219,6 +237,11 @@ export const CATEGORIES: Category[] = [
             { value: "buono", label: "Buono", multiplier: 1.0 },
             { value: "medio", label: "Medio (piccoli ritocchi)", multiplier: 1.15 },
             { value: "alto", label: "Rovinato (rasatura)", multiplier: 1.35 },
+          ]),
+          F("pittura", "Qualità Pittura", [
+            { value: "traspirante", label: "Traspirante", multiplier: 1.0 },
+            { value: "lavabile", label: "Lavabile Premium", multiplier: 1.2 },
+            { value: "antimuffa", label: "Antimuffa/Termica", multiplier: 1.35 },
           ]),
         ],
       },
@@ -244,6 +267,10 @@ export const CATEGORIES: Category[] = [
             { value: "lavabo", label: "Lavabo", multiplier: 0.9 },
             { value: "doccia", label: "Piatto doccia", multiplier: 1.5 },
           ]),
+          F("finitura", "Qualità Elemento", [
+            { value: "standard", label: "Standard", multiplier: 1.0 },
+            { value: "premium", label: "Sospesi / Design", multiplier: 1.4 },
+          ]),
         ],
       },
     ],
@@ -266,6 +293,10 @@ export const CATEGORIES: Category[] = [
           F("tracce", "Tracce nel muro", [
             { value: "no", label: "Non necessarie", multiplier: 1.0 },
             { value: "si", label: "Sì, da realizzare", multiplier: 1.3 },
+          ]),
+          F("serie", "Serie civile", [
+            { value: "standard", label: "Standard (es. Bticino Matix)", multiplier: 1.0 },
+            { value: "premium", label: "Premium (es. Living Now)", multiplier: 1.35 },
           ]),
         ],
       },
