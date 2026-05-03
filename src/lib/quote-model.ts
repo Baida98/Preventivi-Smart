@@ -7,7 +7,7 @@ import type { VerdictKey } from "./verdict";
 /**
  * Stato del preventivo nel ciclo di vita
  */
-export type QuoteStatus = "bozza" | "finalizzato" | "inviato" | "accettato" | "rifiutato" | "archiviato";
+export type QuoteStatus = "bozza" | "finalizzato" | "inviato" | "accettato" | "rifiutato" | "modificato" | "archiviato";
 
 /**
  * Sorgente dati del preventivo

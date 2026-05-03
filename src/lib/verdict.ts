@@ -1,4 +1,5 @@
 import type { MarketAnalysis } from "./pricing";
+import { applyModelTuning } from "./model-tuner";
 
 export type VerdictKey = "ottimo" | "equo" | "alto" | "troppo-alto" | "sospetto";
 
@@ -40,7 +41,7 @@ const COLORS: Record<VerdictKey, Verdict["color"]> = {
     border: "border-amber-500/40",
     bg: "bg-amber-500/10",
     chartHsl: "38 92% 60%",
-    glow: "shadow-[0_0_60_px_-10px_rgba(251,191,36,0.45)]",
+    glow: "shadow-[0_0_60px_-10px_rgba(251,191,36,0.45)]",
   },
   "troppo-alto": {
     text: "text-rose-300",
@@ -92,19 +93,34 @@ const LEGAL_WARRANTIES: Record<string, string[]> = {
   ]
 };
 
-export function judge(price: number, m: MarketAnalysis, categoryId: string = "edilizia"): Verdict {
-  const minThreshold = m.marketMin * 0.8;
-  const maxThreshold = m.marketMax * 1.15;
+export function judge(price: number, m: MarketAnalysis, categoryId: string = "edilizia", segmento?: string): Verdict {
+  // Applica il self-tuning del modello se disponibile
+  let analysis = m;
+  if (segmento) {
+    const tuning = applyModelTuning(m, segmento);
+    if (tuning.tuning_applied) {
+      analysis = {
+        ...m,
+        marketMid: tuning.adjusted_price,
+        marketMin: tuning.adjusted_min,
+        marketMax: tuning.adjusted_max,
+        confidence: tuning.adjusted_confidence,
+      };
+    }
+  }
+
+  const minThreshold = analysis.marketMin * 0.8;
+  const maxThreshold = analysis.marketMax * 1.15;
   
   let v: VerdictKey;
-  let baseConfidence = m.confidence;
+  let baseConfidence = analysis.confidence;
 
   if (price < minThreshold) {
     v = "sospetto";
     baseConfidence *= 0.85;
-  } else if (price < m.marketMin) {
+  } else if (price < analysis.marketMin) {
     v = "ottimo";
-  } else if (price <= m.marketMax) {
+  } else if (price <= analysis.marketMax) {
     v = "equo";
   } else if (price <= maxThreshold) {
     v = "alto";
@@ -113,12 +129,12 @@ export function judge(price: number, m: MarketAnalysis, categoryId: string = "ed
     baseConfidence *= 0.85;
   }
 
-  const isOutlier = price < m.marketMin * 0.5 || price > m.marketMax * 2;
+  const isOutlier = price < analysis.marketMin * 0.5 || price > analysis.marketMax * 2;
   const outlierWarning = isOutlier
     ? "⚠️ ATTENZIONE: Questo prezzo è un outlier estremo. Verifica i dati inseriti."
     : undefined;
 
-  const diffPct = (price - m.marketMid) / m.marketMid;
+  const diffPct = (price - analysis.marketMid) / analysis.marketMid;
 
   // Garanzie legali specifiche
   const warranties = LEGAL_WARRANTIES[categoryId] || LEGAL_WARRANTIES.edilizia;
