@@ -109,13 +109,13 @@ export function judge(price: number, m: MarketAnalysis): Verdict {
       "Il prezzo è significativamente sopra il mercato: non firmare prima di altri preventivi.",
       "Richiedi obbligatoriamente 2–3 preventivi alternativi nella stessa regione.",
       "Chiedi al professionista la giustificazione voce per voce dello scostamento.",
-      "Diffida di urgenze artificiali e sconti immediati condizionati alla firma in giornata.",
+      "Presta attenzione a urgenze artificiali o sconti immediati che condizionano la firma in giornata.",
     ],
     sospetto: [
-      "Il prezzo è anomalmente basso: spesso indica materiali scadenti o lavori non a norma.",
+      "Il prezzo è anomalmente basso: è consigliabile verificare attentamente la qualità dei materiali e la conformità dei lavori alle normative.",
       "Verifica P.IVA, iscrizione CCIAA e abilitazioni del professionista.",
       "Chiedi capitolato dettagliato e marche dei materiali per iscritto.",
-      "Diffida di pagamenti totalmente in nero o richieste di acconti elevati.",
+      "Sii cauto con richieste di pagamenti non tracciabili o acconti eccessivamente elevati.",
       "Pretendi sempre fattura, garanzia e — per impianti — la certificazione di conformità.",
     ],
   };

@@ -49,10 +49,7 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.7, delay: 0.15 }}
           className="mt-6 mx-auto max-w-2xl text-balance text-base sm:text-lg text-muted-foreground"
         >
-          Verifica in pochi secondi se il preventivo dell'artigiano è onesto.
-          Dati di mercato regionali, verdetto chiaro e consigli pratici per
-          trattare con sicurezza.
-        </motion.p>
+        Confronta in pochi secondi il preventivo ricevuto con i prezzi di mercato.\n          Accedi a dati regionali aggiornati, ottieni una valutazione chiara e ricevi\n          consigli utili per una negoziazione informata.        </motion.p>
 
         <motion.div
           initial={{ opacity: 0, y: 16 }}

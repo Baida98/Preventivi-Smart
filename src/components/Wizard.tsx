@@ -537,10 +537,10 @@ export default function Wizard({
             transition={{ duration: 0.25 }}
           >
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              Quanto ti hanno chiesto?
+              Inserisci l'importo del preventivo
             </h2>
             <p className="mt-2 text-sm text-muted-foreground">
-              Scrivi il totale del preventivo che hai ricevuto, IVA inclusa.
+              Inserisci l'importo totale del preventivo ricevuto, inclusa IVA e materiali.
             </p>
 
             <div className="mt-12 mx-auto max-w-md">
