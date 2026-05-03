@@ -4,18 +4,18 @@ import { ListChecks, Scale, Gavel } from "lucide-react";
 const STEPS = [
   {
     Icon: ListChecks,
-    title: "Inserisci i dati",
-    body: "Categoria, regione, quantità e qualche dettaglio. Pochi secondi, niente registrazione.",
+    title: "Configurazione Dati",
+    body: "Seleziona categoria, regione e parametri tecnici. Il sistema non richiede registrazione per l'analisi rapida.",
   },
   {
     Icon: Scale,
-    title: "Confronto col mercato",
-    body: "Calcoliamo la fascia di prezzo onesta usando prezzari ISTAT 2026 e i listini della tua regione.",
+    title: "Confronto Benchmark",
+    body: "Il modello confronta i dati con i prezzari regionali e gli indici ISTAT 2026 per definire la fascia di mercato.",
   },
   {
     Icon: Gavel,
-    title: "Verdetto chiaro",
-    body: "Ricevi un verdetto netto, una tabella dei costi e i consigli pratici per trattare bene.",
+    title: "Report Analitico",
+    body: "Ottieni un report dettagliato con la scomposizione dei costi, il verdetto tecnico e i consigli professionali.",
   },
 ];
 
@@ -24,12 +24,12 @@ export default function HowItWorks() {
     <section className="relative mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-24">
       <div className="text-center">
         <p className="text-xs font-semibold tracking-[0.18em] uppercase text-primary/80">
-          Come funziona
+          Il Metodo
         </p>
         <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">
-          Tre passi.{" "}
+          Tre fasi di analisi.{" "}
           <span className="font-serif-display italic text-muted-foreground">
-            Niente formule strane.
+            Rigore scientifico.
           </span>
         </h2>
       </div>

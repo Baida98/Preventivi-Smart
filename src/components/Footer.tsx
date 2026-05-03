@@ -7,19 +7,18 @@ export default function Footer() {
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-primary" />
           <span>
-            © {new Date().getFullYear()} Preventivi-Smart Pro · La tua protezione
-            economica
+            © {new Date().getFullYear()} Preventivi-Smart · Analisi Tecnica e Benchmark di Mercato
           </span>
         </div>
         <div className="flex items-center gap-5">
           <a href="#" className="hover:text-foreground transition">
-            Privacy
+            Informativa Privacy
           </a>
           <a href="#" className="hover:text-foreground transition">
-            Contatti GDPR
+            Termini di Utilizzo
           </a>
           <a href="#" className="hover:text-foreground transition">
-            Metodologia
+            Metodologia Statistica
           </a>
         </div>
       </div>

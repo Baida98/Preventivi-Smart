@@ -108,7 +108,7 @@ export default function Wizard({
 
       if (mode === "analizza") {
         if (!price) {
-          toast.error("Inserisci il prezzo del preventivo");
+          toast.error("Inserisci l'importo totale del preventivo");
           setLoading(false);
           return;
         }
@@ -122,7 +122,7 @@ export default function Wizard({
       setStep(3 as Step);
     } catch (error) {
       console.error("Errore nell'analisi:", error);
-      toast.error("Errore nel calcolo dell'analisi");
+      toast.error("Si è verificato un errore durante l'elaborazione dell'analisi tecnica.");
     } finally {
       setLoading(false);
     }
@@ -131,7 +131,7 @@ export default function Wizard({
   async function handleSave() {
     if (!job || !category || !analysis || !verdict) return;
     if (isGuestLimitReached()) {
-      toast.error(`Limite raggiunto (${GUEST_QUOTE_LIMIT} preventivi)`);
+      toast.error(`Limite di archiviazione raggiunto (${GUEST_QUOTE_LIMIT} preventivi)`);
       return;
     }
 
@@ -144,7 +144,7 @@ export default function Wizard({
 
     const partialQuote = {
       id: newId(),
-      numero: "DRAFT",
+      numero: "ANALISI-TEMP",
       uid: "guest",
       data: today,
       createdAt: nowStr,
@@ -217,7 +217,7 @@ export default function Wizard({
       onSaved();
     } catch (error) {
       console.error("Errore nel salvataggio:", error);
-      toast.error(error instanceof Error ? error.message : "Errore nel salvataggio del preventivo.");
+      toast.error(error instanceof Error ? error.message : "Errore nel salvataggio dei dati tecnici.");
     }
   }
 
@@ -241,10 +241,10 @@ export default function Wizard({
           </span>
           <div className="flex flex-col justify-center">
             <p className="text-[10px] leading-tight uppercase tracking-[0.2em] text-muted-foreground font-bold">
-              {mode === "analizza" ? "Analisi Preventivo" : "Stima Rapida"}
+              {mode === "analizza" ? "Analisi Preventivo" : "Configurazione Stima"}
             </p>
             <p className="text-sm font-black leading-tight mt-0.5">
-              Passo {progressIndex} di {totalSteps}
+              Fase {progressIndex} di {totalSteps}
             </p>
           </div>
         </div>
@@ -283,9 +283,9 @@ export default function Wizard({
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3 }}
           >
-            <h2 className="text-3xl font-black tracking-tighter mb-2">Cosa vuoi analizzare?</h2>
+            <h2 className="text-3xl font-black tracking-tighter mb-2">Ambito di intervento</h2>
             <p className="text-muted-foreground mb-8 font-medium">
-              Scegli la categoria e il tipo di lavoro per una stima precisa.
+              Seleziona la categoria e la tipologia di lavoro per avviare l'analisi tecnica dei costi.
             </p>
 
             {/* Category selection if not pre-selected */}
@@ -301,46 +301,38 @@ export default function Wizard({
                       <cat.Icon className="w-6 h-6 text-muted-foreground group-hover:text-primary" />
                     </div>
                     <div>
-                      <p className="font-bold text-foreground leading-tight">{cat.label}</p>
+                      <h4 className="font-bold text-foreground leading-tight">{cat.label}</h4>
                       <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">{cat.blurb}</p>
                     </div>
                   </button>
                 ))}
               </div>
             ) : (
-              <div className="space-y-6">
-                <div className="flex items-center justify-between">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => { setCategoryId(null); setJobId(null); }}
-                    className="h-8 px-2 -ml-2 text-muted-foreground hover:text-foreground font-bold"
+              <div className="space-y-4">
+                <div className="flex items-center justify-between mb-4">
+                  <Button 
+                    variant="link" 
+                    onClick={() => setCategoryId(null)}
+                    className="h-auto p-0 text-xs font-bold uppercase tracking-wider text-muted-foreground hover:text-primary"
                   >
-                    <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
-                    Torna alle categorie
+                    <ArrowLeft className="w-3 h-3 mr-1.5" /> Torna alle categorie
                   </Button>
-                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/80 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/60 bg-primary/5 px-2 py-1 rounded-lg ring-1 ring-primary/10">
                     {category?.label}
                   </span>
                 </div>
-
                 <div className="grid grid-cols-1 gap-2.5">
                   {category?.jobs.map((j: any) => (
                     <button
                       key={j.id}
                       onClick={() => pickJob(j.id)}
-                      className={cn(
-                        "group flex items-center justify-between p-4 rounded-2xl border transition-all text-left",
-                        jobId === j.id
-                          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
-                          : "border-border/60 bg-card/40 hover:border-primary/30 hover:bg-primary/5"
-                      )}
+                      className="group flex items-center justify-between p-4 rounded-2xl border border-border/50 bg-card/30 hover:bg-primary/5 hover:border-primary/40 transition-all text-left"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-2 h-2 rounded-full bg-primary/40 group-hover:bg-primary transition-all" />
-                        <span className="font-bold text-foreground">{j.label}</span>
+                      <div>
+                        <h4 className="font-bold text-sm text-foreground">{j.label}</h4>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Analisi su base {j.unitLabel}</p>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-all" />
+                      <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary group-hover:translate-x-1 transition-all" />
                     </button>
                   ))}
                 </div>
@@ -349,39 +341,34 @@ export default function Wizard({
           </motion.div>
         )}
 
-        {/* Step 2: Details */}
+        {/* Step 2: Configuration */}
         {step === 2 && job && (
           <motion.div
             key="s2"
-            initial={{ opacity: 0, x: 20 }}
+            initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
+            exit={{ opacity: 0, x: -12 }}
             transition={{ duration: 0.3 }}
             className="space-y-8"
           >
-            <div className="flex items-center gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setStep(1)}
-                className="w-9 h-9 p-0 rounded-xl bg-white/5 hover:bg-white/10"
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </Button>
-              <h2 className="text-2xl font-black tracking-tighter">Dettagli del lavoro</h2>
+            <div>
+              <h2 className="text-3xl font-black tracking-tighter mb-2">Parametri Tecnici</h2>
+              <p className="text-muted-foreground font-medium">
+                Configura le specifiche del lavoro per allineare la stima al contesto locale e tecnico.
+              </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Regione */}
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Regione</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 p-6 sm:p-8 rounded-[2rem] border border-border/60 bg-card/40 backdrop-blur-md">
+              {/* Region */}
+              <div className="space-y-2.5">
+                <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70 ml-1">Regione di Intervento</Label>
                 <Select value={regionId} onValueChange={setRegionId}>
-                  <SelectTrigger className="h-12 rounded-2xl bg-card/40 border-border/60 card-hover-glow">
+                  <SelectTrigger className="h-12 rounded-2xl bg-background/50 border-border/50 focus:ring-primary/20 transition-all">
                     <SelectValue placeholder="Seleziona regione" />
                   </SelectTrigger>
-                  <SelectContent className="rounded-2xl border-border/60 backdrop-blur-xl">
+                  <SelectContent className="rounded-2xl border-border/50 bg-card/95 backdrop-blur-xl">
                     {REGIONS.map((r: any) => (
-                      <SelectItem key={r.id} value={r.id} className="rounded-xl focus:bg-primary/10">
+                      <SelectItem key={r.id} value={r.id} className="rounded-xl focus:bg-primary/10 focus:text-primary transition-colors">
                         {r.label}
                       </SelectItem>
                     ))}
@@ -389,38 +376,32 @@ export default function Wizard({
                 </Select>
               </div>
 
-              {/* Quantità */}
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
-                  Quantità ({job.unit})
-                </Label>
-                <div className="relative">
-                  <Input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="h-12 rounded-2xl bg-card/40 border-border/60 pl-4 pr-12 font-bold card-hover-glow"
-                  />
-                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground uppercase">
-                    {job.unit}
-                  </span>
-                </div>
+              {/* Quantity */}
+              <div className="space-y-2.5">
+                <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70 ml-1">Quantità ({job.unitLabel})</Label>
+                <Input
+                  type="number"
+                  value={quantity}
+                  onChange={(e) => setQuantity(e.target.value)}
+                  placeholder={`Es. ${job.defaultQty}`}
+                  className="h-12 rounded-2xl bg-background/50 border-border/50 focus:ring-primary/20 transition-all"
+                />
               </div>
 
               {/* Dynamic Fields */}
               {job.fields.map((f: any) => (
-                <div key={f.id} className="space-y-2">
-                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">{f.label}</Label>
+                <div key={f.id} className="space-y-2.5">
+                  <Label className="text-[11px] font-black uppercase tracking-widest text-muted-foreground/70 ml-1">{f.label}</Label>
                   <Select
                     value={fieldValues[f.id]}
                     onValueChange={(val) => setFieldValues({ ...fieldValues, [f.id]: val })}
                   >
-                    <SelectTrigger className="h-12 rounded-2xl bg-card/40 border-border/60 card-hover-glow">
+                    <SelectTrigger className="h-12 rounded-2xl bg-background/50 border-border/50 focus:ring-primary/20 transition-all">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-border/60 backdrop-blur-xl">
+                    <SelectContent className="rounded-2xl border-border/50 bg-card/95 backdrop-blur-xl">
                       {f.options.map((opt: any) => (
-                        <SelectItem key={opt.value} value={opt.value} className="rounded-xl focus:bg-primary/10">
+                        <SelectItem key={opt.value} value={opt.value} className="rounded-xl focus:bg-primary/10 focus:text-primary transition-colors">
                           {opt.label}
                         </SelectItem>
                       ))}
@@ -429,50 +410,53 @@ export default function Wizard({
                 </div>
               ))}
 
-              {/* Prezzo (solo in Analizza) */}
+              {/* Price (Solo per Analizza) */}
               {mode === "analizza" && (
-                <div className="space-y-2 sm:col-span-2 pt-4 border-t border-white/5">
-                  <div className="flex items-center justify-between mb-2">
-                    <Label className="text-sm font-black text-primary">Prezzo del Preventivo</Label>
-                    <Button
-                      variant="link"
+                <div className="space-y-2.5 sm:col-span-2 pt-4 border-t border-white/5">
+                  <div className="flex items-center justify-between px-1">
+                    <Label className="text-[11px] font-black uppercase tracking-widest text-primary/80">Importo Preventivo Ricevuto (€)</Label>
+                    <button 
                       onClick={() => setShowPdfUpload(true)}
-                      className="h-auto p-0 text-xs font-bold text-sky-400 hover:text-sky-300"
+                      className="text-[10px] font-bold text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors"
                     >
-                      <FileUp className="w-3 h-3 mr-1.5" />
-                      Estrai da PDF
-                    </Button>
+                      <FileUp className="w-3 h-3" /> Estrai da PDF
+                    </button>
                   </div>
-                  <div className="relative group">
-                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
-                      <span className="text-lg font-black text-muted-foreground group-focus-within:text-primary transition-colors">€</span>
-                    </div>
-                    <Input
-                      type="number"
-                      placeholder="0,00"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      className="h-16 pl-10 rounded-[1.5rem] bg-primary/5 border-primary/20 text-2xl font-black tracking-tighter shadow-2xl shadow-primary/5 focus:ring-primary/20 focus:border-primary/40 transition-all"
-                    />
-                  </div>
+                  <Input
+                    type="number"
+                    value={price}
+                    onChange={(e) => setPrice(e.target.value)}
+                    placeholder="0,00"
+                    className="h-14 text-lg font-black rounded-2xl bg-primary/5 border-primary/20 focus:ring-primary/30 transition-all placeholder:text-muted-foreground/30"
+                  />
+                  <p className="text-[10px] text-muted-foreground/60 italic px-1">Inserisci il totale imponibile indicato nel preventivo che hai ricevuto.</p>
                 </div>
               )}
             </div>
 
-            <Button
-              disabled={!canStep2Next || (mode === "analizza" && !price) || loading}
-              onClick={runAnalysis}
-              className="w-full h-14 rounded-[1.25rem] bg-primary text-primary-foreground hover:bg-primary/90 text-lg font-black uppercase tracking-tight shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
-            >
-              {loading ? (
-                <Loader2 className="w-6 h-6 animate-spin" />
-              ) : (
-                <>
-                  {mode === "analizza" ? "Analizza Preventivo" : "Calcola Stima"}
-                  <Sparkles className="w-5 h-5 ml-2" />
-                </>
-              )}
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                variant="ghost"
+                onClick={() => setStep(1)}
+                className="h-14 px-6 rounded-2xl font-bold text-muted-foreground hover:text-foreground"
+              >
+                Indietro
+              </Button>
+              <Button
+                onClick={runAnalysis}
+                disabled={!canStep2Next || (mode === "analizza" && !price) || loading}
+                className="flex-1 h-14 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 text-lg font-black uppercase tracking-tight glow-azure shadow-xl shadow-primary/20"
+              >
+                {loading ? (
+                  <Loader2 className="w-6 h-6 animate-spin" />
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Elabora Analisi Tecnica
+                  </>
+                )}
+              </Button>
+            </div>
           </motion.div>
         )}
 
@@ -480,9 +464,9 @@ export default function Wizard({
         {step === 3 && analysis && (
           <motion.div
             key="s3"
-            initial={{ opacity: 0, scale: 0.95 }}
+            initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
-            transition={{ type: "spring", damping: 25, stiffness: 200 }}
+            transition={{ duration: 0.4 }}
           >
             <ResultsView
               mode={mode}
@@ -497,46 +481,69 @@ export default function Wizard({
               onSave={handleSave}
               onReset={() => {
                 setStep(1);
-                setJobId(null);
                 setCategoryId(null);
+                setJobId(null);
+                setQuantity("");
                 setPrice("");
                 setSavedThisRun(false);
               }}
-              onEdit={() => setStep(2)}
+              onEdit={() => {
+                setStep(2);
+                setSavedThisRun(false);
+              }}
             />
           </motion.div>
         )}
       </AnimatePresence>
 
       {/* PDF Upload Modal */}
-      {showPdfUpload && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="relative w-full max-w-xl bg-card border border-border/60 rounded-[2.5rem] p-8 shadow-2xl">
-            <Button
-              variant="ghost"
-              size="icon"
+      <AnimatePresence>
+        {showPdfUpload && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
               onClick={() => setShowPdfUpload(false)}
-              className="absolute right-6 top-6 rounded-full hover:bg-white/5"
-            >
-              <X className="w-5 h-5" />
-            </Button>
-            <div className="mb-8">
-              <h3 className="text-2xl font-black tracking-tighter mb-2">Estrai da PDF</h3>
-              <p className="text-sm text-muted-foreground font-medium">
-                Carica il file del preventivo per estrarre automaticamente il prezzo totale.
-              </p>
-            </div>
-            <PdfUploadZone
-              onPriceDetected={(p) => {
-                setPrice(String(p));
-                setShowPdfUpload(false);
-                toast.success("Prezzo estratto con successo!");
-              }}
-              onDismiss={() => setShowPdfUpload(false)}
+              className="absolute inset-0 bg-background/80 backdrop-blur-sm"
             />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="relative w-full max-w-xl bg-card border border-border/60 rounded-[2.5rem] shadow-2xl overflow-hidden"
+            >
+              <div className="p-6 sm:p-8">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-xl font-black tracking-tight">Estrazione Dati PDF</h3>
+                    <p className="text-sm text-muted-foreground font-medium">L'AI analizzerà il documento per estrarre l'importo totale.</p>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setShowPdfUpload(false)} className="rounded-full">
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+                
+                <PdfUploadZone 
+                  onPriceDetected={(detectedPrice: number) => {
+                    setPrice(String(detectedPrice));
+                    toast.success(`Importo estratto: €${detectedPrice}`);
+                    setShowPdfUpload(false);
+                  }}
+                  onDismiss={() => setShowPdfUpload(false)}
+                />
+                
+                <div className="mt-6 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-xs text-amber-200/80 leading-relaxed font-medium">
+                    Il sistema analizza solo la struttura economica del documento. Nessun dato sensibile viene archiviato o trasmesso a server esterni per l'elaborazione.
+                  </p>
+                </div>
+              </div>
+            </motion.div>
           </div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </section>
   );
 }

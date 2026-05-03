@@ -3,23 +3,23 @@ import { Lock, Database, BadgeEuro, UserX } from "lucide-react";
 const ITEMS = [
   {
     Icon: Database,
-    title: "Dati ISTAT 2026",
-    body: "Indici aggiornati e prezzari delle Camere di Commercio regionali.",
+    title: "Fonti ISTAT 2026",
+    body: "Analisi basata su indici di costo aggiornati e prezzari delle Camere di Commercio.",
   },
   {
     Icon: BadgeEuro,
-    title: "Multipli regionali reali",
-    body: "Differenze tra Lombardia, Sicilia, Lazio: applicate alla cifra finale.",
+    title: "Variabili Regionali",
+    body: "I calcoli integrano i coefficienti di costo specifici per ogni regione italiana.",
   },
   {
     Icon: UserX,
-    title: "Anonimo & senza account",
-    body: "Nessun login, nessun tracciamento. I tuoi dati restano sul tuo browser.",
+    title: "Privacy by Design",
+    body: "Nessun tracciamento personale. L'elaborazione dei dati avviene localmente nel browser.",
   },
   {
     Icon: Lock,
-    title: "Privacy GDPR",
-    body: "Niente dati personali raccolti. L'archivio è solo locale, sul tuo device.",
+    title: "Conformità GDPR",
+    body: "Sistema progettato per la massima riservatezza: nessun dato viene archiviato esternamente.",
   },
 ];
 
@@ -28,12 +28,12 @@ export default function Trust() {
     <section className="relative mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-24">
       <div className="text-center">
         <p className="text-xs font-semibold tracking-[0.18em] uppercase text-primary/80">
-          Perché fidarsi
+          Affidabilità
         </p>
         <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">
-          Numeri verificabili.{" "}
+          Dati certificati.{" "}
           <span className="font-serif-display italic text-muted-foreground">
-            Niente magia.
+            Analisi statistica.
           </span>
         </h2>
       </div>

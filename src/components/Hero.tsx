@@ -28,8 +28,8 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.5 }}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/40 backdrop-blur-md border border-white/10 text-[11px] font-bold uppercase tracking-widest text-primary/90 shadow-2xl mb-8"
         >
-          <Sparkles className="w-3.5 h-3.5" />
-          Powered by AI & Dati Ufficiali ISTAT 2026
+          <TrendingUp className="w-3.5 h-3.5" />
+          Analisi basata su indici ISTAT 2026
         </motion.div>
 
         {/* Title */}
@@ -39,9 +39,9 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-balance text-[52px] sm:text-[80px] md:text-[96px] leading-[0.9] font-black tracking-tighter"
         >
-          Certifica il Valore{" "}
+          Analisi Tecnica{" "}
           <span className="font-serif-display italic text-primary bg-gradient-to-r from-primary to-sky-400 bg-clip-text text-transparent">
-            dei tuoi Preventivi
+            dei Preventivi
           </span>
         </motion.h1>
 
@@ -52,7 +52,7 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="mt-8 mx-auto max-w-3xl text-balance text-lg sm:text-xl text-muted-foreground/80 font-medium leading-relaxed"
         >
-          La prima piattaforma di Intelligenza Artificiale dedicata all'analisi strutturata dei costi nel settore dell'edilizia e dei servizi. Ottieni benchmark regionali precisi, comprendi la composizione dei costi e negozia con dati certificati alla mano.
+          Strumento professionale per la valutazione dei costi nel settore dell'edilizia e dell'impiantistica. Confronta i tuoi preventivi con i benchmark regionali aggiornati e ottieni un'analisi strutturata basata su dati ufficiali.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -77,7 +77,7 @@ export default function Hero({ onAnalizza, onStima }: Props) {
             className="h-16 px-10 gap-3 text-lg font-black uppercase tracking-tight rounded-2xl border-white/10 bg-card/40 backdrop-blur-md hover:bg-card/60 transition-all hover:scale-[1.02] active:scale-[0.98]"
           >
             <Calculator className="w-6 h-6" />
-            Stima Rapida
+            Stima Costi
           </Button>
         </motion.div>
 
@@ -88,10 +88,10 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 1, delay: 0.4 }}
           className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto"
         >
-          <TrustItem icon={ShieldCheck} label="100% Anonimo" sub="Nessun dato salvato" />
-          <TrustItem icon={TrendingUp} label="Dati 2026" sub="ISTAT & Regionali" />
-          <TrustItem icon={Users} label="80k+ Analisi" sub="Utenti soddisfatti" />
-          <TrustItem icon={Sparkles} label="AI Powered" sub="Analisi istantanea" />
+          <TrustItem icon={ShieldCheck} label="Riservatezza" sub="Nessun dato personale" />
+          <TrustItem icon={TrendingUp} label="Benchmark 2026" sub="Indici ISTAT & Regionali" />
+          <TrustItem icon={Search} label="Verifica Tecnica" sub="Analisi delle voci di costo" />
+          <TrustItem icon={Sparkles} label="Modello AI" sub="Elaborazione statistica" />
         </motion.div>
       </div>
     </section>

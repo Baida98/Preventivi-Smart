@@ -7,24 +7,24 @@ import {
 
 const FAQS = [
   {
-    q: "Come fate a sapere il prezzo giusto?",
-    a: "Combiniamo gli indici ISTAT 2026 dei costi di costruzione, i prezzari delle Camere di Commercio regionali e una banca dati interna di preventivi reali aggregati. Il risultato è una fascia di prezzo onesta — non un singolo valore — perché il mercato non è mai un numero secco.",
+    q: "Qual è la metodologia di calcolo dei prezzi?",
+    a: "Il sistema integra gli indici ISTAT 2026 relativi ai costi di costruzione con i prezzari ufficiali delle Camere di Commercio regionali. L'algoritmo definisce una fascia di mercato probabilistica, considerando che i costi possono variare in base alla logistica e alla complessità specifica dell'intervento.",
   },
   {
-    q: "I miei dati vengono salvati o trasmessi?",
-    a: "No. L'analisi avviene interamente nel tuo browser. L'archivio dei preventivi che salvi resta in locale (localStorage) sul tuo device. Non c'è registrazione, non c'è tracciamento personale, non condividiamo niente con terze parti.",
+    q: "Come vengono gestiti i miei dati?",
+    a: "La piattaforma adotta un approccio 'Privacy First'. L'analisi tecnica viene eseguita localmente nel browser e i dati non vengono trasmessi a server esterni. L'archivio dei preventivi è memorizzato esclusivamente nella memoria locale (localStorage) del tuo dispositivo.",
   },
   {
-    q: "Cosa significa il verdetto \"Sospetto\"?",
-    a: "Quando un preventivo è molto sotto la media di mercato (oltre il 30%), spesso indica materiali scadenti, lavoro in nero o competenze improvvisate. Diffida sempre dei preventivi anomali al ribasso e pretendi capitolato dettagliato, fattura e garanzia.",
+    q: "Cosa implica un verdetto di tipo 'Sospetto'?",
+    a: "Un preventivo classificato come 'Sospetto' presenta un costo significativamente inferiore alla soglia minima di sostenibilità del mercato (scostamento >30%). Questo può indicare l'utilizzo di materiali non certificati, l'assenza di tutele assicurative o l'impiego di manodopera non regolare.",
   },
   {
-    q: "Posso usarlo per chiedere uno sconto al mio artigiano?",
-    a: "Sì, è uno dei suoi scopi. Mostragli la fascia di mercato della tua regione e chiedi che giustifichi gli scostamenti voce per voce. Un professionista serio non avrà problemi a farlo.",
+    q: "Il report può essere utilizzato in fase di negoziazione?",
+    a: "Certamente. Il report fornisce una base tecnica oggettiva per discutere le voci di costo con il professionista. Un preventivo trasparente dovrebbe sempre permettere di giustificare eventuali scostamenti rispetto ai benchmark regionali di riferimento.",
   },
   {
-    q: "Funziona per tutti i lavori di casa?",
-    a: "Copriamo le 8 categorie più richieste in Italia: edilizia, imbiancatura, idraulica, elettrico, pavimenti, climatizzazione, serramenti, pulizie e giardino. Aggiungiamo nuovi mestieri ogni mese — se ti manca qualcosa, scrivici.",
+    q: "Quali categorie di intervento sono supportate?",
+    a: "Attualmente il sistema copre i settori principali: edilizia, imbiancatura, idraulica, elettrico, climatizzazione, serramenti ed energia solare. Il database dei costi viene aggiornato periodicamente per includere nuove lavorazioni e parametri tecnici.",
   },
 ];
 
@@ -33,12 +33,12 @@ export default function FAQ() {
     <section className="relative mx-auto max-w-3xl px-5 sm:px-8 py-16 sm:py-24">
       <div className="text-center">
         <p className="text-xs font-semibold tracking-[0.18em] uppercase text-primary/80">
-          Domande frequenti
+          Supporto Tecnico
         </p>
         <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">
-          Tutto quello che ti chiedi{" "}
+          Approfondimenti sulla{" "}
           <span className="font-serif-display italic text-muted-foreground">
-            la prima volta
+            metodologia
           </span>
         </h2>
       </div>

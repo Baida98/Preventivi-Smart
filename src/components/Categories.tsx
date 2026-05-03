@@ -7,23 +7,24 @@ type Props = {
 };
 
 export default function Categories({ onPickCategory }: Props) {
+  const totalJobs = CATEGORIES.reduce((acc, cat) => acc + cat.jobs.length, 0);
+
   return (
     <section className="relative mx-auto max-w-6xl px-5 sm:px-8 py-16 sm:py-24">
       <div className="flex items-end justify-between gap-6 flex-wrap">
         <div>
           <p className="text-xs font-semibold tracking-[0.18em] uppercase text-primary/80">
-            Categorie supportate
+            Ambiti di Analisi
           </p>
           <h2 className="mt-3 text-3xl sm:text-4xl font-bold tracking-tight">
-            Otto mestieri,{" "}
+            {CATEGORIES.length} settori specialistici,{" "}
             <span className="font-serif-display italic text-muted-foreground">
-              più di trenta lavori
+              {totalJobs} tipologie di intervento
             </span>
           </h2>
         </div>
         <p className="text-sm text-muted-foreground max-w-sm">
-          Tocca una categoria per iniziare. Possiamo aggiungerne di nuove, se vuoi
-          scrivici.
+          Seleziona un ambito per avviare l'analisi tecnica. Il database viene aggiornato costantemente con nuovi parametri di mercato.
         </p>
       </div>
 
