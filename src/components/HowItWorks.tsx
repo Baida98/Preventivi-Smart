@@ -10,7 +10,7 @@ const STEPS = [
   {
     Icon: Scale,
     title: "Confronto col mercato",
-    body: "Calcoliamo la fascia di prezzo onesta usando prezzari ISTAT 2025 e i listini della tua regione.",
+    body: "Calcoliamo la fascia di prezzo onesta usando prezzari ISTAT 2026 e i listini della tua regione.",
   },
   {
     Icon: Gavel,

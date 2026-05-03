@@ -8,7 +8,7 @@ import {
 const FAQS = [
   {
     q: "Come fate a sapere il prezzo giusto?",
-    a: "Combiniamo gli indici ISTAT 2025 dei costi di costruzione, i prezzari delle Camere di Commercio regionali e una banca dati interna di preventivi reali aggregati. Il risultato è una fascia di prezzo onesta — non un singolo valore — perché il mercato non è mai un numero secco.",
+    a: "Combiniamo gli indici ISTAT 2026 dei costi di costruzione, i prezzari delle Camere di Commercio regionali e una banca dati interna di preventivi reali aggregati. Il risultato è una fascia di prezzo onesta — non un singolo valore — perché il mercato non è mai un numero secco.",
   },
   {
     q: "I miei dati vengono salvati o trasmessi?",

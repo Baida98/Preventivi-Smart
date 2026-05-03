@@ -3,7 +3,7 @@ import { Lock, Database, BadgeEuro, UserX } from "lucide-react";
 const ITEMS = [
   {
     Icon: Database,
-    title: "Dati ISTAT 2025",
+    title: "Dati ISTAT 2026",
     body: "Indici aggiornati e prezzari delle Camere di Commercio regionali.",
   },
   {

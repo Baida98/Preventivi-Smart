@@ -1,14 +1,14 @@
 /**
  * PHASE 4: Validation Context — Statistical Reference Data
  * 
- * Baseline ISTAT 2025 per il mercato italiano.
+ * Baseline ISTAT 2026 per il mercato italiano.
  * Usato da Livello 3 (validazione statistica) per rilevare outlier.
  */
 
 import type { StatisticalContext } from "./validation-rules";
 
 /**
- * Baseline data: ISTAT 2025 (8 macro-categorie × 20 regioni)
+ * Baseline data: ISTAT 2026 (8 macro-categorie × 20 regioni)
  * 
  * Fonte indicativa: CRESME, ISTAT, Osservatori costruzioni 2025
  * Prezzi in EUR, IVA esclusa
