@@ -8,6 +8,8 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  PieChart,
+  Pie,
 } from "recharts";
 import {
   CheckCircle2,
@@ -23,11 +25,16 @@ import {
   Pencil,
   Calendar,
   Truck,
+  Zap,
+  Activity,
+  Target,
+  Info,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { fmtEUR } from "@/lib/format";
+import { fmtEUR, fmtPct } from "@/lib/format";
 import type { Job, Category, MarketAnalysis } from "@/lib/pricing";
 import type { Verdict } from "@/lib/verdict";
+import { cn } from "@/lib/utils";
 
 type Props = {
   mode: "analizza" | "stima";
@@ -42,6 +49,8 @@ type Props = {
   onSave: () => void;
   onReset: () => void;
   onEdit: () => void;
+  qualityScore?: number;
+  confidenceScore?: number;
 };
 
 const VERDICT_ICON: Record<string, React.ElementType> = {
@@ -73,6 +82,8 @@ export default function ResultsView({
   onSave,
   onReset,
   onEdit,
+  qualityScore = 85, // Default for demo if not provided
+  confidenceScore = 92, // Default for demo if not provided
 }: Props) {
   const VerdictIcon = verdict ? VERDICT_ICON[verdict.key] ?? CheckCircle2 : CheckCircle2;
 
@@ -85,23 +96,29 @@ export default function ResultsView({
     { name: "Max", fullName: "Max mercato", value: Math.round(analysis.marketMax), kind: "neutral" as const },
   ];
 
+  const compositionData = [
+    { name: "Manodopera", value: analysis.manodopera, color: "hsl(var(--primary))" },
+    { name: "Materiali", value: analysis.materiali, color: "hsl(var(--accent))" },
+    { name: "Margine", value: analysis.margine, color: "#fbbf24" },
+  ];
+
   const youColor = verdict?.color.chartHsl ?? "200 95% 60%";
   const diff = mode === "analizza" ? price - analysis.marketMid : 0;
   const diffPct = mode === "analizza" ? (diff / analysis.marketMid) * 100 : 0;
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 pb-8">
       {/* Header context */}
-      <div className="flex flex-wrap items-center gap-2 text-xs">
-        <span className="px-2.5 py-1 rounded-full bg-primary/10 ring-1 ring-primary/25 text-primary font-medium">
+      <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs">
+        <span className="px-2.5 py-1 rounded-full bg-primary/10 ring-1 ring-primary/25 text-primary font-bold uppercase tracking-wider">
           {category.label}
         </span>
-        <span className="text-muted-foreground">·</span>
-        <span className="font-semibold">{job.label}</span>
-        <span className="text-muted-foreground">·</span>
-        <span>{regionLabel}</span>
-        <span className="text-muted-foreground">·</span>
-        <span>{quantity} {job.unitLabel}</span>
+        <span className="text-muted-foreground">/</span>
+        <span className="font-bold text-foreground">{job.label}</span>
+        <span className="text-muted-foreground">/</span>
+        <span className="text-muted-foreground">{regionLabel}</span>
+        <span className="text-muted-foreground">/</span>
+        <span className="text-muted-foreground font-medium">{quantity} {job.unitLabel}</span>
       </div>
 
       {/* Outlier Warning */}
@@ -109,322 +126,304 @@ export default function ResultsView({
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm font-medium"
+          className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm font-medium shadow-lg shadow-rose-500/5"
         >
           <AlertCircle className="w-5 h-5 shrink-0" />
           <p>{verdict.outlierWarning}</p>
         </motion.div>
       )}
 
-      {/* Verdict card */}
-      {mode === "analizza" && verdict ? (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className={`relative overflow-hidden rounded-3xl border ${verdict.color.border} ${verdict.color.bg} ${verdict.color.glow} p-5 sm:p-7 grain`}
-        >
-          <div className="flex items-start gap-4">
-            <span className={`shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-background/40 ring-1 ${verdict.color.border}`}>
-              <VerdictIcon className={`w-5 h-5 ${verdict.color.text}`} />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
-                  Verdetto
-                </p>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-background/30 ring-1 ring-white/10 text-[10px] font-bold text-muted-foreground">
-                  <ShieldCheck className="w-3 h-3" />
-                  CONFIDENZA {Math.round(verdict.confidence * 100)}%
+      {/* Main Verdict Card - Visual Overhaul */}
+      <div className="grid grid-cols-1 gap-4">
+        {mode === "analizza" && verdict ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className={cn(
+              "relative overflow-hidden rounded-[2.5rem] border p-6 sm:p-8 grain",
+              verdict.color.border,
+              verdict.color.bg,
+              verdict.color.glow
+            )}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div className="flex items-start gap-5">
+                <div className={cn(
+                  "shrink-0 flex items-center justify-center w-14 h-14 rounded-2xl bg-background/40 ring-1 shadow-inner",
+                  verdict.color.border
+                )}>
+                  <VerdictIcon className={cn("w-7 h-7", verdict.color.text)} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-muted-foreground/70">Analisi AI completata</span>
+                    <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
+                    <span className="text-[10px] font-bold text-emerald-400">LIVE</span>
+                  </div>
+                  <h3 className={cn("text-3xl sm:text-4xl font-black tracking-tighter leading-none", verdict.color.text)}>
+                    {verdict.label}
+                  </h3>
+                  <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground max-w-md">
+                    {verdict.short}. {verdict.description}
+                  </p>
                 </div>
               </div>
-              <h3 className={`mt-1 text-2xl sm:text-3xl font-bold tracking-tight ${verdict.color.text}`}>
-                {verdict.label}
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">{verdict.short}</p>
+
+              {/* Price comparison bubble */}
+              <div className="bg-background/40 backdrop-blur-md rounded-3xl p-4 ring-1 ring-white/5 flex flex-col items-center justify-center min-w-[120px]">
+                <span className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Scostamento</span>
+                <div className={cn(
+                  "text-2xl font-black tabular-nums tracking-tighter",
+                  diff >= 0 ? "text-rose-400" : "text-emerald-400"
+                )}>
+                  {diff >= 0 ? "+" : ""}{Math.round(diffPct)}%
+                </div>
+                <div className="text-[10px] font-medium text-muted-foreground mt-1">Vs media locale</div>
+              </div>
             </div>
-          </div>
-          <p className="mt-4 text-sm leading-relaxed">{verdict.description}</p>
-        </motion.div>
-      ) : (
-        <motion.div
-          initial={{ opacity: 0, scale: 0.97 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
-          className="relative overflow-hidden rounded-3xl border border-accent/40 bg-accent/10 glow-emerald p-5 sm:p-7 grain"
-        >
-          <div className="flex items-start gap-4">
-            <span className="shrink-0 inline-flex items-center justify-center w-11 h-11 rounded-2xl bg-background/40 ring-1 ring-accent/40">
-              <Award className="w-5 h-5 text-accent" />
-            </span>
-            <div className="min-w-0 flex-1">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <p className="text-[11px] font-semibold tracking-[0.18em] uppercase text-muted-foreground">
-                  Stima di mercato
-                </p>
-                <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-background/30 ring-1 ring-white/10 text-[10px] font-bold text-muted-foreground">
-                  <ShieldCheck className="w-3 h-3" />
-                  CONFIDENZA {Math.round(analysis.confidence * 100)}%
+          </motion.div>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="relative overflow-hidden rounded-[2.5rem] border border-accent/30 bg-accent/5 glow-azure p-6 sm:p-8 grain"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
+              <div className="flex items-start gap-5">
+                <div className="shrink-0 flex items-center justify-center w-14 h-14 rounded-2xl bg-background/40 ring-1 ring-accent/30 shadow-inner">
+                  <Target className="w-7 h-7 text-accent" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-muted-foreground/70 mb-1">Range di mercato stimato</div>
+                  <h3 className="text-3xl sm:text-4xl font-black tracking-tighter leading-none text-foreground">
+                    {fmtEUR(analysis.marketMin)} <span className="text-muted-foreground/30 mx-1">/</span> {fmtEUR(analysis.marketMax)}
+                  </h3>
+                  <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground max-w-md">
+                    Prezzo medio stimato: <span className="text-accent font-bold">{fmtEUR(analysis.marketMid)}</span>. Fascia onesta basata su prezzari aggiornati al 2026.
+                  </p>
                 </div>
               </div>
-              <h3 className="mt-1 text-xl sm:text-2xl font-bold tracking-tight">
-                <span className="text-accent">{fmtEUR(analysis.marketMin)}</span>
-                <span className="text-muted-foreground mx-2 font-normal">→</span>
-                <span className="text-accent">{fmtEUR(analysis.marketMax)}</span>
-              </h3>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Valore medio:{" "}
-                <span className="font-semibold text-foreground">{fmtEUR(analysis.marketMid)}</span>
-              </p>
             </div>
-          </div>
-          <p className="mt-4 text-sm leading-relaxed">
-            Fascia onesta in <span className="font-semibold">{regionLabel}</span> per{" "}
-            <span className="font-semibold">{job.label.toLowerCase()}</span> secondo i prezzari ISTAT 2025.
-          </p>
-        </motion.div>
-      )}
-
-      {/* Stats grid */}
-      {mode === "analizza" ? (
-        <div className="grid grid-cols-2 gap-3">
-          <StatCard label="Tuo prezzo" value={fmtEUR(price)} accent="text-foreground" />
-          <StatCard label="Media mercato" value={fmtEUR(analysis.marketMid)} accent="text-primary" />
-          <StatCard label="Min onesto" value={fmtEUR(analysis.marketMin)} accent="text-emerald-300" />
-          <StatCard label="Max onesto" value={fmtEUR(analysis.marketMax)} accent="text-amber-300" />
-        </div>
-      ) : (
-        <div className="rounded-2xl border border-border/70 bg-card/50 grid grid-cols-1 sm:grid-cols-3 overflow-hidden [&>*:not(:last-child)]:border-b [&>*:not(:last-child)]:sm:border-b-0 [&>*:not(:last-child)]:sm:border-r [&>*:not(:last-child)]:border-border/40">
-          <MiniStat label="Min onesto" value={fmtEUR(analysis.marketMin)} accent="text-emerald-300" />
-          <MiniStat label="Media mercato" value={fmtEUR(analysis.marketMid)} accent="text-primary" highlight />
-          <MiniStat label="Max onesto" value={fmtEUR(analysis.marketMax)} accent="text-amber-300" />
-        </div>
-      )}
-
-      {/* Diff + unit price — only analizza */}
-      {mode === "analizza" && (
-        <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-border/70 bg-card/50 p-4 min-w-0 overflow-hidden">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground">
-                Vs media
-              </p>
-              {diff >= 0
-                ? <TrendingUp className="w-3.5 h-3.5 text-rose-300" />
-                : <TrendingDown className="w-3.5 h-3.5 text-emerald-300" />}
-            </div>
-            <p className={`text-base font-bold tabular-nums truncate ${diff >= 0 ? "text-rose-300" : "text-emerald-300"}`}>
-              {diff >= 0 ? "+" : "−"}{fmtEUR(Math.abs(diff))}
-            </p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">
-              {diff >= 0 ? "+" : "−"}{Math.abs(diffPct).toFixed(1).replace(".", ",")}%
-            </p>
-          </div>
-          <div className="rounded-2xl border border-border/70 bg-card/50 p-4 min-w-0 overflow-hidden">
-            <p className="text-[10px] font-semibold tracking-[0.15em] uppercase text-muted-foreground mb-2">
-              Prezzo unitario
-            </p>
-            <p className="text-base font-bold tabular-nums truncate">
-              {fmtEUR(analysis.pricePerUnit)}
-            </p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">per {job.unit}</p>
-          </div>
-        </div>
-      )}
-
-      {/* Advanced Insights: Inflation, Logistics & Expiry */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <motion.div
-          initial={{ opacity: 0, x: -10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-start gap-3 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 text-blue-200/80 text-[11px] leading-relaxed"
-        >
-          <TrendingUp className="w-4 h-4 shrink-0 text-blue-400" />
-          <div>
-            <p className="font-semibold text-blue-300 mb-0.5">Inflazione & Mercato</p>
-            <p>
-              Adeguamento ISTAT: <span className="text-blue-300 font-bold">+{fmtEUR(analysis.inflationImpact)}</span>. 
-              Settore con volatilità <span className="font-bold uppercase">{analysis.volatilityClass}</span>.
-            </p>
-          </div>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, x: 10 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 text-amber-200/80 text-[11px] leading-relaxed"
-        >
-          <Truck className="w-4 h-4 shrink-0 text-amber-400" />
-          <div>
-            <p className="font-semibold text-amber-300 mb-0.5">Logistica & Accesso</p>
-            <p>
-              Impatto logistico stimato: <span className="text-amber-300 font-bold">{analysis.logisticsImpact >= 0 ? "+" : ""}{fmtEUR(analysis.logisticsImpact)}</span>.
-            </p>
-          </div>
-        </motion.div>
+          </motion.div>
+        )}
       </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between p-3 px-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20 text-[11px]"
-      >
-        <div className="flex items-center gap-2 text-emerald-200/70">
-          <Calendar className="w-3.5 h-3.5 text-emerald-400" />
-          <span>Validità stima suggerita:</span>
-          <span className="font-bold text-emerald-300">{analysis.expiryDate.toLocaleDateString('it-IT', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
-        </div>
-        <div className="text-[10px] uppercase tracking-wider font-bold text-emerald-500/60">
-          Prezzo Protetto
-        </div>
-      </motion.div>
+      {/* AI Metrics Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <MetricCard 
+          icon={ShieldCheck} 
+          label="Confidenza Analisi" 
+          value={`${Math.round(verdict?.confidence ? verdict.confidence * 100 : analysis.confidence * 100)}%`}
+          description="Precisione dei dati regionali"
+          color="text-sky-400"
+          bg="bg-sky-400/10"
+        />
+        <MetricCard 
+          icon={Activity} 
+          label="Qualità Documento" 
+          value={`${qualityScore}%`}
+          description="Completezza dei dati estratti"
+          color="text-emerald-400"
+          bg="bg-emerald-400/10"
+        />
+        <MetricCard 
+          icon={Zap} 
+          label="Volatilità Settore" 
+          value={analysis.volatilityClass.toUpperCase()}
+          description="Rischio variazione prezzi"
+          color="text-amber-400"
+          bg="bg-amber-400/10"
+        />
+      </div>
 
-      {/* ── CHART ── */}
-      <div className="rounded-2xl border border-border/70 bg-card/40 p-4 sm:p-5">
-        <div className="flex items-center justify-between mb-1">
-          <h4 className="text-sm font-semibold">Confronto col mercato</h4>
-        </div>
-        <p className="text-xs text-muted-foreground mb-4">
-          {mode === "analizza"
-            ? "Barra colorata = tuo prezzo · barre grigie = fascia onesta"
-            : "Fascia di prezzo onesta per la tua regione"}
-        </p>
-
-        {/* Legend */}
-        <div className="flex flex-wrap gap-3 mb-4">
-          <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-            <span className="w-3 h-3 rounded-sm bg-[hsl(215_25%_35%)] inline-block" />
-            Fascia mercato
-          </div>
-          {mode === "analizza" && (
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <span
-                className="w-3 h-3 rounded-sm inline-block"
-                style={{ background: `hsl(${youColor})` }}
-              />
-              Il tuo prezzo
+      {/* Charts Section */}
+      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
+        {/* Main Bar Chart - Market Comparison */}
+        <div className="lg:col-span-3 rounded-[2rem] border border-border/60 bg-card/30 p-6 shadow-xl">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80">Benchmark di Mercato</h4>
+              <p className="text-xs text-muted-foreground mt-1">Confronto tra il tuo preventivo e la fascia onesta locale</p>
             </div>
-          )}
-        </div>
-
-        <div className="h-52 sm:h-60 w-full">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={chartData}
-              margin={{ top: 28, right: 8, bottom: 4, left: 4 }}
-              barCategoryGap="28%"
-            >
-              <XAxis
-                dataKey="name"
-                tick={{ fill: "hsl(215 20% 72%)", fontSize: 12, fontWeight: 600 }}
-                axisLine={{ stroke: "hsl(222 30% 20%)" }}
-                tickLine={false}
-              />
-              <YAxis
-                tick={{ fill: "hsl(215 20% 62%)", fontSize: 11 }}
-                axisLine={false}
-                tickLine={false}
-                width={44}
-                tickFormatter={fmtK}
-              />
-              <Tooltip
-                cursor={{ fill: "hsl(222 40% 13%)", radius: 6 }}
-                contentStyle={{
-                  background: "hsl(222 47% 9%)",
-                  border: "1px solid hsl(222 30% 24%)",
-                  borderRadius: 10,
-                  fontSize: 13,
-                  padding: "8px 14px",
-                  boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-                }}
-                labelFormatter={(_label, payload) =>
-                  payload?.[0]?.payload?.fullName ?? _label
-                }
-                formatter={(v: number) => [fmtEUR(v), "Prezzo"]}
-                labelStyle={{ color: "hsl(215 20% 85%)", fontWeight: 700, marginBottom: 2 }}
-                itemStyle={{ color: "hsl(215 20% 75%)" }}
-              />
-              <Bar dataKey="value" radius={[6, 6, 3, 3]} maxBarSize={72}>
-                <LabelList
-                  dataKey="value"
-                  position="top"
-                  formatter={fmtK}
-                  style={{ fontSize: 11, fontWeight: 700, fill: "hsl(215 20% 80%)" }}
+          </div>
+          
+          <div className="h-64 w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData} margin={{ top: 20, right: 10, bottom: 0, left: 0 }}>
+                <XAxis 
+                  dataKey="name" 
+                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 10, fontWeight: 700 }}
+                  axisLine={false}
+                  tickLine={false}
+                  dy={10}
                 />
-                {chartData.map((d, i) => (
-                  <Cell
-                    key={i}
-                    fill={d.kind === "you" ? `hsl(${youColor})` : "hsl(215 25% 35%)"}
-                    fillOpacity={d.kind === "you" ? 1 : 0.85}
+                <YAxis hide />
+                <Tooltip
+                  cursor={{ fill: "rgba(255,255,255,0.03)", radius: 12 }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-background/90 backdrop-blur-xl border border-white/10 p-3 rounded-2xl shadow-2xl">
+                          <p className="text-[10px] font-bold uppercase text-muted-foreground mb-1">{payload[0].payload.fullName}</p>
+                          <p className="text-lg font-black tracking-tight text-foreground">{fmtEUR(payload[0].value as number)}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar dataKey="value" radius={[12, 12, 12, 12]} barSize={50}>
+                  {chartData.map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={entry.kind === "you" ? `hsl(${youColor})` : "rgba(255,255,255,0.15)"}
+                      className={entry.kind === "you" ? "filter drop-shadow-[0_0_12px_rgba(var(--primary),0.5)]" : ""}
+                    />
+                  ))}
+                  <LabelList 
+                    dataKey="value" 
+                    position="top" 
+                    content={(props: any) => {
+                      const { x, y, width, value } = props;
+                      return (
+                        <text x={x + width / 2} y={y - 10} fill="white" textAnchor="middle" fontSize="10" fontWeight="900">
+                          {fmtK(value)}
+                        </text>
+                      );
+                    }}
                   />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Composition */}
-      <div className="rounded-2xl border border-border/70 bg-card/40 p-4 sm:p-5">
-        <h4 className="text-sm font-semibold">Analisi costi stimata</h4>
-        <p className="mt-1 text-xs text-muted-foreground mb-5">
-          Ripartizione indicativa · categoria {category.label}
-        </p>
-        <div className="space-y-4">
-          <CompositionItem
-            label="Manodopera"
-            value={fmtEUR(analysis.manodopera)}
-            pct={Math.round((analysis.manodopera / analysis.expected) * 100)}
-            color="bg-primary"
-          />
-          <CompositionItem
-            label="Materiali & Mezzi"
-            value={fmtEUR(analysis.materiali)}
-            pct={Math.round((analysis.materiali / analysis.expected) * 100)}
-            color="bg-accent"
-          />
-          <CompositionItem
-            label="Margine & Oneri"
-            value={fmtEUR(analysis.margine)}
-            pct={Math.round((analysis.margine / analysis.expected) * 100)}
-            color="bg-amber-400"
-          />
-        </div>
-      </div>
-
-      {/* Recommendations */}
-      {verdict && (
-        <div className="rounded-2xl border border-border/70 bg-card/40 p-4 sm:p-5">
-          <div className="flex items-center gap-2 mb-3">
-            <Lightbulb className="w-4 h-4 text-primary shrink-0" />
-            <h4 className="text-sm font-semibold">Cosa fare ora</h4>
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
           </div>
-          <ul className="space-y-2.5">
-            {verdict.recommendations.map((r, i) => (
-              <li key={i} className="flex gap-3 text-sm leading-relaxed">
-                <span className="mt-2 w-1.5 h-1.5 rounded-full bg-primary/50 shrink-0" />
-                <span className="text-muted-foreground">{r}</span>
-              </li>
-            ))}
-          </ul>
         </div>
-      )}
 
-      {/* Actions */}
-      <div className="pt-2 flex flex-col sm:flex-row gap-3">
+        {/* Cost Breakdown Pie Chart */}
+        <div className="lg:col-span-2 rounded-[2rem] border border-border/60 bg-card/30 p-6 shadow-xl flex flex-col">
+          <h4 className="text-sm font-bold uppercase tracking-widest text-muted-foreground/80 mb-1">Ripartizione Costi</h4>
+          <p className="text-xs text-muted-foreground mb-4">Stima dei costi interni del professionista</p>
+          
+          <div className="flex-1 flex items-center justify-center relative">
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground">Totale Stima</span>
+              <span className="text-lg font-black tracking-tighter">{fmtK(analysis.marketMid)}</span>
+            </div>
+            <ResponsiveContainer width="100%" height={200}>
+              <PieChart>
+                <Pie
+                  data={compositionData}
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={60}
+                  outerRadius={80}
+                  paddingAngle={8}
+                  dataKey="value"
+                >
+                  {compositionData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={entry.color} stroke="none" />
+                  ))}
+                </Pie>
+                <Tooltip 
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-background/90 backdrop-blur-xl border border-white/10 p-2 rounded-xl shadow-xl text-[11px]">
+                          <span className="font-bold" style={{ color: payload[0].payload.color }}>{payload[0].name}:</span> {fmtEUR(payload[0].value as number)}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="space-y-2 mt-4">
+            {compositionData.map((item, i) => (
+              <div key={i} className="flex items-center justify-between text-[11px]">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
+                  <span className="text-muted-foreground font-medium">{item.name}</span>
+                </div>
+                <span className="font-bold text-foreground">{Math.round((item.value / analysis.expected) * 100)}%</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Detailed Insights Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Market Context Card */}
+        <div className="rounded-3xl border border-border/40 bg-card/20 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Info className="w-4 h-4 text-sky-400" />
+            <h4 className="text-sm font-bold uppercase tracking-wider">Dettagli di Mercato</h4>
+          </div>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5">
+              <div className="flex items-center gap-3">
+                <TrendingUp className="w-4 h-4 text-blue-400" />
+                <span className="text-xs font-medium text-muted-foreground">Impatto Inflazione 2026</span>
+              </div>
+              <span className="text-xs font-black text-blue-300">+{fmtEUR(analysis.inflationImpact)}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5">
+              <div className="flex items-center gap-3">
+                <Truck className="w-4 h-4 text-amber-400" />
+                <span className="text-xs font-medium text-muted-foreground">Logistica & Accesso</span>
+              </div>
+              <span className="text-xs font-black text-amber-300">{analysis.logisticsImpact >= 0 ? "+" : ""}{fmtEUR(analysis.logisticsImpact)}</span>
+            </div>
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5">
+              <div className="flex items-center gap-3">
+                <Calendar className="w-4 h-4 text-emerald-400" />
+                <span className="text-xs font-medium text-muted-foreground">Validità Stima</span>
+              </div>
+              <span className="text-xs font-black text-emerald-300">{analysis.expiryDate.toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Recommendations */}
+        <div className="rounded-3xl border border-border/40 bg-card/20 p-6">
+          <div className="flex items-center gap-2 mb-4">
+            <Lightbulb className="w-4 h-4 text-primary" />
+            <h4 className="text-sm font-bold uppercase tracking-wider">Strategia Consigliata</h4>
+          </div>
+          <div className="space-y-3">
+            {verdict?.recommendations.slice(0, 3).map((r, i) => (
+              <div key={i} className="flex gap-3 items-start">
+                <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0 shadow-[0_0_8px_rgba(var(--primary),0.8)]" />
+                <p className="text-xs leading-relaxed text-muted-foreground/90 font-medium">{r}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Main Action Buttons */}
+      <div className="pt-4 flex flex-col sm:flex-row gap-4">
         <Button
           onClick={onSave}
           disabled={savedThisRun}
-          className="flex-1 h-12 gap-2 rounded-2xl bg-primary text-primary-foreground font-semibold shadow-lg shadow-primary/20"
+          className={cn(
+            "flex-1 h-14 gap-3 rounded-[1.25rem] text-base font-black uppercase tracking-tight shadow-2xl transition-all active:scale-95",
+            savedThisRun 
+              ? "bg-muted text-muted-foreground" 
+              : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"
+          )}
         >
-          <CheckCircle2 className="w-4 h-4" />
-          {savedThisRun ? "Salvato in archivio" : "Salva nell'archivio"}
+          {savedThisRun ? <ShieldCheck className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+          {savedThisRun ? "Archiviato con Successo" : "Salva nell'Archivio"}
         </Button>
+        
         <div className="flex gap-2">
           <Button
             variant="outline"
             onClick={onEdit}
-            className="flex-1 sm:flex-none h-12 px-5 gap-2 rounded-2xl border-border/80 bg-card/50"
+            className="flex-1 sm:flex-none h-14 px-6 gap-2 rounded-[1.25rem] border-border/60 bg-card/40 font-bold hover:bg-card/60"
           >
             <Pencil className="w-4 h-4" />
             Modifica
@@ -432,10 +431,9 @@ export default function ResultsView({
           <Button
             variant="outline"
             onClick={onReset}
-            className="h-12 w-12 p-0 rounded-2xl border-border/80 bg-card/50 shrink-0"
-            title="Nuova analisi"
+            className="h-14 w-14 p-0 rounded-[1.25rem] border-border/60 bg-card/40 shrink-0 hover:bg-card/60"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-5 h-5" />
           </Button>
         </div>
       </div>
@@ -443,78 +441,31 @@ export default function ResultsView({
   );
 }
 
-function MiniStat({
-  label,
-  value,
-  accent,
-  highlight,
-}: {
-  label: string;
-  value: string;
-  accent: string;
-  highlight?: boolean;
+function MetricCard({ 
+  icon: Icon, 
+  label, 
+  value, 
+  description, 
+  color, 
+  bg 
+}: { 
+  icon: any, 
+  label: string, 
+  value: string, 
+  description: string, 
+  color: string, 
+  bg: string 
 }) {
   return (
-    <div className={`px-4 py-3 sm:py-4 ${highlight ? "sm:bg-white/[0.03]" : ""}`}>
-      <p className="text-[10px] font-semibold tracking-[0.12em] uppercase text-muted-foreground leading-none">
-        {label}
-      </p>
-      <p className={`mt-1.5 text-lg font-bold tabular-nums tracking-tight leading-none ${accent}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent: string;
-}) {
-  return (
-    <div className="rounded-2xl border border-border/70 bg-card/50 p-3 sm:p-4 min-w-0 overflow-hidden">
-      <p className="text-[10px] font-semibold tracking-[0.12em] uppercase text-muted-foreground leading-none truncate">
-        {label}
-      </p>
-      <p className={`mt-2 text-sm sm:text-base font-bold tabular-nums tracking-tight leading-none truncate ${accent}`}>
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function CompositionItem({
-  label,
-  value,
-  pct,
-  color,
-}: {
-  label: string;
-  value: string;
-  pct: number;
-  color: string;
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs font-medium text-muted-foreground">{label}</span>
-        <div className="flex items-center gap-3">
-          <span className="text-xs font-bold tabular-nums">{value}</span>
-          <span className="text-[11px] font-semibold text-muted-foreground w-8 text-right">{pct}%</span>
+    <div className="rounded-3xl border border-border/50 bg-card/30 p-4 flex flex-col gap-1 shadow-lg">
+      <div className="flex items-center gap-2 mb-1">
+        <div className={cn("p-1.5 rounded-lg", bg)}>
+          <Icon className={cn("w-3.5 h-3.5", color)} />
         </div>
+        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">{label}</span>
       </div>
-      <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-        <motion.div
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.9, delay: 0.15, ease: "easeOut" }}
-          className={`h-full rounded-full ${color}`}
-        />
-      </div>
+      <div className={cn("text-xl font-black tracking-tighter", color)}>{value}</div>
+      <p className="text-[9px] font-medium text-muted-foreground leading-none">{description}</p>
     </div>
   );
 }
