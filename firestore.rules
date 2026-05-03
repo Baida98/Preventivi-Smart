@@ -1,23 +1,108 @@
-rules_version = '2';
+rules_version = '3';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Regola base: accesso consentito solo agli utenti autenticati per i propri dati
-    match /users/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+    
+    // ============================================================================
+    // PHASE 2: Sicurezza e isolamento dati
+    // ============================================================================
+    // Regola mentale: Se un utente può vedere o influenzare dati di altri,
+    // il sistema non è pronto per uso reale.
+    //
+    // Ogni operazione (read, create, update, delete) è filtrata su request.auth.uid
+    // ============================================================================
+    
+    // Helper function: verifica autenticazione e ownership
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+    
+    function isValidQuoteData() {
+      let data = request.resource.data;
+      // Campi obbligatori per validazione lato server
+      return data.keys().hasAll(['id', 'numero', 'uid', 'data', 'createdAt', 'updatedAt', 'cliente', 'ambito', 'sottotipo', 'stato', 'source', 'servizi', 'totale'])
+        && data.uid is string
+        && data.uid.size() > 0
+        && data.numero is string
+        && data.numero.size() > 0
+        && data.totale is number
+        && data.totale >= 0
+        && data.servizi is list
+        && data.servizi.size() > 0
+        && data.stato in ['bozza', 'finalizzato', 'inviato', 'accettato', 'rifiutato', 'archiviato']
+        && data.source in ['manuale', 'pdf', 'ocr', 'import'];
+    }
+    
+    // ============================================================================
+    // Collezione: users/{uid}
+    // ============================================================================
+    match /users/{uid} {
+      // Utente può leggere solo i propri dati
+      allow read: if isSignedIn() && isOwner(uid);
       
-      // Sottocollezione preventivi dell'utente
+      // Crea documento utente (signup)
+      allow create: if isSignedIn() && isOwner(uid)
+        && request.resource.data.uid == uid
+        && request.resource.data.createdAt == request.time;
+      
+      // Aggiorna solo i propri dati
+      allow update: if isSignedIn() && isOwner(uid)
+        && resource.data.uid == uid
+        && request.resource.data.uid == uid
+        && request.resource.data.createdAt == resource.data.createdAt;
+      
+      allow delete: if isSignedIn() && isOwner(uid);
+      
+      // ========================================================================
+      // Collezione: users/{uid}/quotes/{quoteId}
+      // ========================================================================
       match /quotes/{quoteId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+        // Leggi solo i propri preventivi
+        allow read: if isSignedIn() && isOwner(uid);
+        
+        // Crea preventivo: uid nel documento deve corrispondere all'utente
+        allow create: if isSignedIn() && isOwner(uid)
+          && request.resource.data.uid == uid
+          && isValidQuoteData()
+          && request.resource.data.createdAt == request.time
+          && request.resource.data.updatedAt == request.time;
+        
+        // Aggiorna preventivo: uid immutabile, update time aggiornato
+        allow update: if isSignedIn() && isOwner(uid)
+          && resource.data.uid == uid
+          && request.resource.data.uid == uid
+          && request.resource.data.createdAt == resource.data.createdAt
+          && request.resource.data.updatedAt == request.time
+          && isValidQuoteData();
+        
+        // Cancella preventivo: solo l'owner
+        allow delete: if isSignedIn() && isOwner(uid)
+          && resource.data.uid == uid;
       }
       
-      // Contatore per la numerazione dei preventivi
-      match /counters/{counterId} {
-        allow read, write: if request.auth != null && request.auth.uid == userId;
+      // ========================================================================
+      // Collezione: users/{uid}/counters/quotes
+      // ========================================================================
+      match /counters/{counter} {
+        // Leggi solo i propri contatori (per sapere il prossimo numero)
+        allow read: if isSignedIn() && isOwner(uid);
+        
+        // Crea/aggiorna contatore per il proprio user (usato da createQuote transaction)
+        allow write: if isSignedIn() && isOwner(uid)
+          && request.resource.data.year is number
+          && request.resource.data.sequence is number
+          && request.resource.data.sequence > 0
+          && request.resource.data.updatedAt == request.time;
       }
     }
     
-    // Blocco totale per tutto il resto
+    // ============================================================================
+    // Blocca tutto il resto
+    // ============================================================================
     match /{document=**} {
       allow read, write: if false;
     }

@@ -1,115 +1,142 @@
-# Sicurezza e Validazione - Preventivi Smart
+# Security Policy — Preventivi Smart Pro
 
-## Panoramica
+## Phase 2: Data Isolation & Access Control
 
-Questo documento descrive le misure di sicurezza implementate nell'applicazione Preventivi Smart per proteggere i dati degli utenti e prevenire attacchi comuni.
+### Overview
+This document defines the security model for Firestore data access. Every operation is scoped to the authenticated user (`uid`).
 
-## 1. Validazione degli Input con Zod
+### Principles
 
-Tutti gli input dell'utente sono validati utilizzando **Zod**, uno schema validator TypeScript-first.
+1. **Ownership enforcement**: Every quote has an immutable `uid` field matching the creator
+2. **No global queries**: Users cannot see other users' data
+3. **Server-side validation**: Firestore rules validate required fields and data integrity
+4. **Immutable identity**: Cannot change `uid`, `createdAt`, `numero` after creation
+5. **State control**: Only valid state transitions allowed
 
-### Schema di Validazione
+### Firestore Rules Structure
 
-```typescript
-// src/lib/validation.ts
-export const WizardDataSchema = z.object({
-  categoryId: z.string().min(1).max(50),
-  jobId: z.string().min(1).max(50),
-  regionId: z.string().min(1).max(50),
-  quantity: z.number().positive().finite(),
-  fieldValues: z.record(z.string(), z.string().max(100)),
-  notes: z.string().max(2000).optional(),
-  price: z.number().positive().finite().optional(),
-});
+#### Collection: `users/{uid}`
+- **Read**: Only owner can read their own user document
+- **Create**: Only authenticated user can create their own document
+- **Update**: Cannot change `uid` or `createdAt` (immutable)
+- **Delete**: Only owner can delete
+
+#### Collection: `users/{uid}/quotes/{quoteId}`
+- **Read**: Only owner can read their quotes
+- **Create**: 
+  - `uid` must match request user
+  - All required fields must be present (validated server-side)
+  - `createdAt` = `request.time`
+  - `updatedAt` = `request.time`
+  - `stato` must be valid enum value
+  - `source` must be valid enum value
+  - `totale` ≥ 0
+  - `servizi` array non-empty
+
+- **Update**:
+  - `uid`, `createdAt`, `numero` are immutable
+  - `updatedAt` automatically set to `request.time`
+  - Same validation as create
+  
+- **Delete**: Only owner can delete
+
+#### Collection: `users/{uid}/counters/quotes`
+- Maintains per-user quote counter for auto-numbering
+- Read/write scoped to owner only
+- Auto-updated by `createQuote()` transaction
+
+### Validation Rules
+
+**Required Fields:**
+- `id` (string, non-empty)
+- `numero` (string, auto-generated format YYYY-NNNN)
+- `uid` (string, equals `request.auth.uid`)
+- `data` (ISO 8601 date string)
+- `createdAt` (timestamp, immutable)
+- `updatedAt` (timestamp, updated on each write)
+- `cliente` (object with at least `nome` field)
+- `ambito` (string, non-empty)
+- `sottotipo` (string, non-empty)
+- `stato` (enum: bozza|finalizzato|inviato|accettato|rifiutato|archiviato)
+- `source` (enum: manuale|pdf|ocr|import)
+- `servizi` (array, non-empty)
+- `totale` (number ≥ 0)
+
+**Optional Fields:**
+- `mq` (number)
+- `qualityScore`, `anomalyScore` (number 0-100)
+- `validated` (boolean)
+- `verdict`, `verdictLabel`
+- `marketMin`, `marketMid`, `marketMax`
+- `receivedPrice`
+- `note`
+
+### Deployment
+
+1. Go to [Firebase Console](https://console.firebase.google.com)
+2. Select your project
+3. Navigate to Firestore Database → Rules
+4. Replace the default rules with content from `firestore.rules`
+5. Publish rules
+
+### Testing
+
+Use the Firestore Rules Simulator in Console:
+
+**Test 1: User A cannot read User B's quotes**
+```
+uid: "userA"
+path: users/userB/quotes/quote1
+operation: read
+Expected: DENY
 ```
 
-### Funzioni di Validazione
-
-- `validateWizardData(data)`: Valida i dati del wizard
-- `validateQuoteInput(data)`: Valida i dati di un preventivo
-- `validateAndSanitizeWizardData(data)`: Valida e sanitizza i dati
-
-## 2. Prevenzione XSS
-
-### Sanitizzazione delle Stringhe
-
-La funzione `sanitizeString()` rimuove caratteri pericolosi:
-- Rimuove `<` e `>`
-- Limita la lunghezza a 2000 caratteri
-- Esegue il trim dei whitespace
-
-### HTML Encoding
-
-La funzione `encodeHtml()` codifica i caratteri speciali:
-- `&` → `&amp;`
-- `<` → `&lt;`
-- `>` → `&gt;`
-- `"` → `&quot;`
-- `'` → `&#039;`
-
-## 3. Header di Sicurezza HTTP
-
-### Headers Implementati
-
-```typescript
-// src/lib/security.ts
-export const SECURITY_HEADERS = {
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'X-XSS-Protection': '1; mode=block',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'geolocation=(), microphone=(), camera=()',
-};
+**Test 2: User can create own quote with valid data**
+```
+uid: "userA"
+path: users/userA/quotes/newQuote
+operation: create
+data: {
+  id: "abc",
+  numero: "2026-0001",
+  uid: "userA",
+  data: "2026-05-03",
+  createdAt: now,
+  updatedAt: now,
+  cliente: {nome: "Mario"},
+  ambito: "edilizia",
+  sottotipo: "muratura",
+  stato: "finalizzato",
+  source: "manuale",
+  servizi: [{...}],
+  totale: 1000
+}
+Expected: ALLOW
 ```
 
-### Content Security Policy
-
+**Test 3: User cannot forge uid on create**
 ```
-Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self';
-```
-
-## 4. Test di Sicurezza
-
-Tutti i componenti di validazione e sicurezza hanno test unitari:
-
-```bash
-npm test
+uid: "userA"
+data with uid: "userB"
+Expected: DENY
 ```
 
-### Test Inclusi
+### Common Issues
 
-- Validazione dei dati del wizard
-- Rifiuto di dati invalidi
-- Sanitizzazione delle stringhe
-- Protezione da input troppo lunghi
-- Validazione dei numeri positivi
+**Issue**: `PERMISSION_DENIED: Missing or insufficient permissions`
+- **Cause**: User not authenticated or trying to access other user's data
+- **Fix**: Check `request.auth` is not null and `uid` matches
 
-## 5. Best Practices di Sicurezza
+**Issue**: `Invalid data - required field missing`
+- **Cause**: Quote missing required fields like `ambito`, `sottotipo`, `stato`, `source`
+- **Fix**: Ensure `createEmptyQuote()` and `createQuote()` populate all required fields
 
-### Per gli Sviluppatori
+**Issue**: Unauthenticated users cannot read
+- **Cause**: Firestore rules require `isSignedIn()` check
+- **Fix**: For guest mode (localStorage), don't use Firestore — use local storage only
 
-1. **Sempre validare gli input**: Utilizzare `validateWizardData()` prima di elaborare i dati
-2. **Sanitizzare le stringhe**: Utilizzare `sanitizeString()` per i dati user-generated
-3. **Usare TypeScript**: Sfruttare il type checking per prevenire errori
-4. **Non fidarsi del client**: Implementare validazione anche lato server se necessario
+### Future Phases
 
-### Per gli Utenti
-
-1. **Non condividere i dati**: I preventivi sono salvati localmente nel browser
-2. **Usare HTTPS**: Assicurarsi di accedere all'app tramite HTTPS
-3. **Logout**: Pulire il browser cache se si usa un dispositivo condiviso
-
-## 6. Conformità e Standard
-
-- **OWASP Top 10**: Protezione da XSS, Injection, CSRF
-- **WCAG 2.1**: Accessibilità (in fase di implementazione)
-- **GDPR**: Nessun dato sensibile è trasmesso o memorizzato su server
-
-## 7. Segnalazione di Vulnerabilità
-
-Se scopri una vulnerabilità di sicurezza, contatta il team di sviluppo direttamente.
-Non pubblicare vulnerabilità pubblicamente prima di una patch.
-
----
-
-*Ultimo aggiornamento: 30 Aprile 2026*
+**Phase 3**: Add validation webhooks for OCR data
+**Phase 4**: Add audit logs (read/write timestamps + user agent)
+**Phase 5**: Rate limiting on write operations

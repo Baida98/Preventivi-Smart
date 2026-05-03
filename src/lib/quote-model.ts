@@ -4,15 +4,26 @@ import type { VerdictKey } from "./verdict";
  * Modello dati completo per un preventivo
  * Struttura ottimizzata per Firestore con tutti i campi necessari
  */
+/**
+ * Stato del preventivo nel ciclo di vita
+ */
+export type QuoteStatus = "bozza" | "finalizzato" | "inviato" | "accettato" | "rifiutato" | "archiviato";
+
+/**
+ * Sorgente dati del preventivo
+ */
+export type QuoteSource = "manuale" | "pdf" | "ocr" | "import";
+
 export type Quote = {
   // Identificativi
   id: string;
   numero: string; // Numerazione preventivo (es: "2026-0001")
+  uid: string; // User ID per isolamento dati
   
   // Informazioni temporali
   data: string; // ISO 8601 format (YYYY-MM-DD)
   createdAt: string; // Timestamp ISO 8601 con ora
-  updatedAt?: string; // Timestamp ISO 8601 con ora
+  updatedAt: string; // Timestamp ISO 8601 con ora
   
   // Dati cliente
   cliente: {
@@ -26,16 +37,25 @@ export type Quote = {
     provincia?: string;
   };
   
+  // Segmentazione
+  ambito: string; // Categoria (es: "edilizia", "impianti")
+  sottotipo: string; // Tipo di lavoro specifico (es: "muratura", "impianto-elettrico")
+  mq?: number; // Metratura se applicabile
+  
   // Servizi/Lavori
   servizi: Service[];
   
   // Totali
   totale: number; // Importo totale in euro
   
-  // Metadati analisi
+  // Stato gestione
+  stato: QuoteStatus; // Stato del preventivo
+  
+  // Provenienza dati
+  source: QuoteSource; // Come è stato creato (manuale, PDF, OCR, etc.)
+  
+  // Metadati analisi (legacy)
   jobId?: string;
-  jobLabel?: string;
-  categoryLabel?: string;
   regionLabel?: string;
   
   // Verdetto analisi
@@ -55,6 +75,11 @@ export type Quote = {
   
   // Prezzo ricevuto (se disponibile)
   receivedPrice?: number;
+  
+  // Metadati validazione
+  qualityScore?: number; // 0-100
+  anomalyScore?: number; // 0-100
+  validated?: boolean;
   
   // Campi legacy per compatibilità
   fieldValues?: Record<string, string>;
@@ -93,17 +118,31 @@ export function isValidQuote(quote: unknown): quote is Quote {
   
   const q = quote as Record<string, unknown>;
   
-  // Campi obbligatori
+  // Campi obbligatori di identificazione
   if (typeof q.id !== "string" || !q.id.trim()) return false;
   if (typeof q.numero !== "string" || !q.numero.trim()) return false;
+  if (typeof q.uid !== "string" || !q.uid.trim()) return false;
+  
+  // Campi temporali
   if (typeof q.data !== "string") return false;
   if (typeof q.createdAt !== "string") return false;
+  if (typeof q.updatedAt !== "string") return false;
+  
+  // Totali
   if (typeof q.totale !== "number" || q.totale < 0) return false;
   
   // Cliente
   if (!q.cliente || typeof q.cliente !== "object") return false;
   const cliente = q.cliente as Record<string, unknown>;
   if (typeof cliente.nome !== "string" || !cliente.nome.trim()) return false;
+  
+  // Segmentazione
+  if (typeof q.ambito !== "string" || !q.ambito.trim()) return false;
+  if (typeof q.sottotipo !== "string" || !q.sottotipo.trim()) return false;
+  
+  // Stato e source
+  if (typeof q.stato !== "string" || !q.stato.trim()) return false;
+  if (typeof q.source !== "string" || !q.source.trim()) return false;
   
   // Servizi
   if (!Array.isArray(q.servizi)) return false;
@@ -121,13 +160,19 @@ export function createEmptyQuote(userId: string): Partial<Quote> {
   
   return {
     id: generateQuoteId(),
+    uid: userId,
     data: today,
     createdAt: now,
+    updatedAt: now,
     cliente: {
       nome: "",
     },
+    ambito: "",
+    sottotipo: "",
     servizi: [],
     totale: 0,
+    stato: "bozza",
+    source: "manuale",
   };
 }
 
