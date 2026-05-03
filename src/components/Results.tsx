@@ -230,6 +230,21 @@ export default function ResultsView({
         </div>
       )}
 
+      {/* Inflation Impact Info */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="flex items-start gap-3 p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 text-blue-200/80 text-[11px] leading-relaxed"
+      >
+        <TrendingUp className="w-4 h-4 shrink-0 text-blue-400" />
+        <div>
+          <p className="font-semibold text-blue-300 mb-0.5">Aggiornamento Inflazione & Mercato 2026</p>
+          <p>
+            Il calcolo include un adeguamento di <span className="text-blue-300 font-bold">+{fmtEUR(analysis.inflationImpact)}</span> dovuto all'inflazione ISTAT e alla volatilità del settore <span className="italic">{category.label}</span>. I prezzi sono allineati agli indici di costo correnti.
+          </p>
+        </div>
+      </motion.div>
+
       {/* ── CHART ── */}
       <div className="rounded-2xl border border-border/70 bg-card/40 p-4 sm:p-5">
         <div className="flex items-center justify-between mb-1">

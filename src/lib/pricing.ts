@@ -9,6 +9,7 @@ import {
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
+import { MARKET_INDICATORS, getDynamicInflationFactor } from "./market-config";
 
 export type FieldOption = { value: string; label: string; multiplier: number };
 export type Field = {
@@ -680,6 +681,7 @@ export type MarketAnalysis = {
   materiali: number;
   margine: number;
   confidence: number;
+  inflationImpact: number; // Nuovo campo: impatto inflazione in Euro
 };
 
 export function computeMarket(
@@ -692,6 +694,7 @@ export function computeMarket(
   const regMul = region?.multiplier ?? 1;
   const regionConfidence = region?.confidence ?? 0.8;
   
+  // 1. Calcolo base con moltiplicatori utente
   let extrasMul = 1.0;
   for (const f of job.fields) {
     const v = fieldValues[f.id];
@@ -699,21 +702,37 @@ export function computeMarket(
     const opt = f.options.find((o) => o.value === v);
     if (opt) extrasMul *= opt.multiplier;
   }
+
+  // 2. Applicazione Fattore Inflazione Dinamico
+  const inflationFactor = getDynamicInflationFactor();
+  const sectorVolatility = MARKET_INDICATORS.sectorVolatility[job.categoryId as keyof typeof MARKET_INDICATORS.sectorVolatility] || 1.05;
   
-  const expected = job.base * extrasMul * Math.max(1, quantity) * regMul;
+  // Il prezzo base viene corretto per l'inflazione e la volatilità del settore
+  const adjustedBase = job.base * inflationFactor;
+  
+  // 3. Calcolo finale
+  const expected = adjustedBase * extrasMul * Math.max(1, quantity) * regMul;
+  const inflationImpact = expected - (job.base * extrasMul * Math.max(1, quantity) * regMul);
   
   const composition = COMPOSITION_BY_CATEGORY[job.categoryId] || { labor: 0.55, materials: 0.35, margin: 0.1 };
-  const range = MARKET_RANGES[job.categoryId] || { minVariance: 0.78, maxVariance: 1.28 };
+  
+  // 4. Calcolo Range di Mercato (corretto per volatilità settore)
+  const baseRange = MARKET_RANGES[job.categoryId] || { minVariance: 0.78, maxVariance: 1.28 };
+  const range = {
+    minVariance: baseRange.minVariance,
+    maxVariance: baseRange.maxVariance * (1 + (sectorVolatility - 1) * 0.5) // Aumenta il range superiore se il settore è volatile
+  };
 
   return {
     expected,
     marketMin: expected * range.minVariance,
     marketMid: expected,
     marketMax: expected * range.maxVariance,
-    pricePerUnit: (job.base * extrasMul * regMul),
+    pricePerUnit: (adjustedBase * extrasMul * regMul),
     manodopera: expected * composition.labor,
     materiali: expected * composition.materials,
     margine: expected * composition.margin,
     confidence: regionConfidence,
+    inflationImpact,
   };
 }
