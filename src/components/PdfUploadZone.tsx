@@ -91,23 +91,23 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-3xl border border-primary/20 bg-gradient-to-br from-primary/5 to-card/30 p-8 flex flex-col items-center justify-center gap-5 shadow-xl"
+        className="rounded-[2.5rem] border border-primary/20 bg-gradient-to-br from-primary/5 to-card/30 p-10 flex flex-col items-center justify-center gap-6 shadow-2xl"
       >
-        <div className="relative flex items-center justify-center w-16 h-16">
+        <div className="relative flex items-center justify-center w-20 h-20">
           <div className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
-          <div className="relative flex items-center justify-center w-14 h-14 rounded-full bg-primary/15 ring-1 ring-primary/30">
-            <Loader2 className="w-7 h-7 animate-spin text-primary" />
+          <div className="relative flex items-center justify-center w-16 h-16 rounded-2xl bg-primary/15 border border-primary/30">
+            <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
         </div>
         <div className="text-center">
-          <p className="text-sm font-black text-foreground">Analisi PDF in corso…</p>
-          <p className="text-xs text-muted-foreground mt-1">Estrazione e classificazione automatica</p>
+          <p className="text-base font-black text-foreground uppercase tracking-tight">Analisi PDF in corso…</p>
+          <p className="text-xs text-muted-foreground font-medium mt-1 uppercase tracking-widest opacity-60">Estrazione automatica AI</p>
         </div>
         {result?.steps && result.steps.length > 0 && (
-          <div className="w-full max-w-xs space-y-1.5">
+          <div className="w-full max-w-xs space-y-2 mt-2">
             {result.steps.map((step, idx) => (
-              <div key={idx} className="flex items-center gap-2 text-[11px] text-muted-foreground/80">
-                <div className="w-1 h-1 rounded-full bg-primary/60 shrink-0" />
+              <div key={idx} className="flex items-center gap-3 text-[10px] text-muted-foreground/70 font-black uppercase tracking-widest">
+                <div className="w-1.5 h-1.5 rounded-full bg-primary/40 shrink-0" />
                 <span>{step}</span>
               </div>
             ))}
@@ -124,64 +124,65 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         className={cn(
-          'rounded-3xl border p-6 space-y-4 shadow-xl',
+          'rounded-[2.5rem] border p-8 space-y-6 shadow-2xl',
           result.success
             ? 'border-emerald-500/25 bg-emerald-500/5'
             : 'border-rose-500/25 bg-rose-500/5'
         )}
       >
         {/* Header */}
-        <div className="flex items-start gap-3">
+        <div className="flex items-start gap-5">
           <div className={cn(
-            'shrink-0 flex items-center justify-center w-10 h-10 rounded-2xl',
-            result.success ? 'bg-emerald-500/15 ring-1 ring-emerald-500/30' : 'bg-rose-500/15 ring-1 ring-rose-500/30'
+            'shrink-0 flex items-center justify-center w-12 h-12 rounded-2xl border shadow-inner',
+            result.success ? 'bg-emerald-500/15 border-emerald-500/30' : 'bg-rose-500/15 border-rose-500/30'
           )}>
             {result.success
-              ? <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-              : <AlertCircle className="w-5 h-5 text-rose-400" />}
+              ? <CheckCircle2 className="w-6 h-6 text-emerald-400" />
+              : <AlertCircle className="w-6 h-6 text-rose-400" />}
           </div>
           <div>
-            <h3 className="text-sm font-black text-foreground">
+            <h3 className="text-lg font-black text-foreground tracking-tight">
               {result.success ? 'Preventivo estratto con successo' : "Errore nell'estrazione"}
             </h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">
-              Confidenza: <span className={cn('font-bold', result.success ? 'text-emerald-400' : 'text-rose-400')}>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60">Confidenza:</span>
+              <span className={cn('text-[10px] font-black uppercase tracking-widest', result.success ? 'text-emerald-400' : 'text-rose-400')}>
                 {result.confidence.toFixed(0)}%
               </span>
               {result.classification && (
-                <span className="ml-2 px-1.5 py-0.5 rounded-full bg-white/5 text-muted-foreground/70 text-[10px] font-medium">
+                <span className="px-2 py-0.5 rounded-full bg-white/5 border border-white/10 text-muted-foreground/70 text-[9px] font-black uppercase tracking-tighter">
                   {result.classification}
                 </span>
               )}
-            </p>
+            </div>
           </div>
         </div>
 
         {/* Extracted Data */}
         {result.quote && (
-          <div className="rounded-2xl border border-white/8 bg-card/30 p-4 grid grid-cols-2 gap-3">
+          <div className="rounded-[1.5rem] border border-white/8 bg-card/30 p-6 grid grid-cols-2 gap-6">
             {result.quote.numero && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Numero</p>
-                <p className="text-xs font-bold text-foreground mt-0.5">{result.quote.numero}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Numero</p>
+                <p className="text-sm font-black text-foreground mt-1 tracking-tight">{result.quote.numero}</p>
               </div>
             )}
             {result.quote.cliente?.nome && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Cliente</p>
-                <p className="text-xs font-bold text-foreground mt-0.5">{result.quote.cliente.nome}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Cliente</p>
+                <p className="text-sm font-black text-foreground mt-1 tracking-tight">{result.quote.cliente.nome}</p>
               </div>
             )}
             {result.quote.ambito && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Ambito</p>
-                <p className="text-xs font-bold text-foreground mt-0.5">{result.quote.ambito}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Ambito</p>
+                <p className="text-sm font-black text-foreground mt-1 tracking-tight">{result.quote.ambito}</p>
               </div>
             )}
             {result.quote.totale != null && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Totale</p>
-                <p className="text-sm font-black text-primary mt-0.5">€{result.quote.totale.toFixed(2)}</p>
+                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/40">Importo Totale</p>
+                <p className="text-lg font-black text-primary mt-1 tracking-tighter">€{result.quote.totale.toLocaleString('it-IT', { minimumFractionDigits: 2 })}</p>
               </div>
             )}
           </div>
@@ -189,32 +190,32 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
 
         {/* Warnings */}
         {result.warnings.length > 0 && (
-          <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-3 space-y-1">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-400/80">Avvertenze</p>
+          <div className="rounded-[1.5rem] border border-amber-500/20 bg-amber-500/5 p-5 space-y-2">
+            <p className="text-[10px] font-black uppercase tracking-widest text-amber-400/80">Avvertenze Tecniche</p>
             {result.warnings.map((w, i) => (
-              <p key={i} className="text-[11px] text-amber-300/80 font-medium">· {w}</p>
+              <p key={i} className="text-xs text-amber-300/80 font-medium leading-relaxed">· {w}</p>
             ))}
           </div>
         )}
 
         {/* Actions */}
-        <div className="flex gap-2 pt-1">
+        <div className="flex gap-3 pt-2">
           <Button
             variant="outline"
             onClick={() => {
               setResult(null);
               if (fileInputRef.current) fileInputRef.current.value = '';
             }}
-            className="flex-1 h-10 gap-2 rounded-2xl text-xs font-bold border-white/10 bg-white/5 hover:bg-white/10"
+            className="flex-1 h-12 gap-2 rounded-2xl"
           >
-            <RotateCcw className="w-3.5 h-3.5" /> Carica altro
+            <RotateCcw className="w-4 h-4" /> Carica altro
           </Button>
           <Button
             variant="outline"
             onClick={onDismiss}
-            className="h-10 w-10 p-0 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 shrink-0"
+            className="h-12 w-12 p-0 rounded-2xl shrink-0"
           >
-            <X className="w-4 h-4" />
+            <X className="w-5 h-5" />
           </Button>
         </div>
       </motion.div>
@@ -232,9 +233,9 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
       onDrop={handleDrop}
       onClick={() => fileInputRef.current?.click()}
       className={cn(
-        'relative rounded-3xl border-2 border-dashed p-8 cursor-pointer transition-all duration-300 group',
+        'relative rounded-[2.5rem] border-2 border-dashed p-10 cursor-pointer transition-all duration-300 group',
         dragActive
-          ? 'border-primary/60 bg-primary/8 shadow-[0_0_30px_-10px_hsl(200_95%_55%/0.3)]'
+          ? 'border-primary/60 bg-primary/8 shadow-[0_0_40px_-10px_hsl(200_95%_55%/0.4)]'
           : 'border-white/10 bg-gradient-to-br from-card/40 to-card/20 hover:border-primary/30 hover:bg-primary/5'
       )}
     >
@@ -246,38 +247,38 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
         className="hidden"
       />
 
-      <div className="flex flex-col items-center justify-center gap-4 text-center">
+      <div className="flex flex-col items-center justify-center gap-6 text-center">
         {/* Icon */}
         <div className={cn(
-          'flex items-center justify-center w-14 h-14 rounded-2xl transition-all duration-300',
+          'flex items-center justify-center w-16 h-16 rounded-[1.5rem] transition-all duration-300 border',
           dragActive
-            ? 'bg-primary/20 ring-1 ring-primary/40 scale-110'
-            : 'bg-white/5 ring-1 ring-white/10 group-hover:bg-primary/10 group-hover:ring-primary/25'
+            ? 'bg-primary/20 border-primary/40 scale-110 shadow-lg shadow-primary/20'
+            : 'bg-white/5 border-white/10 group-hover:bg-primary/10 group-hover:border-primary/25'
         )}>
           <FileUp className={cn(
-            'w-7 h-7 transition-colors duration-300',
+            'w-8 h-8 transition-colors duration-300',
             dragActive ? 'text-primary' : 'text-muted-foreground group-hover:text-primary'
           )} />
         </div>
 
-        <div>
-          <p className="text-sm font-black text-foreground">
+        <div className="space-y-1">
+          <p className="text-base font-black text-foreground uppercase tracking-tight">
             {dragActive ? 'Rilascia il PDF qui' : 'Carica il preventivo PDF'}
           </p>
-          <p className="text-xs text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground font-medium uppercase tracking-widest opacity-60">
             Trascina il file oppure clicca per selezionarlo
           </p>
         </div>
 
         {/* Feature Pills */}
-        <div className="flex flex-wrap justify-center gap-2 mt-1">
+        <div className="flex flex-wrap justify-center gap-3 mt-2">
           {[
             { icon: FileText, label: 'PDF nativo' },
             { icon: Zap, label: 'OCR automatico' },
-            { icon: ShieldCheck, label: 'Estrazione sicura' },
+            { icon: ShieldCheck, label: 'Privacy protetta' },
           ].map(({ icon: Icon, label }) => (
-            <span key={label} className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-white/5 border border-white/8 text-[10px] font-bold text-muted-foreground/80 uppercase tracking-wider">
-              <Icon className="w-3 h-3" />
+            <span key={label} className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/5 border border-white/8 text-[9px] font-black text-muted-foreground/60 uppercase tracking-widest">
+              <Icon className="w-3.5 h-3.5" />
               {label}
             </span>
           ))}
@@ -287,9 +288,9 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
       {/* Dismiss */}
       <button
         onClick={(e) => { e.stopPropagation(); onDismiss(); }}
-        className="absolute top-3 right-3 flex items-center justify-center w-7 h-7 rounded-xl bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+        className="absolute top-4 right-4 flex items-center justify-center w-8 h-8 rounded-xl bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
       >
-        <X className="w-3.5 h-3.5" />
+        <X className="w-4 h-4" />
       </button>
     </motion.div>
   );

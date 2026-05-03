@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Search, Calculator, Sparkles, ShieldCheck, FileText, TrendingUp, Users } from "lucide-react";
+import { Search, Calculator, Sparkles, ShieldCheck, FileText, TrendingUp, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 type Props = {
@@ -26,9 +26,9 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.5 }}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/40 backdrop-blur-md border border-white/10 text-[11px] font-bold uppercase tracking-widest text-primary/90 shadow-2xl mb-8"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/40 backdrop-blur-md border border-white/10 text-[11px] font-black uppercase tracking-widest text-primary/90 shadow-2xl mb-10"
         >
-          <TrendingUp className="w-3.5 h-3.5" />
+          <BarChart3 className="w-3.5 h-3.5" />
           Analisi basata su indici ISTAT 2026
         </motion.div>
 
@@ -52,7 +52,7 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="mt-8 mx-auto max-w-3xl text-balance text-lg sm:text-xl text-muted-foreground/80 font-medium leading-relaxed"
         >
-          Strumento professionale per la valutazione dei costi nel settore dell'edilizia e dell'impiantistica. Confronta i tuoi preventivi con i benchmark regionali aggiornati e ottieni un'analisi strutturata basata su dati ufficiali.
+          Strumento professionale per la valutazione dei costi nel settore dell'edilizia e dell'impiantistica. Confronta i tuoi preventivi con i benchmark regionali aggiornati.
         </motion.p>
 
         {/* CTA Buttons */}
@@ -60,12 +60,12 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-12 flex flex-col sm:flex-row items-center justify-center gap-4"
+          className="mt-14 flex flex-col sm:flex-row items-center justify-center gap-5"
         >
           <Button
             size="lg"
             onClick={onAnalizza}
-            className="h-16 px-10 gap-3 text-lg font-black uppercase tracking-tight bg-primary hover:bg-primary/90 text-primary-foreground glow-azure rounded-2xl shadow-2xl transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="h-16 px-12 gap-4 text-lg font-black uppercase tracking-tight glow-azure rounded-[1.5rem]"
           >
             <FileText className="w-6 h-6" />
             Analizza Preventivo
@@ -74,7 +74,7 @@ export default function Hero({ onAnalizza, onStima }: Props) {
             size="lg"
             variant="outline"
             onClick={onStima}
-            className="h-16 px-10 gap-3 text-lg font-black uppercase tracking-tight rounded-2xl border-white/10 bg-card/40 backdrop-blur-md hover:bg-card/60 transition-all hover:scale-[1.02] active:scale-[0.98]"
+            className="h-16 px-12 gap-4 text-lg font-black uppercase tracking-tight rounded-[1.5rem] bg-card/40 backdrop-blur-md"
           >
             <Calculator className="w-6 h-6" />
             Stima Costi
@@ -86,12 +86,12 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1, delay: 0.4 }}
-          className="mt-16 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto"
+          className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto"
         >
-          <TrustItem icon={ShieldCheck} label="Riservatezza" sub="Nessun dato personale" />
-          <TrustItem icon={TrendingUp} label="Benchmark 2026" sub="Indici ISTAT & Regionali" />
-          <TrustItem icon={Search} label="Verifica Tecnica" sub="Analisi delle voci di costo" />
-          <TrustItem icon={Sparkles} label="Modello AI" sub="Elaborazione statistica" />
+          <TrustItem icon={ShieldCheck} label="Riservatezza" sub="Dati protetti" />
+          <TrustItem icon={BarChart3} label="Benchmark" sub="Dati Regionali" />
+          <TrustItem icon={Search} label="Verifica" sub="Voci di costo" />
+          <TrustItem icon={Sparkles} label="Modello AI" sub="Auto-apprendimento" />
         </motion.div>
       </div>
     </section>
@@ -100,13 +100,13 @@ export default function Hero({ onAnalizza, onStima }: Props) {
 
 function TrustItem({ icon: Icon, label, sub }: { icon: any, label: string, sub: string }) {
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div className="p-2.5 rounded-xl bg-primary/5 ring-1 ring-primary/10">
-        <Icon className="w-5 h-5 text-primary/80" />
+    <div className="flex flex-col items-center gap-3 group cursor-default">
+      <div className="p-3 rounded-2xl bg-primary/5 border border-primary/10 group-hover:bg-primary/10 group-hover:border-primary/20 transition-all">
+        <Icon className="w-6 h-6 text-primary" />
       </div>
       <div>
         <p className="text-xs font-black uppercase tracking-wider text-foreground">{label}</p>
-        <p className="text-[10px] font-medium text-muted-foreground">{sub}</p>
+        <p className="text-[10px] font-bold text-muted-foreground/60 uppercase mt-0.5">{sub}</p>
       </div>
     </div>
   );

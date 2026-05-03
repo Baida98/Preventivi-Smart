@@ -33,6 +33,9 @@ import {
   Gavel,
   History,
   Scale,
+  Wallet,
+  Coins,
+  LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fmtEUR, fmtPct } from "@/lib/format";
@@ -116,14 +119,14 @@ export default function ResultsView({
     <div className="space-y-6 pb-8">
       {/* Header context */}
       <div className="flex flex-wrap items-center gap-2 text-[10px] sm:text-xs">
-        <span className="px-2.5 py-1 rounded-full bg-primary/10 ring-1 ring-primary/25 text-primary font-bold uppercase tracking-wider">
+        <span className="px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary font-bold uppercase tracking-wider">
           {category.label}
         </span>
-        <span className="text-muted-foreground">/</span>
+        <span className="text-muted-foreground opacity-30">/</span>
         <span className="font-bold text-foreground">{job.label}</span>
-        <span className="text-muted-foreground">/</span>
+        <span className="text-muted-foreground opacity-30">/</span>
         <span className="text-muted-foreground">{regionLabel}</span>
-        <span className="text-muted-foreground">/</span>
+        <span className="text-muted-foreground opacity-30">/</span>
         <span className="text-muted-foreground font-medium">{quantity} {job.unitLabel}</span>
       </div>
 
@@ -155,36 +158,36 @@ export default function ResultsView({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div className="flex items-start gap-5">
                 <div className={cn(
-                  "shrink-0 flex items-center justify-center w-14 h-14 rounded-2xl bg-background/40 ring-1 shadow-inner",
+                  "shrink-0 flex items-center justify-center w-16 h-16 rounded-2xl bg-background/40 border shadow-inner",
                   verdict.color.border
                 )}>
-                  <VerdictIcon className={cn("w-7 h-7", verdict.color.text)} />
+                  <VerdictIcon className={cn("w-8 h-8", verdict.color.text)} />
                 </div>
                 <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[10px] font-bold tracking-[0.2em] uppercase text-muted-foreground/70">Analisi tecnica completata</span>
+                  <div className="flex items-center gap-2 mb-1.5">
+                    <span className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70">Analisi tecnica completata</span>
                     <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
-                    <span className="text-[10px] font-bold text-emerald-400">ISTAT 2026</span>
+                    <span className="text-[10px] font-black text-emerald-400">ISTAT 2026</span>
                   </div>
-                  <h3 className={cn("text-3xl sm:text-4xl font-black tracking-tighter leading-none", verdict.color.text)}>
+                  <h3 className={cn("text-3xl sm:text-5xl font-black tracking-tighter leading-none mb-3", verdict.color.text)}>
                     {verdict.label}
                   </h3>
-                  <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground max-w-md">
+                  <p className="text-sm sm:text-base font-medium text-muted-foreground max-w-md leading-relaxed">
                     {verdict.short}. {verdict.description}
                   </p>
                 </div>
               </div>
 
               {/* Price comparison bubble */}
-              <div className="bg-background/40 backdrop-blur-md rounded-3xl p-4 ring-1 ring-white/5 flex flex-col items-center justify-center min-w-[120px]">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Scostamento</span>
+              <div className="bg-background/40 backdrop-blur-md rounded-[2rem] p-6 border border-white/5 flex flex-col items-center justify-center min-w-[140px] shadow-2xl">
+                <span className="text-[10px] font-black uppercase text-muted-foreground mb-1.5 tracking-widest">Scostamento</span>
                 <div className={cn(
-                  "text-2xl font-black tabular-nums tracking-tighter",
+                  "text-3xl font-black tabular-nums tracking-tighter",
                   diff >= 0 ? "text-rose-400" : "text-emerald-400"
                 )}>
                   {diff >= 0 ? "+" : ""}{Math.round(diffPct)}%
                 </div>
-                <div className="text-[10px] font-medium text-muted-foreground mt-1">Vs benchmark regionale</div>
+                <div className="text-[10px] font-bold text-muted-foreground/60 mt-1.5 uppercase">Vs benchmark</div>
               </div>
             </div>
           </motion.div>
@@ -196,25 +199,25 @@ export default function ResultsView({
           >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6">
               <div className="flex items-start gap-5">
-                <div className="shrink-0 flex items-center justify-center w-14 h-14 rounded-2xl bg-background/40 ring-1 ring-accent/30 shadow-inner">
-                  <Target className="w-7 h-7 text-accent" />
+                <div className="shrink-0 flex items-center justify-center w-16 h-16 rounded-2xl bg-background/40 border border-accent/30 shadow-inner">
+                  <Target className="w-8 h-8 text-accent" />
                 </div>
                 <div>
-                  <div className="text-[10px] font-bold tracking-[0.2em] uppercase text-muted-foreground/70 mb-1">Intervallo di mercato stimato</div>
-                  <h3 className="text-3xl sm:text-4xl font-black tracking-tighter leading-none text-foreground">
-                    {fmtEUR(analysis.marketMin)} <span className="text-muted-foreground/30 mx-1">/</span> {fmtEUR(analysis.marketMax)}
+                  <div className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70 mb-1.5">Intervallo di mercato stimato</div>
+                  <h3 className="text-3xl sm:text-5xl font-black tracking-tighter leading-none text-foreground mb-3">
+                    {fmtEUR(analysis.marketMin)} <span className="text-muted-foreground/20 mx-1">/</span> {fmtEUR(analysis.marketMax)}
                   </h3>
-                  <p className="mt-2 text-sm sm:text-base font-medium text-muted-foreground max-w-md">
+                  <p className="text-sm sm:text-base font-medium text-muted-foreground max-w-md leading-relaxed">
                     Prezzo medio calcolato: <span className="text-accent font-bold">{fmtEUR(analysis.marketMid)}</span>. Fascia basata su indici di costo aggiornati al 2026.
                   </p>
                 </div>
               </div>
-              <div className="bg-background/40 backdrop-blur-md rounded-3xl p-4 ring-1 ring-white/5 flex flex-col items-center justify-center min-w-[120px]">
-                <span className="text-[10px] font-bold uppercase text-muted-foreground mb-1">Prezzo Unitario</span>
-                <div className="text-2xl font-black tabular-nums tracking-tighter text-accent">
+              <div className="bg-background/40 backdrop-blur-md rounded-[2rem] p-6 border border-white/5 flex flex-col items-center justify-center min-w-[140px] shadow-2xl">
+                <span className="text-[10px] font-black uppercase text-muted-foreground mb-1.5 tracking-widest">Prezzo Unitario</span>
+                <div className="text-3xl font-black tabular-nums tracking-tighter text-accent">
                   {fmtEUR(analysis.marketMid / Math.max(quantity, 1))}/{job.unit}
                 </div>
-                <div className="text-[10px] font-medium text-muted-foreground mt-1">Benchmark {regionLabel}</div>
+                <div className="text-[10px] font-bold text-muted-foreground/60 mt-1.5 uppercase">Benchmark regionale</div>
               </div>
             </div>
           </motion.div>
@@ -222,7 +225,7 @@ export default function ResultsView({
       </div>
 
       {/* AI Metrics Row */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}>
           <MetricCard 
             icon={ShieldCheck} 
@@ -261,51 +264,63 @@ export default function ResultsView({
             icon={Calendar} 
             label="Validità" 
             value={analysis.expiryDate.toLocaleDateString('it-IT', { month: 'short', year: 'numeric' })}
-            description="Aggiornamento dati"
-            color="text-violet-400"
-            bg="bg-violet-400/10"
+            description="Scadenza stima"
+            color="text-rose-400"
+            bg="bg-rose-400/10"
           />
         </motion.div>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
-        {/* Benchmark Chart */}
-        <motion.div 
+      {/* Main Analysis Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Market Benchmark Chart */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-          className="lg:col-span-3 rounded-[2rem] border border-border/60 bg-card/40 p-6 sm:p-8"
+          transition={{ delay: 0.25 }}
+          className="rounded-[2rem] border border-border/60 bg-card/40 p-6 sm:p-8 space-y-6 flex flex-col"
         >
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h4 className="text-lg font-black tracking-tight">Benchmark di Mercato</h4>
-              <p className="text-xs text-muted-foreground font-medium mt-0.5">Posizionamento rispetto ai valori regionali</p>
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
+                <BarChart className="w-5 h-5 text-primary" />
+                Benchmark di Mercato
+              </h4>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Confronto prezzi regionali 2026</p>
             </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/5 border border-white/5">
-              <History className="w-3.5 h-3.5 text-primary" />
-              <span className="text-[10px] font-black text-muted-foreground uppercase tracking-wider">ISTAT 2026</span>
+            <div className="px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-400 uppercase tracking-tighter">
+              Dati Verificati
             </div>
           </div>
-          
-          <div className="h-[280px] w-full">
+
+          <div className="flex-1 min-h-[280px] w-full mt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                <defs>
+                  <linearGradient id="neutralGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.2} />
+                    <stop offset="100%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.05} />
+                  </linearGradient>
+                  <linearGradient id="youGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={`hsl(${youColor})`} stopOpacity={0.8} />
+                    <stop offset="100%" stopColor={`hsl(${youColor})`} stopOpacity={0.2} />
+                  </linearGradient>
+                </defs>
                 <XAxis 
                   dataKey="name" 
                   axisLine={false} 
                   tickLine={false} 
-                  tick={{ fill: "hsl(var(--muted-foreground))", fontSize: 11, fontWeight: 700 }}
+                  tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11, fontWeight: 700 }}
                   dy={10}
                 />
                 <Tooltip 
-                  cursor={{ fill: "rgba(255,255,255,0.03)" }}
+                  cursor={{ fill: 'rgba(255,255,255,0.03)' }}
                   content={({ active, payload }) => {
                     if (active && payload && payload.length) {
                       const data = payload[0].payload;
                       return (
-                        <div className="rounded-2xl border border-white/10 bg-background/90 backdrop-blur-xl p-3 shadow-2xl">
-                          <p className="text-[10px] font-black uppercase text-muted-foreground mb-1">{data.fullName}</p>
+                        <div className="bg-popover/90 backdrop-blur-md border border-border/60 p-3 rounded-2xl shadow-2xl">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{data.fullName}</p>
                           <p className="text-lg font-black text-foreground">{fmtEUR(data.value)}</p>
                         </div>
                       );
@@ -317,37 +332,65 @@ export default function ResultsView({
                   {chartData.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
-                      fill={entry.kind === "you" ? `hsl(${youColor})` : "rgba(255,255,255,0.08)"}
-                      className={entry.kind === "you" ? "animate-pulse-glow" : ""}
+                      fill={entry.kind === "you" ? "url(#youGradient)" : "url(#neutralGradient)"}
+                      stroke={entry.kind === "you" ? `hsl(${youColor})` : "transparent"}
+                      strokeWidth={2}
                     />
                   ))}
                   <LabelList 
                     dataKey="value" 
                     position="top" 
-                    formatter={(v: number) => `€${fmtK(v)}`}
-                    style={{ fill: "hsl(var(--foreground))", fontSize: 11, fontWeight: 900 }}
-                    offset={10}
+                    content={(props: any) => {
+                      const { x, y, width, value, index } = props;
+                      const isYou = chartData[index].kind === "you";
+                      return (
+                        <text 
+                          x={x + width / 2} 
+                          y={y - 12} 
+                          fill={isYou ? `hsl(${youColor})` : "hsl(var(--muted-foreground))"} 
+                          textAnchor="middle" 
+                          fontSize="11" 
+                          fontWeight="900"
+                        >
+                          {fmtK(value)}
+                        </text>
+                      );
+                    }}
                   />
                 </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border/40">
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground/60 tracking-widest">Prezzo Unitario</span>
+              <p className="text-lg font-black text-foreground">{fmtEUR(unitPrice)} <span className="text-xs text-muted-foreground font-medium">/{job.unit}</span></p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-bold uppercase text-muted-foreground/60 tracking-widest">Media Mercato</span>
+              <p className="text-lg font-black text-foreground">{fmtEUR(unitMarketMid)} <span className="text-xs text-muted-foreground font-medium">/{job.unit}</span></p>
+            </div>
+          </div>
         </motion.div>
 
-        {/* Cost Breakdown */}
-        <motion.div 
+        {/* Breakdown & Costs */}
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35 }}
-          className="lg:col-span-2 rounded-[2rem] border border-border/60 bg-card/40 p-6 sm:p-8 flex flex-col"
+          transition={{ delay: 0.30 }}
+          className="rounded-[2rem] border border-border/60 bg-card/40 p-6 sm:p-8 space-y-8"
         >
-          <div className="mb-6">
-            <h4 className="text-lg font-black tracking-tight">Scomposizione Costi</h4>
-            <p className="text-xs text-muted-foreground font-medium mt-0.5">Ripartizione stimata delle voci di spesa</p>
+          <div className="space-y-1">
+            <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
+              <PieChart className="w-5 h-5 text-accent" />
+              Composizione Costi
+            </h4>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Breakdown tecnico stimato</p>
           </div>
 
-          <div className="flex-1 flex flex-col justify-center">
-            <div className="h-[180px] w-full mb-6">
+          <div className="flex flex-col sm:flex-row items-center gap-8">
+            <div className="w-44 h-44 shrink-0 relative">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
                   <Pie
@@ -362,167 +405,140 @@ export default function ResultsView({
                       <Cell key={`cell-${index}`} fill={entry.color} />
                     ))}
                   </Pie>
-                  <Tooltip 
-                    content={({ active, payload }) => {
-                      if (active && payload && payload.length) {
-                        return (
-                          <div className="rounded-xl border border-white/10 bg-background/90 backdrop-blur-md p-2 shadow-xl">
-                            <p className="text-[10px] font-black text-foreground">{payload[0].name}: {fmtEUR(Number(payload[0].value))}</p>
-                          </div>
-                        );
-                      }
-                      return null;
-                    }}
-                  />
                 </PieChart>
               </ResponsiveContainer>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-[10px] font-black uppercase text-muted-foreground/60">Totale</span>
+                <span className="text-lg font-black tracking-tighter">{fmtK(analysis.marketMid)}</span>
+              </div>
             </div>
 
-            <div className="space-y-3">
-              {compositionData.map((item) => (
-                <div key={item.name} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-xs font-bold text-muted-foreground">{item.name}</span>
+            <div className="flex-1 space-y-4 w-full">
+              {compositionData.map((item, i) => (
+                <div key={i} className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-3">
+                    <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
+                    <span className="text-sm font-bold text-muted-foreground">{item.name}</span>
                   </div>
                   <div className="text-right">
-                    <span className="text-xs font-black text-foreground">{fmtPct(item.value / analysis.marketMid)}</span>
-                    <span className="text-[10px] text-muted-foreground ml-2">({fmtEUR(item.value)})</span>
+                    <p className="text-sm font-black text-foreground">{fmtEUR(item.value)}</p>
+                    <p className="text-[10px] font-bold text-muted-foreground/60 uppercase">{Math.round((item.value / analysis.marketMid) * 100)}%</p>
                   </div>
                 </div>
               ))}
             </div>
           </div>
-        </motion.div>
-      </div>
 
-      {/* Market Drivers Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.4 }}
-          className="rounded-[2rem] border border-border/60 bg-card/40 p-6 flex items-center gap-5 card-hover-glow"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-amber-400/10 flex items-center justify-center shrink-0">
-            <TrendingUp className="w-6 h-6 text-amber-400" />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Impatto Inflazione 2026</p>
-            <p className="text-sm font-black text-foreground mt-0.5">+{fmtEUR(analysis.inflationImpact)} sul totale</p>
-            <p className="text-[11px] text-muted-foreground font-medium">Basato su indici PricePedia e volatilità di settore</p>
-          </div>
-        </motion.div>
-
-        <motion.div 
-          initial={{ opacity: 0, x: 20 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ delay: 0.45 }}
-          className="rounded-[2rem] border border-border/60 bg-card/40 p-6 flex items-center gap-5 card-hover-glow"
-        >
-          <div className="w-12 h-12 rounded-2xl bg-sky-400/10 flex items-center justify-center shrink-0">
-            <Truck className="w-6 h-6 text-sky-400" />
-          </div>
-          <div>
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/60">Coefficiente Logistico</p>
-            <p className="text-sm font-black text-foreground mt-0.5">Indice Regionale: {regionLabel}</p>
-            <p className="text-[11px] text-muted-foreground font-medium">Include costi di trasporto e trasferta regionali</p>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-1">
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary tracking-widest">
+                <TrendingUp className="w-3 h-3" /> Inflazione
+              </div>
+              <p className="text-xl font-black text-foreground">+{fmtEUR(analysis.inflationImpact)}</p>
+              <p className="text-[10px] font-bold text-muted-foreground/60">Indice ISTAT 2026</p>
+            </div>
+            <div className="p-4 rounded-2xl bg-accent/5 border border-accent/10 space-y-1">
+              <div className="flex items-center gap-2 text-[10px] font-black uppercase text-accent tracking-widest">
+                <Truck className="w-3 h-3" /> Logistica
+              </div>
+              <p className="text-xl font-black text-foreground">{fmtEUR(analysis.logisticsImpact >= 0 ? analysis.logisticsImpact : 0)}</p>
+              <p className="text-[10px] font-bold text-muted-foreground/60">Impatto territoriale</p>
+            </div>
           </div>
         </motion.div>
       </div>
 
-      {/* Recommendations & Warranties */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Strategia Consigliata */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="rounded-[2rem] border border-primary/20 bg-primary/5 p-6 sm:p-8"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-              <Lightbulb className="w-5 h-5 text-primary" />
-            </div>
-            <h4 className="text-lg font-black tracking-tight">Strategia Consigliata</h4>
+      {/* Advice Section */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="rounded-[2.5rem] border border-border/60 bg-card/40 p-6 sm:p-8 space-y-6"
+      >
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
+              <Lightbulb className="w-5 h-5 text-amber-400" />
+              Strategia Consigliata
+            </h4>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tutele legali e consigli pratici</p>
           </div>
-          <div className="space-y-4">
-            {verdict?.recommendations.map((rec, i) => (
-              <div key={i} className="flex items-start gap-3">
-                <div className="mt-1.5 w-1.5 h-1.5 rounded-full bg-primary shrink-0" />
-                <p className="text-sm font-medium text-foreground/90 leading-relaxed">{rec}</p>
-              </div>
-            ))}
+          <div className="p-2 rounded-xl bg-amber-400/10 border border-amber-400/20">
+            <Gavel className="w-5 h-5 text-amber-400" />
           </div>
-        </motion.div>
+        </div>
 
-        {/* Tutele Legali */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.55 }}
-          className="rounded-[2rem] border border-emerald-500/20 bg-emerald-500/5 p-6 sm:p-8"
-        >
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center">
-              <Gavel className="w-5 h-5 text-emerald-400" />
-            </div>
-            <h4 className="text-lg font-black tracking-tight">Tutele Legali e Normative</h4>
-          </div>
-          <div className="space-y-4">
-            <div className="flex items-start gap-3">
-              <ShieldCheck className="w-4 h-4 text-emerald-400 shrink-0 mt-1" />
-              <div>
-                <p className="text-sm font-bold text-foreground">Conformità Obbligatoria</p>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Verifica sempre che il preventivo includa la dichiarazione di conformità (DM 37/08) ove previsto.</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Scale className="w-4 h-4 text-emerald-400 shrink-0 mt-1" />
-              <div>
-                <p className="text-sm font-bold text-foreground">Garanzia di Legge</p>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Tutti i lavori sono coperti da garanzia biennale per difetti di conformità (Art. 1667 C.C.).</p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3">
-              <Info className="w-4 h-4 text-emerald-400 shrink-0 mt-1" />
-              <div>
-                <p className="text-sm font-bold text-foreground">Verifica DURC</p>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">Richiedi il Documento Unico di Regolarità Contributiva per tutelarti da responsabilità solidali.</p>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {verdict?.recommendations.map((rec, i) => {
+            const isLegal = rec.toLowerCase().includes("legale");
+            return (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 + i * 0.1 }}
+                className={cn(
+                  "group p-5 rounded-[1.5rem] border transition-all hover:scale-[1.02] flex items-start gap-4",
+                  isLegal 
+                    ? "bg-amber-400/5 border-amber-400/20 hover:border-amber-400/40" 
+                    : "bg-white/5 border-white/5 hover:border-white/10"
+                )}
+              >
+                <div className={cn(
+                  "shrink-0 w-10 h-10 rounded-xl flex items-center justify-center shadow-inner",
+                  isLegal ? "bg-amber-400/10" : "bg-white/5"
+                )}>
+                  {isLegal ? <Scale className="w-5 h-5 text-amber-400" /> : <ShieldCheck className="w-5 h-5 text-primary" />}
+                </div>
+                <p className="text-sm font-semibold leading-relaxed text-muted-foreground group-hover:text-foreground transition-colors">
+                  {rec}
+                </p>
+              </motion.div>
+            );
+          })}
+        </div>
+      </motion.div>
 
       {/* Actions */}
-      <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t border-white/5">
-        <Button
-          onClick={onReset}
-          variant="outline"
-          className="flex-1 h-14 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 text-base font-black uppercase tracking-tight"
-        >
-          <RotateCcw className="w-5 h-5 mr-2" />
-          Nuova Analisi
-        </Button>
-        <Button
-          onClick={onEdit}
-          variant="outline"
-          className="flex-1 h-14 rounded-2xl border-white/10 bg-white/5 hover:bg-white/10 text-base font-black uppercase tracking-tight"
-        >
-          <Pencil className="w-5 h-5 mr-2" />
-          Modifica Dati
-        </Button>
-        {!savedThisRun && (
-          <Button
-            onClick={onSave}
-            className="flex-[1.5] h-14 rounded-2xl bg-primary text-primary-foreground hover:bg-primary/90 text-base font-black uppercase tracking-tight shadow-xl shadow-primary/20"
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className="flex flex-col sm:flex-row gap-4 pt-4"
+      >
+        {!savedThisRun ? (
+          <Button 
+            onClick={onSave} 
+            className="flex-1 rounded-[1.5rem] h-14 text-base font-black tracking-tight"
           >
-            <ShieldCheck className="w-5 h-5 mr-2" />
-            Salva nell'Archivio
+            <History className="w-5 h-5 mr-2" />
+            Salva nell'Archivio Tecnico
           </Button>
+        ) : (
+          <div className="flex-1 h-14 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center gap-2 text-emerald-400 font-black">
+            <CheckCircle2 className="w-5 h-5" />
+            Analisi Salvata con Successo
+          </div>
         )}
-      </div>
+        <div className="flex gap-3">
+          <Button 
+            variant="outline" 
+            onClick={onEdit} 
+            className="flex-1 sm:flex-none rounded-[1.5rem] h-14 px-8"
+          >
+            <Pencil className="w-5 h-5 mr-2" />
+            Modifica Dati
+          </Button>
+          <Button 
+            variant="ghost" 
+            onClick={onReset} 
+            className="flex-1 sm:flex-none rounded-[1.5rem] h-14 px-8"
+          >
+            <RotateCcw className="w-5 h-5 mr-2" />
+            Nuova Analisi
+          </Button>
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -543,15 +559,15 @@ function MetricCard({
   bg: string
 }) {
   return (
-    <div className="h-full rounded-2xl border border-border/60 bg-card/40 p-4 card-hover-glow flex flex-col justify-between">
-      <div>
-        <div className={cn("w-9 h-9 rounded-xl flex items-center justify-center mb-3", bg)}>
-          <Icon className={cn("w-5 h-5", color)} />
-        </div>
-        <p className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60">{label}</p>
-        <p className={cn("text-xl font-black tabular-nums tracking-tighter mt-0.5", color)}>{value}</p>
+    <div className="p-5 rounded-[2rem] border border-border/60 bg-card/40 space-y-3 hover:border-primary/30 transition-all group">
+      <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shadow-inner", bg)}>
+        <Icon className={cn("w-5 h-5", color)} />
       </div>
-      <p className="text-[10px] font-medium text-muted-foreground mt-2 leading-tight">{description}</p>
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground/60 mb-0.5">{label}</p>
+        <p className={cn("text-xl font-black tracking-tighter", color)}>{value}</p>
+        <p className="text-[10px] font-bold text-muted-foreground/40 uppercase mt-1">{description}</p>
+      </div>
     </div>
   );
 }
