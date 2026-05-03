@@ -35,15 +35,23 @@ export default function App() {
   useEffect(() => {
     // Applica gli header di sicurezza al caricamento
     applySecurityHeaders();
-    const loaded = loadArchive();
-    setArchive(loaded);
-    setArchiveTotal(calculateTotalArchive());
+    
+    // Carica archivio in modo asincrono
+    (async () => {
+      const loaded = await loadArchive();
+      setArchive(loaded);
+      const total = await calculateTotalArchive();
+      setArchiveTotal(total);
+    })();
   }, []);
 
   function refreshArchive() {
-    const updated = loadArchive();
-    setArchive(updated);
-    setArchiveTotal(calculateTotalArchive());
+    (async () => {
+      const updated = await loadArchive();
+      setArchive(updated);
+      const total = await calculateTotalArchive();
+      setArchiveTotal(total);
+    })();
   }
 
   useEffect(() => {
@@ -59,8 +67,10 @@ export default function App() {
   }
 
   function handleDelete(id: string) {
-    deleteQuote(id);
-    refreshArchive();
+    (async () => {
+      await deleteQuote(id);
+      refreshArchive();
+    })();
   }
 
   return (

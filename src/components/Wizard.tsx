@@ -132,7 +132,7 @@ export default function Wizard({
 
   async function handleSave() {
     if (!job || !category || !analysis || !verdict) return;
-    if (isGuestLimitReached()) {
+    if (await isGuestLimitReached()) {
       toast.error(`Limite di archiviazione raggiunto (${GUEST_QUOTE_LIMIT} preventivi)`);
       return;
     }

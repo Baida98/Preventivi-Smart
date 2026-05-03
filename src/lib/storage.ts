@@ -1,6 +1,6 @@
-import type { VerdictKey } from "./verdict";
 import { getFirestoreInstance, getCurrentUser } from "./firebase-service";
-import { doc, collection, addDoc, setDoc, getDocs, query, orderBy, limit, Timestamp } from "firebase/firestore";
+import { doc, collection, addDoc, setDoc, getDocs, query, orderBy, limit, Timestamp, deleteDoc } from "firebase/firestore";
+import type { VerdictKey } from "./verdict";
 
 const KEY = "preventivi-smart-archive-v1";
 export const GUEST_QUOTE_LIMIT = 5;
@@ -48,7 +48,7 @@ export type SavedQuote = {
   anomalyScore?: number;
   validated?: boolean;
 
-  // Tracking & Analytics (Nuovo - Standardizzato 0-1)
+  // Tracking & Analytics (Standardizzato 0-1)
   prezzo_suggerito?: number;
   prezzo_finale?: number;
   range_min?: number;
@@ -105,59 +105,91 @@ const ANALYTICS_KEY = "preventivi-smart-analytics-v1";
 const AGGREGATES_KEY = "preventivi-smart-aggregates-v1";
 
 /**
- * Ottiene il riferimento alla collezione dell'utente corrente su Firestore
+ * COMMIT 1: Firestore è l'unica sorgente di verità
+ * localStorage è solo cache locale (read-only per i guest)
  */
-export function getUserCollection(path: string) {
-  const db = getFirestoreInstance();
-  const user = getCurrentUser();
-  if (!db || !user) return null;
-  return collection(db, "users", user.uid, path);
-}
 
-export function loadArchive(): SavedQuote[] {
+/**
+ * Carica i preventivi da Firestore (utenti loggati) o localStorage (guest)
+ * FIRESTORE FIRST: Prova sempre il cloud prima del locale
+ */
+export async function loadArchive(): Promise<SavedQuote[]> {
+  const user = getCurrentUser();
+  const db = getFirestoreInstance();
+
+  // Se loggato e Firestore disponibile: carica dal cloud
+  if (user && db) {
+    try {
+      const col = collection(db, "users", user.uid, "preventivi");
+      const q = query(col, orderBy("updatedAt", "desc"), limit(100));
+      const snap = await getDocs(q);
+      const cloudQuotes = snap.docs.map(d => d.data() as SavedQuote);
+      
+      // Aggiorna cache locale
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(KEY, JSON.stringify(cloudQuotes));
+      }
+      return cloudQuotes;
+    } catch (error) {
+      console.error("Errore nel caricamento da Firestore:", error);
+      // Fallback a cache locale
+    }
+  }
+
+  // Guest o Firestore non disponibile: carica da localStorage (cache)
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(KEY);
     if (!raw) return [];
     const arr = JSON.parse(raw);
-    if (!Array.isArray(arr)) return [];
-    return arr;
+    return Array.isArray(arr) ? arr : [];
   } catch (error) {
-    console.error("Errore nel caricamento dell'archivio locale:", error);
+    console.error("Errore nel caricamento della cache locale:", error);
     return [];
   }
 }
 
 /**
- * Salva un preventivo (LocalStorage per guest, Firestore per auth)
+ * Salva un preventivo su Firestore (sorgente primaria)
+ * localStorage viene aggiornato solo come cache
  */
 export async function saveQuote(q: SavedQuote) {
   const user = getCurrentUser();
+  const db = getFirestoreInstance();
   const quoteWithUid = { ...q, uid: user?.uid || "guest" };
 
   try {
-    // 1. Sempre LocalStorage (per persistenza offline/guest)
-    const all = loadArchive();
-    const existingIdx = all.findIndex(item => item.id === q.id);
-    if (existingIdx >= 0) {
-      all[existingIdx] = quoteWithUid;
-    } else {
-      all.unshift(quoteWithUid);
-    }
-    window.localStorage.setItem(KEY, JSON.stringify(all.slice(0, 100)));
-
-    // 2. Se loggato, salva su Firestore
-    const col = getUserCollection("preventivi");
-    if (col) {
+    // FIRESTORE FIRST: Se loggato, salva sempre su Firestore
+    if (user && db) {
+      const col = collection(db, "users", user.uid, "preventivi");
       const quoteRef = doc(col, q.id);
       await setDoc(quoteRef, {
         ...quoteWithUid,
         updatedAt: new Date().toISOString()
       }, { merge: true });
+    } else if (db) {
+      // Guest: salva su collezione globale guest con uid "guest"
+      const quoteRef = doc(db, "guests", "guest", "preventivi", q.id);
+      await setDoc(quoteRef, {
+        ...quoteWithUid,
+        updatedAt: new Date().toISOString()
+      }, { merge: true });
     }
-    
+
+    // Aggiorna cache locale (fallback per offline)
+    if (typeof window !== "undefined") {
+      const all = await loadArchive();
+      const existingIdx = all.findIndex(item => item.id === q.id);
+      if (existingIdx >= 0) {
+        all[existingIdx] = quoteWithUid;
+      } else {
+        all.unshift(quoteWithUid);
+      }
+      window.localStorage.setItem(KEY, JSON.stringify(all.slice(0, 100)));
+    }
+
     // Log evento
-    logEvent(existingIdx >= 0 ? "UPDATED" : "CREATED", q.id);
+    logEvent(q.id ? "UPDATED" : "CREATED", q.id);
     
   } catch (error) {
     console.error("Errore nel salvataggio del preventivo:", error);
@@ -166,18 +198,21 @@ export async function saveQuote(q: SavedQuote) {
 }
 
 /**
- * Sincronizza l'archivio locale con Firestore per l'utente loggato
+ * Sincronizza i dati cloud con la cache locale
  */
 export async function syncArchiveWithCloud(): Promise<SavedQuote[]> {
-  const col = getUserCollection("preventivi");
-  if (!col) return loadArchive();
+  const user = getCurrentUser();
+  const db = getFirestoreInstance();
+
+  if (!user || !db) return loadArchive();
 
   try {
-    const q = query(col, orderBy("data", "desc"), limit(100));
+    const col = collection(db, "users", user.uid, "preventivi");
+    const q = query(col, orderBy("updatedAt", "desc"), limit(100));
     const snap = await getDocs(q);
     const cloudQuotes = snap.docs.map(d => d.data() as SavedQuote);
     
-    if (cloudQuotes.length > 0) {
+    if (cloudQuotes.length > 0 && typeof window !== "undefined") {
       window.localStorage.setItem(KEY, JSON.stringify(cloudQuotes));
     }
     return cloudQuotes;
@@ -188,16 +223,24 @@ export async function syncArchiveWithCloud(): Promise<SavedQuote[]> {
 }
 
 export async function deleteQuote(id: string) {
-  try {
-    // 1. Local
-    const all = loadArchive().filter((q) => q.id !== id);
-    window.localStorage.setItem(KEY, JSON.stringify(all));
+  const user = getCurrentUser();
+  const db = getFirestoreInstance();
 
-    // 2. Firestore
-    const col = getUserCollection("preventivi");
-    if (col) {
-      const { deleteDoc, doc } = await import("firebase/firestore");
-      await deleteDoc(doc(col, id));
+  try {
+    // Firestore first
+    if (user && db) {
+      const quoteRef = doc(db, "users", user.uid, "preventivi", id);
+      await deleteDoc(quoteRef);
+    } else if (db) {
+      const quoteRef = doc(db, "guests", "guest", "preventivi", id);
+      await deleteDoc(quoteRef);
+    }
+
+    // Aggiorna cache locale
+    if (typeof window !== "undefined") {
+      const all = await loadArchive();
+      const filtered = all.filter((q) => q.id !== id);
+      window.localStorage.setItem(KEY, JSON.stringify(filtered));
     }
   } catch (error) {
     console.error("Errore nell'eliminazione del preventivo:", error);
@@ -213,18 +256,20 @@ export function newId() {
   );
 }
 
-export function getQuoteCount(): number {
-  return loadArchive().length;
+export async function getQuoteCount(): Promise<number> {
+  const archive = await loadArchive();
+  return archive.length;
 }
 
-export function isGuestLimitReached(): boolean {
+export async function isGuestLimitReached(): Promise<boolean> {
   const user = getCurrentUser();
   if (user) return false; // Nessun limite per utenti loggati
-  return getQuoteCount() >= GUEST_QUOTE_LIMIT;
+  const count = await getQuoteCount();
+  return count >= GUEST_QUOTE_LIMIT;
 }
 
-export function calculateTotalArchive(): number {
-  const quotes = loadArchive();
+export async function calculateTotalArchive(): Promise<number> {
+  const quotes = await loadArchive();
   return quotes.reduce((sum, q) => {
     const value = q.mode === "analizza" && q.receivedPrice 
       ? q.receivedPrice 
@@ -236,10 +281,11 @@ export function calculateTotalArchive(): number {
 // ⸻ TRACKING & ANALYTICS ⸻
 
 /**
- * Salva un evento di tracking (Cloud-first se loggato)
+ * Salva un evento di tracking (Firestore se loggato, localStorage se guest)
  */
 export async function logEvent(type: QuoteEvent["type"], preventivoId: string, payload: Record<string, any> = {}) {
   const user = getCurrentUser();
+  const db = getFirestoreInstance();
   const event: QuoteEvent = {
     preventivoId,
     type,
@@ -249,16 +295,17 @@ export async function logEvent(type: QuoteEvent["type"], preventivoId: string, p
   };
 
   try {
-    // 1. Cloud (collezione globale events per aggregazione admin)
-    const db = getFirestoreInstance();
+    // Firestore: collezione globale events per aggregazione admin
     if (db) {
       await addDoc(collection(db, "events"), event);
     }
 
-    // 2. Local fallback per guest
-    const events = loadEvents();
-    events.unshift(event);
-    window.localStorage.setItem(EVENTS_KEY, JSON.stringify(events.slice(0, 500)));
+    // Local fallback per offline
+    if (typeof window !== "undefined") {
+      const events = loadEvents();
+      events.unshift(event);
+      window.localStorage.setItem(EVENTS_KEY, JSON.stringify(events.slice(0, 500)));
+    }
   } catch (error) {
     console.error("Errore nel logging evento:", error);
   }
@@ -273,9 +320,12 @@ export function loadEvents(): QuoteEvent[] {
 }
 
 /**
- * Chiude un preventivo e genera un record analytics (Standardizzato)
+ * Chiude un preventivo e genera un record analytics
+ * STANDARDIZZATO: confidence 0-1, prezzi in number
  */
 export async function closePreventivo(preventivo: SavedQuote) {
+  const db = getFirestoreInstance();
+  
   try {
     if (!preventivo.prezzo_suggerito || !preventivo.prezzo_finale || !preventivo.segmento) {
       return;
@@ -297,21 +347,22 @@ export async function closePreventivo(preventivo: SavedQuote) {
       errore_percentuale,
       dentro_range,
       outcome: preventivo.outcome || "bozza",
-      confidence: preventivo.confidence || 0.5,
+      confidence: preventivo.confidence || 0.5, // Sempre 0-1
       model_version: preventivo.model_version || "v1.0",
       createdAt: Date.now(),
     };
 
-    // Salva record
-    const db = getFirestoreInstance();
+    // Salva record su Firestore
     if (db) {
       await setDoc(doc(db, "analytics", preventivo.id), record);
     }
 
-    // Local update
-    const analytics = loadAnalytics();
-    analytics.unshift(record);
-    window.localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics.slice(0, 1000)));
+    // Local cache
+    if (typeof window !== "undefined") {
+      const analytics = loadAnalytics();
+      analytics.unshift(record);
+      window.localStorage.setItem(ANALYTICS_KEY, JSON.stringify(analytics.slice(0, 1000)));
+    }
 
     logEvent("CLOSED", preventivo.id, { outcome: preventivo.outcome });
     updateAggregates(preventivo.segmento);
@@ -336,7 +387,6 @@ export function updateAggregates(segmento: string) {
     if (segmentData.length === 0) return;
 
     const count = segmentData.length;
-    // Protezione divisione per zero garantita dal check sopra
     const errore_medio = segmentData.reduce((a, x) => a + x.errore_assoluto, 0) / count;
     const errore_percentuale_medio = segmentData.reduce((a, x) => a + x.errore_percentuale, 0) / count;
     const accuracy_range = segmentData.filter(x => x.dentro_range).length / count;
@@ -355,11 +405,13 @@ export function updateAggregates(segmento: string) {
     };
 
     // Save
-    const aggregates = loadAggregates();
-    const idx = aggregates.findIndex(a => a.segmento === metrics.segmento);
-    if (idx >= 0) aggregates[idx] = metrics;
-    else aggregates.push(metrics);
-    window.localStorage.setItem(AGGREGATES_KEY, JSON.stringify(aggregates));
+    if (typeof window !== "undefined") {
+      const aggregates = loadAggregates();
+      const idx = aggregates.findIndex(a => a.segmento === metrics.segmento);
+      if (idx >= 0) aggregates[idx] = metrics;
+      else aggregates.push(metrics);
+      window.localStorage.setItem(AGGREGATES_KEY, JSON.stringify(aggregates));
+    }
     
   } catch (error) {
     console.error("Errore nell'aggiornamento degli aggregati:", error);
