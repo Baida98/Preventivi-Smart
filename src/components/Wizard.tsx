@@ -31,7 +31,6 @@ import {
   type Job,
   type MarketAnalysis,
 } from "@/lib/pricing";
-import { MARKET_INDICATORS } from "@/lib/market-config";
 import { judge, type Verdict } from "@/lib/verdict";
 import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT } from "@/lib/storage";
 import { validateQuoteMultiLevel } from "@/lib/validation-rules";
@@ -64,16 +63,14 @@ export default function Wizard({
   const [quantity, setQuantity] = useState<string>("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [price, setPrice] = useState<string>("");
-  const [zoneId, setZoneId] = useState<string>("urbana");
-  const [propertyTypeId, setPropertyTypeId] = useState<string>("appartamento-standard");
-
+  
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<MarketAnalysis | null>(null);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [savedThisRun, setSavedThisRun] = useState(false);
   const [showPdfUpload, setShowPdfUpload] = useState(false);
 
-  const job: Job | null = jobId ? findJob(jobId) ?? null : null;
+  const job: Job | null = (categoryId && jobId) ? findJob(categoryId, jobId) ?? null : null;
   const category = categoryId ? findCategory(categoryId) ?? null : null;
 
   // quando viene selezionato il job, imposta i valori di default
@@ -101,13 +98,11 @@ export default function Wizard({
 
     setLoading(true);
     try {
-      const logisticsData = { zoneId, propertyTypeId };
       const marketAnalysis = computeMarket(
         job,
-        regionId,
         Number(quantity),
         fieldValues,
-        logisticsData
+        regionId
       );
       setAnalysis(marketAnalysis);
 
@@ -140,11 +135,11 @@ export default function Wizard({
       return;
     }
 
-    const region = REGIONS.find((r) => r.id === regionId);
+    const region = REGIONS.find((r: any) => r.id === regionId);
     if (!region) return;
 
-    const now = new Date().toISOString();
-    const today = now.split("T")[0];
+    const nowStr = new Date().toISOString();
+    const today = nowStr.split("T")[0];
     const totale = mode === "analizza" ? Number(price) : analysis.marketMid;
 
     const partialQuote = {
@@ -152,8 +147,8 @@ export default function Wizard({
       numero: "DRAFT",
       uid: "guest",
       data: today,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: nowStr,
+      updatedAt: nowStr,
       cliente: { nome: "Ospite" },
       ambito: category?.id ?? "",
       sottotipo: job.id,
@@ -175,8 +170,8 @@ export default function Wizard({
 
     const quote: SavedQuote = {
       id: partialQuote.id,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: Date.now().toString(),
+      updatedAt: Date.now().toString(),
       data: today,
       jobId: job.id,
       jobLabel: job.label,
@@ -185,11 +180,11 @@ export default function Wizard({
       quantity: Number(quantity),
       unitLabel: job.unitLabel,
       fieldValues,
-      fieldLabels: job.fields.map((f) => ({
+      fieldLabels: job.fields.map((f: any) => ({
         id: f.id,
         label: f.label,
         valueLabel:
-          f.options.find((o) => o.value === fieldValues[f.id])?.label ?? "",
+          f.options.find((o: any) => o.value === fieldValues[f.id])?.label ?? "",
       })),
       receivedPrice: mode === "analizza" ? Number(price) : undefined,
       marketMin: analysis.marketMin,
@@ -206,19 +201,19 @@ export default function Wizard({
       qualityScore: validationResult.qualityScore,
       anomalyScore: validationResult.anomalyScore,
       validated: validationResult.valid,
+      outcome: "bozza",
+      segmento: `${category.id}:${job.id}`,
+      prezzo_suggerito: analysis.marketMid,
+      prezzo_finale: totale,
+      errore_assoluto: Math.abs(totale - analysis.marketMid),
+      errore_percentuale: Math.abs(totale - analysis.marketMid) / analysis.marketMid,
+      dentro_range: totale >= analysis.marketMin && totale <= analysis.marketMax,
+      confidence: analysis.confidence
     };
 
     try {
       saveQuote(quote);
       setSavedThisRun(true);
-      const qScore = validationResult.qualityScore;
-      if (qScore >= 80) {
-        toast.success(`✅ Preventivo salvato · Qualità ${qScore}/100`);
-      } else if (qScore >= 50) {
-        toast.success(`✅ Preventivo salvato · Qualità ${qScore}/100`);
-      } else {
-        toast.success(`✅ Preventivo salvato`);
-      }
       onSaved();
     } catch (error) {
       console.error("Errore nel salvataggio:", error);
@@ -288,156 +283,145 @@ export default function Wizard({
             exit={{ opacity: 0, y: -12 }}
             transition={{ duration: 0.3 }}
           >
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-              {categoryId ? `Quale ${category?.label.toLowerCase()}?` : "Cosa analizziamo?"}
-            </h2>
-            <p className="mt-3 text-base text-muted-foreground/80 font-medium">
-              {categoryId
-                ? "Scegli il lavoro più simile al tuo."
-                : "Seleziona la categoria del lavoro."}
+            <h2 className="text-3xl font-black tracking-tighter mb-2">Cosa vuoi analizzare?</h2>
+            <p className="text-muted-foreground mb-8 font-medium">
+              Scegli la categoria e il tipo di lavoro per una stima precisa.
             </p>
 
-            {!categoryId && (
-              <div className="mt-10 grid grid-cols-2 sm:grid-cols-3 gap-4">
-                {CATEGORIES.map((c) => (
-                  <motion.button
-                    key={c.id}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setCategoryId(c.id)}
-                    className="group relative text-left rounded-3xl border border-white/10 bg-gradient-to-br from-card/60 to-card/30 p-6 hover:border-primary/30 transition-all shadow-lg hover:shadow-xl hover:shadow-primary/10"
+            {/* Category selection if not pre-selected */}
+            {!categoryId ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {CATEGORIES.map((cat: any) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => setCategoryId(cat.id)}
+                    className="group relative flex items-center gap-4 p-5 rounded-[1.5rem] border border-border/60 bg-card/40 text-left transition-all hover:border-primary/50 hover:bg-primary/5 hover:scale-[1.02]"
                   >
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-primary/20 to-accent/15 ring-1 ring-primary/20 group-hover:ring-primary/40 transition-all">
-                      <c.Icon className="w-6 h-6 text-primary group-hover:scale-110 transition-transform" strokeWidth={2} />
+                    <div className="flex items-center justify-center w-12 h-12 rounded-2xl bg-background/50 ring-1 ring-border/50 group-hover:ring-primary/30 group-hover:bg-primary/10 transition-all">
+                      <cat.Icon className="w-6 h-6 text-muted-foreground group-hover:text-primary" />
                     </div>
-                    <h3 className="mt-4 text-base font-black leading-tight text-foreground">
-                      {c.label}
-                    </h3>
-                    <p className="mt-1.5 text-[12px] text-muted-foreground/70 font-medium">
-                      {c.jobs.length} opzioni
-                    </p>
-                  </motion.button>
+                    <div>
+                      <p className="font-bold text-foreground leading-tight">{cat.label}</p>
+                      <p className="text-[11px] text-muted-foreground mt-1 line-clamp-1">{cat.blurb}</p>
+                    </div>
+                  </button>
                 ))}
               </div>
-            )}
-
-            {categoryId && category && (
-              <div className="mt-10 grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {category.jobs.map((j) => (
-                  <motion.button
-                    key={j.id}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    onClick={() => pickJob(j.id)}
-                    className="group flex items-center justify-between text-left rounded-3xl border border-white/10 bg-gradient-to-br from-card/60 to-card/30 px-6 py-5 hover:border-primary/30 transition-all shadow-lg hover:shadow-xl hover:shadow-primary/10"
+            ) : (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => { setCategoryId(null); setJobId(null); }}
+                    className="h-8 px-2 -ml-2 text-muted-foreground hover:text-foreground font-bold"
                   >
-                    <div className="min-w-0">
-                      <h3 className="text-base font-black leading-tight text-foreground">
-                        {j.label}
-                      </h3>
-                      <p className="mt-1.5 text-[12px] text-muted-foreground/70 font-medium">
-                        Da € {j.base}/{j.unit}
-                      </p>
-                    </div>
-                    <ArrowRight className="w-5 h-5 text-primary group-hover:translate-x-1 transition-transform shrink-0" />
-                  </motion.button>
-                ))}
+                    <ArrowLeft className="w-3.5 h-3.5 mr-1.5" />
+                    Torna alle categorie
+                  </Button>
+                  <span className="text-[10px] font-black uppercase tracking-widest text-primary/80 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+                    {category?.label}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 gap-2.5">
+                  {category?.jobs.map((j: any) => (
+                    <button
+                      key={j.id}
+                      onClick={() => pickJob(j.id)}
+                      className={cn(
+                        "group flex items-center justify-between p-4 rounded-2xl border transition-all text-left",
+                        jobId === j.id
+                          ? "border-primary bg-primary/5 ring-1 ring-primary/20"
+                          : "border-border/60 bg-card/40 hover:border-primary/30 hover:bg-primary/5"
+                      )}
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-2 h-2 rounded-full bg-primary/40 group-hover:bg-primary transition-all" />
+                        <span className="font-bold text-foreground">{j.label}</span>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-all" />
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
-
-            <div className="mt-12 flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => (categoryId ? setCategoryId(null) : onClose())}
-                className="gap-2 h-12 px-6 font-bold"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                {categoryId ? "Indietro" : "Annulla"}
-              </Button>
-            </div>
           </motion.div>
         )}
 
-        {/* Step 2: Configuration */}
+        {/* Step 2: Details */}
         {step === 2 && job && (
           <motion.div
             key="s2"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
+            className="space-y-8"
           >
-            <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-              Configura i dettagli
-            </h2>
-            <p className="mt-3 text-base text-muted-foreground/80 font-medium">
-              Pochi dati essenziali per una stima accurata.
-            </p>
-
-            <div className="mt-8 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 ring-1 ring-primary/30 text-xs font-bold">
-              <Sparkles className="w-4 h-4 text-primary" />
-              <span>{category?.label}</span>
-              <span className="text-muted-foreground">·</span>
-              <span>{job.label}</span>
+            <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setStep(1)}
+                className="w-9 h-9 p-0 rounded-xl bg-white/5 hover:bg-white/10"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+              <h2 className="text-2xl font-black tracking-tighter">Dettagli del lavoro</h2>
             </div>
 
-            {/* Essentials: Region, Quantity, Fields */}
-            <div className="mt-8 space-y-5">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Regione */}
               <div className="space-y-2">
-                <Label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                  La tua Regione *
-                </Label>
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Regione</Label>
                 <Select value={regionId} onValueChange={setRegionId}>
-                  <SelectTrigger className="h-12 bg-card/60 border-white/10 rounded-2xl font-medium">
+                  <SelectTrigger className="h-12 rounded-2xl bg-card/40 border-border/60 card-hover-glow">
                     <SelectValue placeholder="Seleziona regione" />
                   </SelectTrigger>
-                  <SelectContent position="popper" sideOffset={8}>
-                    <div className="max-h-[300px] overflow-y-auto">
-                      {REGIONS.map((r) => (
-                        <SelectItem key={r.id} value={r.id}>
-                          {r.label}
-                        </SelectItem>
-                      ))}
-                    </div>
+                  <SelectContent className="rounded-2xl border-border/60 backdrop-blur-xl">
+                    {REGIONS.map((r: any) => (
+                      <SelectItem key={r.id} value={r.id} className="rounded-xl focus:bg-primary/10">
+                        {r.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* Quantità */}
               <div className="space-y-2">
-                <Label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                  Quantità ({job.unitLabel}) *
+                <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">
+                  Quantità ({job.unit})
                 </Label>
-                <Input
-                  type="number"
-                  inputMode="decimal"
-                  min="0"
-                  step="any"
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder={`Es. ${job.defaultQty ?? 1}`}
-                  className="h-12 bg-card/60 border-white/10 rounded-2xl font-medium"
-                />
+                <div className="relative">
+                  <Input
+                    type="number"
+                    value={quantity}
+                    onChange={(e) => setQuantity(e.target.value)}
+                    className="h-12 rounded-2xl bg-card/40 border-border/60 pl-4 pr-12 font-bold card-hover-glow"
+                  />
+                  <span className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-muted-foreground uppercase">
+                    {job.unit}
+                  </span>
+                </div>
               </div>
 
-              {/* Job-specific fields */}
-              {job.fields.map((f) => (
+              {/* Dynamic Fields */}
+              {job.fields.map((f: any) => (
                 <div key={f.id} className="space-y-2">
-                  <Label className="text-xs font-black uppercase tracking-wider text-muted-foreground">
-                    {f.label} *
-                  </Label>
+                  <Label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">{f.label}</Label>
                   <Select
-                    value={fieldValues[f.id] ?? ""}
-                    onValueChange={(v) =>
-                      setFieldValues((s) => ({ ...s, [f.id]: v }))
-                    }
+                    value={fieldValues[f.id]}
+                    onValueChange={(val) => setFieldValues({ ...fieldValues, [f.id]: val })}
                   >
-                    <SelectTrigger className="h-12 bg-card/60 border-white/10 rounded-2xl font-medium">
-                      <SelectValue placeholder="Scegli" />
+                    <SelectTrigger className="h-12 rounded-2xl bg-card/40 border-border/60 card-hover-glow">
+                      <SelectValue />
                     </SelectTrigger>
-                    <SelectContent position="popper" sideOffset={8}>
-                      {f.options.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>
-                          {o.label}
+                    <SelectContent className="rounded-2xl border-border/60 backdrop-blur-xl">
+                      {f.options.map((opt: any) => (
+                        <SelectItem key={opt.value} value={opt.value} className="rounded-xl focus:bg-primary/10">
+                          {opt.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -445,203 +429,114 @@ export default function Wizard({
                 </div>
               ))}
 
-              {/* Logistics - Collapsible Advanced */}
-              <details className="group">
-                <summary className="cursor-pointer text-xs font-black uppercase tracking-wider text-muted-foreground/60 hover:text-muted-foreground transition-colors py-2">
-                  Dettagli logistici (Opzionali)
-                </summary>
-                <div className="mt-4 space-y-5 pb-4">
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-muted-foreground">Zona di lavoro</Label>
-                    <Select value={zoneId} onValueChange={setZoneId}>
-                      <SelectTrigger className="h-12 bg-card/40 border-white/5 rounded-2xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(MARKET_INDICATORS.logistics.zones).map(([id, z]) => (
-                          <SelectItem key={id} value={id}>{z.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+              {/* Prezzo (solo in Analizza) */}
+              {mode === "analizza" && (
+                <div className="space-y-2 sm:col-span-2 pt-4 border-t border-white/5">
+                  <div className="flex items-center justify-between mb-2">
+                    <Label className="text-sm font-black text-primary">Prezzo del Preventivo</Label>
+                    <Button
+                      variant="link"
+                      onClick={() => setShowPdfUpload(true)}
+                      className="h-auto p-0 text-xs font-bold text-sky-400 hover:text-sky-300"
+                    >
+                      <FileUp className="w-3 h-3 mr-1.5" />
+                      Estrai da PDF
+                    </Button>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-muted-foreground">Tipo immobile</Label>
-                    <Select value={propertyTypeId} onValueChange={setPropertyTypeId}>
-                      <SelectTrigger className="h-12 bg-card/40 border-white/5 rounded-2xl">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {Object.entries(MARKET_INDICATORS.logistics.propertyType).map(([id, p]) => (
-                          <SelectItem key={id} value={id}>{p.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+                      <span className="text-lg font-black text-muted-foreground group-focus-within:text-primary transition-colors">€</span>
+                    </div>
+                    <Input
+                      type="number"
+                      placeholder="0,00"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      className="h-16 pl-10 rounded-[1.5rem] bg-primary/5 border-primary/20 text-2xl font-black tracking-tighter shadow-2xl shadow-primary/5 focus:ring-primary/20 focus:border-primary/40 transition-all"
+                    />
                   </div>
                 </div>
-              </details>
+              )}
             </div>
 
-            <div className="mt-10 flex items-center gap-2">
-              <Button
-                variant="outline"
-                onClick={() => setStep(1)}
-                className="gap-2 h-12 px-6 font-bold"
-              >
-                <ArrowLeft className="w-4 h-4" /> Indietro
-              </Button>
-              <Button
-                disabled={!canStep2Next}
-                onClick={() => (mode === "analizza" ? setStep(3) : runAnalysis())}
-                className="gap-2 ml-auto h-12 px-8 bg-primary text-primary-foreground glow-azure font-black"
-              >
-                {mode === "analizza" ? (
-                  <>
-                    Avanti <ArrowRight className="w-4 h-4" />
-                  </>
-                ) : (
-                  <>
-                    Calcola Stima <Calculator className="w-4 h-4" />
-                  </>
-                )}
-              </Button>
-            </div>
+            <Button
+              disabled={!canStep2Next || (mode === "analizza" && !price) || loading}
+              onClick={runAnalysis}
+              className="w-full h-14 rounded-[1.25rem] bg-primary text-primary-foreground hover:bg-primary/90 text-lg font-black uppercase tracking-tight shadow-xl shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+            >
+              {loading ? (
+                <Loader2 className="w-6 h-6 animate-spin" />
+              ) : (
+                <>
+                  {mode === "analizza" ? "Analizza Preventivo" : "Calcola Stima"}
+                  <Sparkles className="w-5 h-5 ml-2" />
+                </>
+              )}
+            </Button>
           </motion.div>
         )}
 
-        {/* Step 3: Analysis (Only for mode === "analizza") */}
-        {step === 3 && (
+        {/* Step 3: Results */}
+        {step === 3 && analysis && (
           <motion.div
             key="s3"
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
-            transition={{ duration: 0.3 }}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ type: "spring", damping: 25, stiffness: 200 }}
           >
-            {!analysis ? (
-              <>
-                <h2 className="text-3xl sm:text-4xl font-black tracking-tight">
-                  Prezzo del preventivo
-                </h2>
-                <p className="mt-3 text-base text-muted-foreground/80 font-medium">
-                  Inserisci l'importo totale ricevuto o carica il PDF.
-                </p>
-
-                {/* PDF Upload Zone Toggle */}
-                <div className="mt-8">
-                  <AnimatePresence mode="wait">
-                    {showPdfUpload ? (
-                      <motion.div
-                        key="pdf-zone"
-                        initial={{ opacity: 0, y: 6 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 6 }}
-                      >
-                        <PdfUploadZone
-                          onPriceDetected={(p) => {
-                            setPrice(String(p));
-                            setShowPdfUpload(false);
-                          }}
-                          onDismiss={() => setShowPdfUpload(false)}
-                        />
-                      </motion.div>
-                    ) : (
-                      <motion.button
-                        key="pdf-toggle"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={() => setShowPdfUpload(true)}
-                        className="w-full flex items-center gap-4 px-6 py-4 rounded-3xl border border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 transition-all"
-                      >
-                        <FileUp className="w-5 h-5 text-primary shrink-0" />
-                        <div className="text-left">
-                          <p className="text-sm font-bold text-primary">Carica PDF Preventivo</p>
-                          <p className="text-[12px] text-muted-foreground">Estraiamo il prezzo automaticamente</p>
-                        </div>
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
-                </div>
-
-                {/* Price Input */}
-                <div className="mt-8 mx-auto max-w-sm">
-                  <div className="rounded-3xl border border-white/10 bg-gradient-to-br from-card/60 to-card/30 p-8 shadow-xl">
-                    <Label className="text-[11px] font-black tracking-[0.2em] uppercase text-muted-foreground">
-                      Prezzo Ricevuto *
-                    </Label>
-                    <div className="mt-4 flex items-baseline gap-2">
-                      <span className="text-5xl sm:text-6xl font-black text-primary">€</span>
-                      <Input
-                        type="number"
-                        inputMode="decimal"
-                        min="0"
-                        step="any"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        placeholder="0"
-                        className="text-4xl sm:text-5xl font-black bg-transparent border-none p-0 focus:outline-none text-primary placeholder:text-primary/20"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-10 flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setStep(2)}
-                    className="gap-2 h-12 px-6 font-bold"
-                  >
-                    <ArrowLeft className="w-4 h-4" /> Indietro
-                  </Button>
-                  <Button
-                    disabled={!price || loading}
-                    onClick={runAnalysis}
-                    className="gap-2 ml-auto h-12 px-8 bg-primary text-primary-foreground glow-azure font-black"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin" /> Analisi…
-                      </>
-                    ) : (
-                      <>
-                        Analizza <Sparkles className="w-4 h-4" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </>
-            ) : analysis && verdict ? (
-              <>
-                <ResultsView
-                  mode={mode}
-                  job={job!}
-                  category={category!}
-                  regionLabel={REGIONS.find((r) => r.id === regionId)?.label ?? ""}
-                  quantity={Number(quantity)}
-                  price={Number(price) || analysis.marketMid}
-                  analysis={analysis}
-                  verdict={verdict}
-                  savedThisRun={savedThisRun}
-                  onSave={handleSave}
-                  onReset={() => {
-                    setStep(1);
-                    setCategoryId(null);
-                    setJobId(null);
-                    setRegionId("");
-                    setQuantity("");
-                    setFieldValues({});
-                    setPrice("");
-                    setAnalysis(null);
-                    setVerdict(null);
-                    setSavedThisRun(false);
-                  }}
-                  onEdit={() => setStep(2)}
-                />
-              </>
-            ) : null}
+            <ResultsView
+              mode={mode}
+              job={job!}
+              category={category!}
+              regionLabel={REGIONS.find((r: any) => r.id === regionId)?.label ?? ""}
+              quantity={Number(quantity)}
+              price={Number(price)}
+              analysis={analysis}
+              verdict={verdict}
+              savedThisRun={savedThisRun}
+              onSave={handleSave}
+              onReset={() => {
+                setStep(1);
+                setJobId(null);
+                setCategoryId(null);
+                setPrice("");
+                setSavedThisRun(false);
+              }}
+              onEdit={() => setStep(2)}
+            />
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* PDF Upload Modal */}
+      {showPdfUpload && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-background/80 backdrop-blur-xl animate-in fade-in duration-300">
+          <div className="relative w-full max-w-xl bg-card border border-border/60 rounded-[2.5rem] p-8 shadow-2xl">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowPdfUpload(false)}
+              className="absolute right-6 top-6 rounded-full hover:bg-white/5"
+            >
+              <X className="w-5 h-5" />
+            </Button>
+            <div className="mb-8">
+              <h3 className="text-2xl font-black tracking-tighter mb-2">Estrai da PDF</h3>
+              <p className="text-sm text-muted-foreground font-medium">
+                Carica il file del preventivo per estrarre automaticamente il prezzo totale.
+              </p>
+            </div>
+            <PdfUploadZone
+              onPriceDetected={(p) => {
+                setPrice(String(p));
+                setShowPdfUpload(false);
+                toast.success("Prezzo estratto con successo!");
+              }}
+              onDismiss={() => setShowPdfUpload(false)}
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }

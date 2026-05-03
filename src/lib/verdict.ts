@@ -68,28 +68,35 @@ const LEGAL_WARRANTIES: Record<string, string[]> = {
     "Garanzia Biennale (Art. 1667 C.C.): Copre difetti minori o non conformità per 2 anni dalla consegna.",
     "Obbligo DURC: Verifica che l'impresa sia in regola con i contributi INPS/INAIL."
   ],
-  impianti: [
-    "Certificazione di Conformità (DM 37/08): Obbligatoria per legge per impianti elettrici, idraulici e gas.",
-    "Garanzia Prodotto: Minimo 2 anni sui componenti (caldaie, condizionatori, inverter).",
-    "Responsabilità Civile: Assicurati che l'installatore abbia una polizza RC per danni a terzi."
+  clima: [
+    "Certificazione F-Gas: Obbligatoria per l'installatore per maneggiare gas refrigeranti.",
+    "Dichiarazione di Conformità: Necessaria per la validità della garanzia del produttore.",
+    "Libretto d'Impianto: Obbligatorio per sistemi sopra una certa potenza termica."
+  ],
+  infissi: [
+    "Marcatura CE: Obbligatoria per tutti i serramenti esterni venduti in UE.",
+    "Trasmittanza Termica (Uw): Verifica che i valori rispettino i limiti per le detrazioni Ecobonus.",
+    "Garanzia di Posa: Assicurati che l'installazione segua la norma UNI 11673-1."
+  ],
+  fotovoltaico: [
+    "Garanzia di Rendimento: Solitamente 25 anni all'80% della potenza nominale.",
+    "Certificazione Inverter: Deve essere conforme alle norme CEI 0-21 per la connessione alla rete.",
+    "Smaltimento Moduli: Verifica l'iscrizione del produttore a un consorzio per il riciclo (RAEE)."
+  ],
+  idraulica: [
+    "Certificazione di Conformità (DM 37/08): Obbligatoria per legge per impianti idraulici e gas.",
+    "Garanzia Prodotto: Minimo 2 anni sui componenti.",
+    "Responsabilità Civile: Assicurati che l'installatore abbia una polizza RC."
   ],
   imbiancatura: [
     "Garanzia Biennale (Art. 1667 C.C.): Copre vizi e difetti di esecuzione per 2 anni.",
-    "Scheda Tecnica: Hai diritto a conoscere marca e tipo di pittura usata per future manutenzioni.",
+    "Scheda Tecnica: Hai diritto a conoscere marca e tipo di pittura usata.",
     "Pulizia e Ripristino: Il preventivo deve specificare la protezione di mobili e pavimenti."
   ],
-  carpenteria: [
-    "Certificazione Energetica: Per gli infissi, necessaria per le detrazioni fiscali (Ecobonus).",
-    "Garanzia 10 anni su installazione: Molti produttori offrono estensioni sulla posa in opera.",
-    "Marcatura CE: Obbligatoria per tutti i serramenti e porte esterne."
-  ],
-  finiture: [
-    "Garanzia Biennale (Art. 1667 C.C.): Copre difetti di posa o materiali per 24 mesi.",
-    "Certificazione Materiali: Verifica la classe di resistenza o tossicità (es. formaldeide nel parquet)."
-  ],
-  pavimenti: [
-    "Garanzia Biennale (Art. 1667 C.C.): Copre difetti di posa o materiali per 24 mesi.",
-    "Certificazione Materiali: Verifica la classe di resistenza o tossicità (es. formaldeide nel parquet)."
+  elettrico: [
+    "Certificazione di Conformità (DM 37/08): Obbligatoria per ogni intervento sull'impianto elettrico.",
+    "Protezioni Obbligatorie: Verifica la presenza di interruttori differenziali (salvavita) a norma.",
+    "Messa a Terra: Il professionista deve testare e certificare l'efficienza dell'impianto di terra."
   ]
 };
 

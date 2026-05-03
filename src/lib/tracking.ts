@@ -2,22 +2,21 @@
  * Sistema di tracking, analytics e feedback loop per il modello AI
  * 
  * Architettura:
- * - Events: traccia ogni azione importante (CREATED, UPDATED, SENT, ACCEPTED, REJECTED, MODIFIED, CLOSED)
- * - Analytics: registra metriche normalizzate per ogni preventivo chiuso
- * - Aggregates: statistiche pre-calcolate per segmento
- * - Feedback: modifica i pesi del modello basato su outcome reale
+ * - Events: traccia ogni azione importante
+ * - Analytics: registra metriche normalizzate
+ * - Pipeline Batch: ricalcola i modelli calibrati periodicamente
  */
 
-import type { SavedQuote, AnalyticsRecord, AggregateMetrics } from "./storage";
+import type { SavedQuote } from "./storage";
 import {
   logEvent,
   closePreventivo,
   loadAnalytics,
   loadAggregates,
   getSegmentMetrics,
-  computeWeight,
   updateAggregates,
 } from "./storage";
+import { detectMarketDrift } from "./model-tuner";
 
 /**
  * Interfaccia per il feedback del modello
@@ -29,10 +28,11 @@ export interface ModelFeedback {
   errore_percentuale_medio: number;
   accuracy_range: number;
   avg_confidence: number;
-  suggested_price_adjustment: number; // -1 to 1 (% adjustment)
-  suggested_range_expansion: number; // 0 to 1 (% expansion)
+  suggested_price_adjustment: number;
+  suggested_range_expansion: number;
   data_count: number;
   confidence_level: "low" | "medium" | "high";
+  drift_detected: boolean;
 }
 
 /**
@@ -64,8 +64,41 @@ export function trackQuoteStateChange(
 export function completeQuoteTracking(preventivo: SavedQuote) {
   try {
     closePreventivo(preventivo);
+    // Trigger batch update immediato per demo/piccoli volumi
+    runBatchSelfTuning();
   } catch (error) {
     console.error("Errore nel completamento del tracking:", error);
+  }
+}
+
+/**
+ * 🔁 PIPELINE SELF-TUNING (BATCH)
+ * Ricalcola gli aggregati e rileva i drift per tutti i segmenti
+ */
+export function runBatchSelfTuning() {
+  try {
+    const analytics = loadAnalytics();
+    const segments = Array.from(new Set(analytics.map(a => a.segmento)));
+    
+    console.log(`[Batch Tuning] Avvio ricalcolo per ${segments.length} segmenti...`);
+    
+    for (const segmento of segments) {
+      updateAggregates(segmento);
+      
+      // Controllo drift
+      const metrics = getSegmentMetrics(segmento);
+      if (metrics) {
+        const drift = detectMarketDrift(segmento, metrics.errore_medio);
+        if (drift) {
+          console.warn(`[Drift Detection] Rilevato cambio mercato nel segmento: ${segmento}`);
+        }
+      }
+    }
+    
+    return true;
+  } catch (error) {
+    console.error("Errore nella pipeline batch:", error);
+    return false;
   }
 }
 
@@ -75,32 +108,20 @@ export function completeQuoteTracking(preventivo: SavedQuote) {
 export function generateModelFeedback(segmento: string): ModelFeedback | null {
   try {
     const metrics = getSegmentMetrics(segmento);
-    if (!metrics || metrics.count < 5) {
-      // Insufficienti dati per feedback affidabile
-      return null;
-    }
+    if (!metrics || metrics.count < 5) return null;
 
-    // Determina il livello di confidenza basato sul numero di dati
+    const drift = detectMarketDrift(segmento, metrics.errore_medio);
+
     let confidence_level: "low" | "medium" | "high" = "low";
     if (metrics.count >= 50) confidence_level = "high";
     else if (metrics.count >= 20) confidence_level = "medium";
 
-    // Calcola l'aggiustamento del prezzo suggerito
     let suggested_price_adjustment = 0;
-    if (metrics.acceptance_rate < 0.5) {
-      // Troppi rifiuti: prezzo troppo alto
-      suggested_price_adjustment = -0.1;
-    } else if (metrics.acceptance_rate > 0.8) {
-      // Troppi accettati: potremmo aumentare il prezzo
-      suggested_price_adjustment = 0.05;
-    }
+    if (metrics.acceptance_rate < 0.45) suggested_price_adjustment = -0.08;
+    else if (metrics.acceptance_rate > 0.85) suggested_price_adjustment = 0.04;
 
-    // Calcola l'espansione del range suggerita
     let suggested_range_expansion = 0;
-    if (metrics.accuracy_range < 0.7) {
-      // Molti preventivi fuori range: allarga il range
-      suggested_range_expansion = 0.15;
-    }
+    if (metrics.accuracy_range < 0.65) suggested_range_expansion = 0.12;
 
     return {
       segmento,
@@ -113,9 +134,10 @@ export function generateModelFeedback(segmento: string): ModelFeedback | null {
       suggested_range_expansion,
       data_count: metrics.count,
       confidence_level,
+      drift_detected: drift,
     };
   } catch (error) {
-    console.error("Errore nella generazione del feedback:", error);
+    console.error("Errore nel feedback:", error);
     return null;
   }
 }
@@ -126,14 +148,9 @@ export function generateModelFeedback(segmento: string): ModelFeedback | null {
 export function getTrainingDataset() {
   try {
     const analytics = loadAnalytics();
-    // Filtra solo i dati da PDF con alta qualità
-    return analytics.filter(a => {
-      // In futuro, quando avremo il campo source, filtreremo qui
-      // Per ora, ritorniamo tutti i dati con errore ragionevole
-      return a.errore_percentuale < 0.5; // Scarta outlier estremi
-    });
+    return analytics.filter(a => a.errore_percentuale < 0.4);
   } catch (error) {
-    console.error("Errore nel recupero del dataset di training:", error);
+    console.error("Errore nel dataset training:", error);
     return [];
   }
 }
@@ -151,36 +168,16 @@ export function getModelPerformanceBySegment() {
       avg_error_pct: agg.errore_percentuale_medio,
       data_points: agg.count,
       last_updated: new Date(agg.lastUpdated).toISOString(),
+      drift: detectMarketDrift(agg.segmento, agg.errore_percentuale_medio)
     }));
   } catch (error) {
-    console.error("Errore nel calcolo delle performance:", error);
+    console.error("Errore nelle performance:", error);
     return [];
   }
 }
 
 /**
- * Esporta i dati analytics per analisi esterna
- */
-export function exportAnalyticsData() {
-  try {
-    const analytics = loadAnalytics();
-    const aggregates = loadAggregates();
-    
-    return {
-      timestamp: new Date().toISOString(),
-      total_records: analytics.length,
-      segments: aggregates.length,
-      analytics: analytics.slice(0, 100), // Limita per evitare payload troppo grandi
-      aggregates,
-    };
-  } catch (error) {
-    console.error("Errore nell'esportazione dei dati:", error);
-    return null;
-  }
-}
-
-/**
- * Pulisce i dati di tracking (mantieni solo ultimi N mesi)
+ * Pulisce i dati di tracking vecchi
  */
 export function cleanupTrackingData(daysToKeep: number = 90) {
   try {
@@ -190,9 +187,8 @@ export function cleanupTrackingData(daysToKeep: number = 90) {
     
     if (filtered.length < analytics.length) {
       window.localStorage.setItem("preventivi-smart-analytics-v1", JSON.stringify(filtered));
-      console.log(`Cleanup: rimossi ${analytics.length - filtered.length} record vecchi`);
     }
   } catch (error) {
-    console.error("Errore nella pulizia dei dati:", error);
+    console.error("Errore nella pulizia:", error);
   }
 }
