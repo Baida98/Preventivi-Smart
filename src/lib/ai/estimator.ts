@@ -1,5 +1,6 @@
 /**
- * Price Estimator - Stima i prezzi basati su dati storici
+ * COMMIT 2: Price Estimator - Standardizzato con confidence 0-1
+ * Stima i prezzi basati su dati storici
  * Utilizza segmentazione e analisi statistica
  */
 
@@ -10,7 +11,7 @@ export interface PriceEstimate {
   estimatedPrice: number;
   minPrice: number;
   maxPrice: number;
-  confidence: number; // 0-100
+  confidence: number; // 0.0 - 1.0 (standardizzato)
   method: "segment" | "market" | "default";
   reasoning: string;
 }
@@ -52,7 +53,7 @@ export function estimatePrice(
     estimatedPrice: Math.round(estimatedPrice),
     minPrice: Math.round(segment.priceRange.min * 0.9),
     maxPrice: Math.round(segment.priceRange.max * 1.1),
-    confidence: segment.confidence,
+    confidence: segment.confidence, // Già 0-1 da segmenter
     method: "segment",
     reasoning: `Stima basata su ${segment.sampleSize} preventivi simili nel ${quote.ambito} in ${quote.regionLabel}`,
   };
@@ -60,6 +61,7 @@ export function estimatePrice(
 
 /**
  * Stima il prezzo basato su dati di mercato
+ * STANDARDIZZATO: confidence sempre 0-1
  */
 function estimatePriceFromMarket(quote: Partial<Quote>): PriceEstimate {
   // Calcola stima base dal numero di servizi
@@ -74,7 +76,7 @@ function estimatePriceFromMarket(quote: Partial<Quote>): PriceEstimate {
     estimatedPrice,
     minPrice,
     maxPrice,
-    confidence: 40,
+    confidence: 0.4, // Standardizzato: 40% → 0.4
     method: "market",
     reasoning: "Stima basata su dati di mercato generici",
   };
@@ -98,7 +100,10 @@ export function evaluatePriceReasonableness(
   let verdict: "too_low" | "fair" | "too_high" | "unknown";
   let advice = "";
 
-  if (estimate.confidence < 30) {
+  // Converti confidence 0-1 a scala 0-100 per il confronto
+  const confidencePercent = estimate.confidence * 100;
+
+  if (confidencePercent < 30) {
     verdict = "unknown";
     advice = "Dati insufficienti per una valutazione accurata";
   } else if (percentage < -20) {
@@ -140,8 +145,8 @@ export function calculateValueScore(
     score = Math.max(0, 50 - evaluation.percentage / 2);
   }
 
-  // Aggiusta in base alla confidence
-  score = score * (estimate.confidence / 100);
+  // Aggiusta in base alla confidence (0-1)
+  score = score * estimate.confidence;
 
   return Math.round(score);
 }

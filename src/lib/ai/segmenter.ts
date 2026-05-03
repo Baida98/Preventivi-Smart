@@ -1,5 +1,6 @@
 /**
- * Data Segmenter - Segmenta i dati per migliorare la stima dei prezzi
+ * COMMIT 2: Data Segmenter - Standardizzato con confidence 0-1
+ * Segmenta i dati per migliorare la stima dei prezzi
  * Raggruppa quote per ambito, regione e complessità
  */
 
@@ -15,7 +16,7 @@ export interface DataSegment {
     average: number;
   };
   sampleSize: number;
-  confidence: number;
+  confidence: number; // 0.0 - 1.0 (standardizzato)
 }
 
 /**
@@ -31,6 +32,7 @@ export function determineComplexity(quote: Partial<Quote>): "low" | "medium" | "
 
 /**
  * Segmenta un array di quote per ambito, regione e complessità
+ * STANDARDIZZATO: confidence sempre 0-1
  */
 export function segmentQuotes(quotes: Partial<Quote>[]): Map<string, DataSegment> {
   const segments = new Map<string, DataSegment>();
@@ -54,7 +56,7 @@ export function segmentQuotes(quotes: Partial<Quote>[]): Map<string, DataSegment
           average: total,
         },
         sampleSize: 1,
-        confidence: 50,
+        confidence: 0.5, // Standardizzato: 50% → 0.5
       });
     } else {
       const segment = segments.get(key)!;
@@ -64,8 +66,8 @@ export function segmentQuotes(quotes: Partial<Quote>[]): Map<string, DataSegment
         (segment.priceRange.average * segment.sampleSize + total) / (segment.sampleSize + 1);
       segment.sampleSize++;
 
-      // Aumenta confidence con più campioni
-      segment.confidence = Math.min(95, 50 + segment.sampleSize * 5);
+      // Aumenta confidence con più campioni (0-1)
+      segment.confidence = Math.min(0.95, 0.5 + (segment.sampleSize * 0.05));
     }
   });
 
@@ -107,6 +109,7 @@ export function findBestSegment(
 
 /**
  * Calcola statistiche per un segmento
+ * STANDARDIZZATO: confidence 0-1 convertita a percentuale solo in output
  */
 export function getSegmentStats(segment: DataSegment): {
   priceRange: string;
@@ -114,7 +117,8 @@ export function getSegmentStats(segment: DataSegment): {
   recommendation: string;
 } {
   const priceRange = `€${segment.priceRange.min.toFixed(0)} - €${segment.priceRange.max.toFixed(0)}`;
-  const confidence = `${segment.confidence.toFixed(0)}%`;
+  // Converti confidence 0-1 a percentuale solo per display
+  const confidence = `${(segment.confidence * 100).toFixed(0)}%`;
 
   let recommendation = "Prezzo non determinato";
   if (segment.sampleSize >= 10) {

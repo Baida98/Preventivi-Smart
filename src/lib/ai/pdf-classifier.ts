@@ -1,5 +1,6 @@
 /**
- * PDF Classifier - Determina il tipo di PDF (nativo, scansionato, misto)
+ * COMMIT 2: PDF Classifier - Standardizzato con confidence 0-1
+ * Determina il tipo di PDF (nativo, scansionato, misto)
  * Supporta classificazione rapida e accurata per ottimizzare il flusso OCR
  */
 
@@ -11,7 +12,7 @@ export interface ClassificationResult {
   hasImages: boolean;
   pageCount: number;
   textDensity: number; // 0-100, percentuale di testo vs immagini
-  confidence: number; // 0-100
+  confidence: number; // 0.0 - 1.0 (standardizzato)
   error?: string;
 }
 
@@ -58,7 +59,7 @@ export async function classifyPDF(file: File): Promise<ClassificationResult> {
         hasImages: false,
         pageCount,
         textDensity: 0,
-        confidence: 0,
+        confidence: 0.0, // Standardizzato: 0-1
         error: "Impossibile analizzare il PDF",
       };
     }
@@ -87,12 +88,12 @@ export async function classifyPDF(file: File): Promise<ClassificationResult> {
       classification = "error";
     }
 
-    // Calcola confidence
-    let confidence = 80;
-    if (classification === "text") confidence = 95;
-    if (classification === "scanned") confidence = 85;
-    if (classification === "mixed") confidence = 75;
-    if (classification === "error") confidence = 20;
+    // Calcola confidence (standardizzato: 0-1)
+    let confidence = 0.80;
+    if (classification === "text") confidence = 0.95;
+    if (classification === "scanned") confidence = 0.85;
+    if (classification === "mixed") confidence = 0.75;
+    if (classification === "error") confidence = 0.20;
 
     return {
       classification,
@@ -110,7 +111,7 @@ export async function classifyPDF(file: File): Promise<ClassificationResult> {
       hasImages: false,
       pageCount: 0,
       textDensity: 0,
-      confidence: 0,
+      confidence: 0.0, // Standardizzato: 0-1
       error: errorMsg,
     };
   }
