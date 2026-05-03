@@ -29,7 +29,7 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-card/40 backdrop-blur-md border border-white/10 text-[11px] font-bold uppercase tracking-widest text-primary/90 shadow-2xl mb-8"
         >
           <Sparkles className="w-3.5 h-3.5" />
-          Prezzari ISTAT 2026 & Listini Regionali Live
+          Powered by AI & Dati Ufficiali ISTAT 2026
         </motion.div>
 
         {/* Title */}
@@ -39,9 +39,9 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="text-balance text-[52px] sm:text-[80px] md:text-[96px] leading-[0.9] font-black tracking-tighter"
         >
-          Analisi Prezzi{" "}
+          Certifica il Valore{" "}
           <span className="font-serif-display italic text-primary bg-gradient-to-r from-primary to-sky-400 bg-clip-text text-transparent">
-            Intelligente
+            dei tuoi Preventivi
           </span>
         </motion.h1>
 
@@ -50,9 +50,9 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-8 mx-auto max-w-2xl text-balance text-lg sm:text-xl text-muted-foreground/80 font-medium leading-relaxed"
+          className="mt-8 mx-auto max-w-3xl text-balance text-lg sm:text-xl text-muted-foreground/80 font-medium leading-relaxed"
         >
-          Trasforma i tuoi preventivi in dati certi. La nostra AI analizza istantaneamente i costi di mercato della tua regione per garantirti trasparenza e risparmio.
+          La prima piattaforma di Intelligenza Artificiale dedicata all'analisi strutturata dei costi nel settore dell'edilizia e dei servizi. Ottieni benchmark regionali precisi, comprendi la composizione dei costi e negozia con dati certificati alla mano.
         </motion.p>
 
         {/* CTA Buttons */}
