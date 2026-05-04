@@ -66,7 +66,42 @@ export default function Wizard({
   const [quantity, setQuantity] = useState<string>("");
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [price, setPrice] = useState<string>("");
+  const [notes, setNotes] = useState<string>("");
   
+  // Persistence logic
+  useEffect(() => {
+    const saved = localStorage.getItem(`wizard_data_${mode}`);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        if (data.categoryId) setCategoryId(data.categoryId);
+        if (data.jobId) setJobId(data.jobId);
+        if (data.regionId) setRegionId(data.regionId);
+        if (data.quantity) setQuantity(data.quantity);
+        if (data.fieldValues) setFieldValues(data.fieldValues);
+        if (data.price) setPrice(data.price);
+        if (data.notes) setNotes(data.notes);
+        if (data.step && data.step < 3) setStep(data.step);
+      } catch (e) {
+        console.error("Failed to restore wizard state", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    const data = {
+      categoryId,
+      jobId,
+      regionId,
+      quantity,
+      fieldValues,
+      price,
+      notes,
+      step
+    };
+    localStorage.setItem(`wizard_data_${mode}`, JSON.stringify(data));
+  }, [categoryId, jobId, regionId, quantity, fieldValues, price, step, mode]);
+
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<MarketAnalysis | null>(null);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
@@ -106,7 +141,8 @@ export default function Wizard({
         job,
         Number(quantity),
         fieldValues,
-        regionId
+        regionId,
+        notes
       );
       setAnalysis(marketAnalysis);
 

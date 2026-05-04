@@ -344,11 +344,41 @@ export function findJob(categoryId: string, jobId: string): Job | undefined {
   return findCategory(categoryId)?.jobs.find((j) => j.id === jobId);
 }
 
+const KEYWORDS_MULTIPLIERS: Record<string, number> = {
+  rame: 1.15,
+  demolizione: 1.2,
+  urgente: 1.3,
+  rifacimento: 1.25,
+  ristrutturazione: 1.1,
+  bonus: 0.95,
+};
+
+function applyKeywordImpact(text: string, price: number): number {
+  let result = price;
+  Object.keys(KEYWORDS_MULTIPLIERS).forEach((word) => {
+    if (text.toLowerCase().includes(word)) {
+      result *= KEYWORDS_MULTIPLIERS[word];
+    }
+  });
+  return result;
+}
+
+const RISK_MAP: Record<string, number> = {
+  basso: 1.05,
+  medio: 1.15,
+  alto: 1.3,
+};
+
+function addRiskMargin(price: number, riskLevel: string = "basso"): number {
+  return price * (RISK_MAP[riskLevel] || 1.05);
+}
+
 export function calculateMarketAnalysis(
   job: Job,
   quantity: number,
   selections: Record<string, string>,
-  regionId: string
+  regionId: string,
+  notes: string = ""
 ): MarketAnalysis {
   let totalMultiplier = 1.0;
   job.fields.forEach((f) => {
@@ -357,8 +387,18 @@ export function calculateMarketAnalysis(
     if (opt) totalMultiplier *= opt.multiplier;
   });
 
-  const baseTotal = job.base * quantity * totalMultiplier;
+  let baseTotal = job.base * quantity * totalMultiplier;
   
+  // Apply keywords impact if notes are provided
+  if (notes) {
+    baseTotal = applyKeywordImpact(notes, baseTotal);
+  }
+
+  // Apply risk margin based on complexity/accessibility
+  const riskLevel = selections["complessita"] === "complessa" || selections["accessibilita"] === "difficile" ? "alto" : 
+                    selections["complessita"] === "media" || selections["accessibilita"] === "centro" ? "medio" : "basso";
+  baseTotal = addRiskMargin(baseTotal, riskLevel);
+
   const inflationFactor = getDynamicInflationFactor();
   const region = REGIONS.find(r => r.id === regionId);
   const regionFactor = region?.index || 1.0;

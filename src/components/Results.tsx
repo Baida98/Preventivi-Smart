@@ -115,6 +115,28 @@ export default function ResultsView({
   const unitPrice = price / Math.max(quantity, 1);
   const unitMarketMid = analysis.marketMid / Math.max(quantity, 1);
 
+  // Smart Alerts logic
+  const alerts: string[] = [];
+  if (mode === "analizza") {
+    if (price > analysis.marketMax * 1.1) {
+      alerts.push(`Il prezzo inserito è significativamente superiore al massimo di mercato (+10%). Valori sopra ${fmtEUR(analysis.marketMax * 1.1)} possono dipendere da lavorazioni aggiuntive o materiali di lusso.`);
+    } else if (price < analysis.marketMin * 0.9) {
+      alerts.push(`Il prezzo inserito è significativamente inferiore al minimo di mercato (-10%). Valori sotto ${fmtEUR(analysis.marketMin * 0.9)} potrebbero indicare materiali di bassa qualità o omissione di servizi essenziali.`);
+    }
+  }
+
+  // Price explanation logic
+  const reasons: string[] = [];
+  if (regionLabel.toLowerCase().includes("lombardia") || regionLabel.toLowerCase().includes("lazio")) {
+    reasons.push("Indice regionale alto (zona ad alta densità urbana)");
+  }
+  if (analysis.volatilityClass === "high") {
+    reasons.push("Settore con alta volatilità dei prezzi dei materiali");
+  }
+  if (quantity > 100) {
+    reasons.push("Economia di scala applicata per grandi quantità");
+  }
+
   return (
     <div className="space-y-6 pb-8">
       {/* Header context */}
@@ -130,16 +152,32 @@ export default function ResultsView({
         <span className="text-muted-foreground font-medium">{quantity} {job.unitLabel}</span>
       </div>
 
-      {/* Outlier Warning (Solo per Analizza) */}
-      {mode === "analizza" && verdict?.outlierWarning && (
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm font-medium shadow-lg shadow-rose-500/5"
-        >
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <p>{verdict.outlierWarning}</p>
-        </motion.div>
+      {/* Outlier & Smart Alerts (Solo per Analizza) */}
+      {(mode === "analizza" && (verdict?.outlierWarning || alerts.length > 0)) && (
+        <div className="space-y-3">
+          {verdict?.outlierWarning && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="flex items-center gap-3 p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 text-rose-300 text-sm font-medium shadow-lg shadow-rose-500/5"
+            >
+              <AlertCircle className="w-5 h-5 shrink-0" />
+              <p>{verdict.outlierWarning}</p>
+            </motion.div>
+          )}
+          {alerts.map((alert, idx) => (
+            <motion.div
+              key={idx}
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 * (idx + 1) }}
+              className="flex items-center gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-200 text-sm font-medium shadow-lg shadow-amber-500/5"
+            >
+              <Info className="w-5 h-5 shrink-0" />
+              <p>{alert}</p>
+            </motion.div>
+          ))}
+        </div>
       )}
 
       {/* Main Verdict/Range Card */}
@@ -223,6 +261,28 @@ export default function ResultsView({
           </motion.div>
         )}
       </div>
+
+      {/* Price Explanation Section */}
+      {reasons.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="p-4 rounded-[1.5rem] bg-white/5 border border-white/10"
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Lightbulb className="w-4 h-4 text-amber-400" />
+            <span className="text-xs font-black uppercase tracking-widest text-muted-foreground">Fattori che influenzano il prezzo</span>
+          </div>
+          <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {reasons.map((reason, idx) => (
+              <li key={idx} className="flex items-center gap-2 text-sm text-muted-foreground font-medium">
+                <div className="w-1.5 h-1.5 rounded-full bg-amber-400/40" />
+                {reason}
+              </li>
+            ))}
+          </ul>
+        </motion.div>
+      )}
 
       {/* AI Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
