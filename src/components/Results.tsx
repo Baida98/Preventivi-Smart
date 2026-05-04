@@ -719,9 +719,9 @@ export default function ResultsView({
           <div className="space-y-1">
             <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
               <Lightbulb className="w-5 h-5 text-amber-400" />
-              Domande utili prima di confermare il lavoro
+              Strategia Consigliata
             </h4>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Possibili variazioni da considerare: alcuni dettagli non visibili subito possono influire sul prezzo finale.</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tutele legali e consigli pratici</p>
           </div>
           <div className="p-2 rounded-xl bg-amber-400/10 border border-amber-400/20">
             <Gavel className="w-5 h-5 text-amber-400" />
@@ -777,12 +777,12 @@ export default function ResultsView({
         className="flex flex-col sm:flex-row gap-4 pt-4"
       >
         {!savedThisRun ? (
-            <Button 
+          <Button 
             onClick={onSave} 
             className="flex-1 rounded-[1.5rem] h-14 text-base font-black tracking-tight"
           >
             <History className="w-5 h-5 mr-2" />
-            Visualizza il report completo
+            Salva nell'Archivio Tecnico
           </Button>
         ) : (
           <div className="flex-1 h-14 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center gap-2 text-emerald-400 font-black">
