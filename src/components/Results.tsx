@@ -655,11 +655,11 @@ export default function ResultsView({
       >
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-              <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-indigo-400" />
-                Come leggere questo risultato
-              </h4>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Se il prezzo è molto più basso o molto più alto del range, vale la pena controllare cosa include davvero. Non sostituisce una ditta: ti aiuta a confrontare meglio le offerte e a fare una scelta più consapevole.</p>
+            <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-indigo-400" />
+              Conformità Normativa e Sicurezza
+            </h4>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Indicatori di affidabilità legale e tecnica basati sui parametri inseriti</p>
           </div>
           <div className="px-3 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-tighter">
             SCORE: {Math.round((qualityScore + confidenceScore) / 2)}%
@@ -729,7 +729,7 @@ export default function ResultsView({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {["Il preventivo include tutte le voci principali?", "Ci sono costi extra possibili?", "Quali materiali sono compresi?", "Il prezzo tiene conto di eventuali variabili?"].map((rec, i) => {
+          {verdict?.recommendations.map((rec, i) => {
             const isLegal = rec.toLowerCase().includes("legale");
             return (
               <motion.div
