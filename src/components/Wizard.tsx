@@ -108,6 +108,12 @@ export default function Wizard({
   const [savedThisRun, setSavedThisRun] = useState(false);
   const [showPdfUpload, setShowPdfUpload] = useState(false);
 
+  const handlePdfPriceDetected = (detectedPrice: number) => {
+    setPrice(String(detectedPrice));
+    setShowPdfUpload(false);
+    toast.success(`Importo rilevato: €${detectedPrice.toLocaleString('it-IT')}`);
+  };
+
   const job: Job | null = (categoryId && jobId) ? findJob(categoryId, jobId) ?? null : null;
   const category = categoryId ? findCategory(categoryId) ?? null : null;
 
@@ -457,18 +463,44 @@ export default function Wizard({
                   </div>
 
                   {mode === "analizza" && (
-                    <div className="space-y-2 pt-1">
-                      <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1 flex items-center gap-2">
-                        <BarChart3 className="w-3.5 h-3.5" />
-                        Importo totale del preventivo ricevuto
-                      </Label>
-                      <Input
-                        type="number"
-                        value={price}
-                        onChange={(e) => setPrice(e.target.value)}
-                        className="h-12 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary focus:ring-primary/20 transition-all text-base font-black"
-                        placeholder="Es. 2.500"
-                      />
+                    <div className="space-y-4 pt-1">
+                      <div className="space-y-2">
+                        <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1 flex items-center gap-2">
+                          <BarChart3 className="w-3.5 h-3.5" />
+                          Importo totale del preventivo ricevuto
+                        </Label>
+                        <div className="relative">
+                          <Input
+                            type="number"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            className="h-12 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary focus:ring-primary/20 transition-all text-base font-black pr-12"
+                            placeholder="Es. 2.500"
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-primary/40">
+                            €
+                          </div>
+                        </div>
+                      </div>
+
+                      {!showPdfUpload ? (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setShowPdfUpload(true)}
+                          className="w-full h-12 rounded-2xl border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all gap-2 text-xs font-black uppercase tracking-widest text-primary"
+                        >
+                          <FileUp className="w-4 h-4" />
+                          Estrai da PDF o Scansione
+                        </Button>
+                      ) : (
+                        <div className="relative">
+                          <PdfUploadZone
+                            onPriceDetected={handlePdfPriceDetected}
+                            onDismiss={() => setShowPdfUpload(false)}
+                          />
+                        </div>
+                      )}
                     </div>
                   )}
                 </div>
