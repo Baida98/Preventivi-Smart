@@ -12,6 +12,9 @@ import {
   ChevronRight,
   ShieldCheck,
   DollarSign,
+  AlertCircle,
+  Zap,
+  Lightbulb,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -114,7 +117,10 @@ export default function Wizard({
   const progressIndex = step;
 
   // Step 2 validation: region, quantity, field values
-  const canStep2Next = regionId && quantity && Number(quantity) > 0 && Object.values(fieldValues).every((v) => v);
+  const quantityNum = Number(quantity);
+  const isValidQuantity = quantityNum > 0 && 
+    !(jobId && ["muratura", "imbiancatura-standard", "posa-piastrelle"].includes(jobId) && quantityNum < 2);
+  const canStep2Next = regionId && quantity && isValidQuantity && Object.values(fieldValues).every((v) => v);
 
   // Step 3 validation: price (for analizza mode)
   const canStep3Next = mode !== "analizza" || (price && Number(price) > 0);
@@ -252,8 +258,6 @@ export default function Wizard({
       errore_percentuale: Math.abs(totale - analysis.marketMid) / analysis.marketMid,
       dentro_range: totale >= analysis.marketMin && totale <= analysis.marketMax,
       confidence: analysis.confidence,
-      materialQuality: fieldValues['material_quality'] || 'standard',
-      urgency: fieldValues['urgency'] || 'standard'
     };
 
     try {
@@ -416,7 +420,7 @@ export default function Wizard({
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <h2 className="text-2xl font-black tracking-tightest">Configurazione Tecnica</h2>
+                <h2 className="text-3xl font-black tracking-tightest">Configurazione Tecnica</h2>
               </div>
               <p className="text-muted-foreground mb-8 font-medium">
                 Parametri tecnici per il calcolo del benchmark di <span className="text-foreground font-bold">{job.label}</span>.
@@ -570,6 +574,15 @@ export default function Wizard({
               </div>
             </div>
 
+            {jobId && ["muratura", "imbiancatura-standard", "posa-piastrelle"].includes(jobId) && quantityNum > 0 && quantityNum < 2 && (
+              <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/30 mt-6">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+                  <p className="text-sm text-destructive font-medium">La quantità minima per questo lavoro è 2 {job?.unitLabel}.</p>
+                </div>
+              </div>
+            )}
+
             <div className="mt-8 pt-6 border-t border-border/30 flex justify-between items-center">
               <Button
                 variant="ghost"
@@ -617,7 +630,7 @@ export default function Wizard({
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <h2 className="text-2xl font-black tracking-tightest">Dati Economici</h2>
+                <h2 className="text-3xl font-black tracking-tightest">Dati Economici</h2>
               </div>
               <p className="text-muted-foreground mb-8 font-medium">
                 {mode === "analizza" 
