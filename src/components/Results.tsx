@@ -257,7 +257,7 @@ export default function ResultsView({
                   <Target className="w-8 h-8 text-accent" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70 mb-1.5 truncate">Un riferimento chiaro per valutare un preventivo</div>
+                  <div className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70 mb-1.5 truncate">Valuta il tuo preventivo</div>
                   <h3 className="text-2xl sm:text-4xl font-black tracking-tighter leading-tight text-foreground mb-3 break-words">
                     {fmtEUR(analysis.marketMin)} <span className="text-muted-foreground/20 mx-1">/</span> {fmtEUR(analysis.marketMax)}
                   </h3>
