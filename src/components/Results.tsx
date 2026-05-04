@@ -256,12 +256,12 @@ export default function ResultsView({
                 <div className="shrink-0 flex items-center justify-center w-16 h-16 rounded-2xl bg-background/40 border border-accent/30 shadow-inner">
                   <Target className="w-8 h-8 text-accent" />
                 </div>
-                <div>
-                  <div className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70 mb-1.5">Un riferimento chiaro per valutare un preventivo</div>
-                  <h3 className="text-3xl sm:text-5xl font-black tracking-tighter leading-none text-foreground mb-3">
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70 mb-1.5 truncate">Un riferimento chiaro per valutare un preventivo</div>
+                  <h3 className="text-2xl sm:text-4xl font-black tracking-tighter leading-tight text-foreground mb-3 break-words">
                     {fmtEUR(analysis.marketMin)} <span className="text-muted-foreground/20 mx-1">/</span> {fmtEUR(analysis.marketMax)}
                   </h3>
-                  <p className="text-sm sm:text-base font-medium text-muted-foreground max-w-md leading-relaxed">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed">
                     Ti aiuta a leggere meglio prezzi, variabili e differenze tra le offerte, con un punto di partenza realistico.
                   </p>
                 </div>
