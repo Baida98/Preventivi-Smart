@@ -114,6 +114,22 @@ export default function Wizard({
     toast.success(`Importo rilevato: €${detectedPrice.toLocaleString('it-IT')}`);
   };
 
+  // Reset state when mode changes
+  useEffect(() => {
+    setStep(1);
+    setCategoryId(initialCategoryId);
+    setJobId(null);
+    setRegionId("");
+    setQuantity("");
+    setFieldValues({});
+    setPrice("");
+    setNotes("");
+    setAnalysis(null);
+    setVerdict(null);
+    setSavedThisRun(false);
+    setShowPdfUpload(false);
+  }, [mode, initialCategoryId]);
+
   const job: Job | null = (categoryId && jobId) ? findJob(categoryId, jobId) ?? null : null;
   const category = categoryId ? findCategory(categoryId) ?? null : null;
 
@@ -131,7 +147,7 @@ export default function Wizard({
   const totalSteps = mode === "analizza" ? 3 : 2;
   const progressIndex = step;
 
-  const canStep2Next = regionId && quantity && Object.values(fieldValues).every((v) => v);
+  const canStep2Next = regionId && quantity && Number(quantity) > 0 && Object.values(fieldValues).every((v) => v) && (mode !== "analizza" || (price && Number(price) > 0));
 
   function pickJob(jid: string) {
     setJobId(jid);
@@ -483,24 +499,39 @@ export default function Wizard({
                         </div>
                       </div>
 
-                      {!showPdfUpload ? (
-                        <Button
-                          type="button"
-                          variant="outline"
-                          onClick={() => setShowPdfUpload(true)}
-                          className="w-full h-12 rounded-2xl border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all gap-2 text-xs font-black uppercase tracking-widest text-primary"
-                        >
-                          <FileUp className="w-4 h-4" />
-                          Estrai da PDF o Scansione
-                        </Button>
-                      ) : (
-                        <div className="relative">
-                          <PdfUploadZone
-                            onPriceDetected={handlePdfPriceDetected}
-                            onDismiss={() => setShowPdfUpload(false)}
-                          />
-                        </div>
-                      )}
+                      <AnimatePresence mode="wait">
+                        {!showPdfUpload ? (
+                          <motion.div
+                            key="upload-trigger"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -10 }}
+                          >
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => setShowPdfUpload(true)}
+                              className="w-full h-12 rounded-2xl border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all gap-2 text-xs font-black uppercase tracking-widest text-primary"
+                            >
+                              <FileUp className="w-4 h-4" />
+                              Estrai da PDF o Scansione
+                            </Button>
+                          </motion.div>
+                        ) : (
+                          <motion.div
+                            key="upload-zone"
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            className="relative"
+                          >
+                            <PdfUploadZone
+                              onPriceDetected={handlePdfPriceDetected}
+                              onDismiss={() => setShowPdfUpload(false)}
+                            />
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
                     </div>
                   )}
                 </div>
@@ -548,13 +579,21 @@ export default function Wizard({
               </div>
             </div>
 
-            <div className="mt-8 pt-6 border-t border-border/30 flex justify-end">
+            <div className="mt-auto pt-8 border-t border-border/30 flex justify-between items-center">
+              <Button
+                variant="ghost"
+                onClick={() => setStep(1)}
+                className="rounded-xl text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Indietro
+              </Button>
               <Button
                 size="lg"
                 disabled={!canStep2Next || loading}
                 onClick={runAnalysis}
                 className={cn(
-                  "h-14 px-8 rounded-2xl font-black text-base shadow-lg transition-all hover:scale-105 active:scale-95",
+                  "h-14 px-10 rounded-2xl font-black text-base shadow-lg transition-all hover:scale-105 active:scale-95",
                   mode === "analizza" 
                     ? "bg-primary hover:bg-primary/90 shadow-primary/20" 
                     : "bg-accent hover:bg-accent/90 shadow-accent/20"
