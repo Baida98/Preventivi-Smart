@@ -223,7 +223,7 @@ export default function ResultsView({
                     <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
                     <span className="text-[10px] font-black text-emerald-400">ISTAT 2026</span>
                   </div>
-                  <h3 className={cn("text-3xl sm:text-5xl font-black tracking-tighter leading-none mb-3", verdict.color.text)}>
+                  <h3 className={cn("title-elegant-lg leading-none mb-3", verdict.color.text)}>
                     {verdict.label}
                   </h3>
                   <p className="text-sm sm:text-base font-medium text-muted-foreground max-w-md leading-relaxed">
@@ -258,7 +258,7 @@ export default function ResultsView({
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-xs sm:text-sm font-bold tracking-normal uppercase text-muted-foreground/70 mb-1.5 whitespace-normal">Valuta il tuo preventivo</div>
-                  <h3 className="text-2xl sm:text-4xl font-black tracking-tighter leading-tight text-foreground mb-3 break-words">
+                  <h3 className="title-elegant-md leading-tight text-foreground mb-3 break-words">
                     {fmtEUR(analysis.marketMin)} <span className="text-muted-foreground/20 mx-1">/</span> {fmtEUR(analysis.marketMax)}
                   </h3>
                   <p className="text-xs sm:text-sm font-medium text-muted-foreground leading-relaxed">

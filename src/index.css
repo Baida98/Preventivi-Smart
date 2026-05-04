@@ -198,6 +198,31 @@
   .tracking-tightest { letter-spacing: -0.05em; }
   .font-black { font-weight: 900; }
 
+  /* Elegant Title Style */
+  .title-elegant-lg {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    @apply text-4xl sm:text-5xl;
+  }
+
+  .title-elegant-md {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    @apply text-3xl sm:text-4xl;
+  }
+
+  .title-elegant-sm {
+    font-family: 'Instrument Serif', Georgia, serif;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1.1;
+    @apply text-2xl sm:text-3xl;
+  }
+
   /* Animation enhancements */
   @keyframes slideInUp {
     from { opacity: 0; transform: translateY(20px); }
