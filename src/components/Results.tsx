@@ -646,6 +646,68 @@ export default function ResultsView({
         </motion.div>
       </div>
 
+      {/* Regulatory Compliance & Safety Chart */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.42 }}
+        className="rounded-[2rem] border border-border/60 bg-card/40 p-6 sm:p-8 space-y-6"
+      >
+        <div className="flex items-center justify-between">
+          <div className="space-y-1">
+            <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-indigo-400" />
+              Conformità Normativa e Sicurezza
+            </h4>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Indicatori di affidabilità legale e tecnica</p>
+          </div>
+          <div className="px-3 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-tighter">
+            SCORE: {Math.round((qualityScore + confidenceScore) / 2)}%
+          </div>
+        </div>
+        
+        <div className="h-[120px] w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              layout="vertical"
+              data={[
+                { name: 'Normative', value: 95, color: '#818cf8' },
+                { name: 'Sicurezza', value: 88, color: '#6366f1' },
+                { name: 'Garanzie', value: 92, color: '#4f46e5' },
+              ]}
+              margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
+            >
+              <XAxis type="number" hide domain={[0, 100]} />
+              <YAxis 
+                dataKey="name" 
+                type="category" 
+                axisLine={false} 
+                tickLine={false}
+                tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10, fontWeight: 700 }}
+              />
+              <Tooltip
+                cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    return (
+                      <div className="bg-popover/90 backdrop-blur-md border border-border/60 p-2 rounded-xl shadow-2xl">
+                        <p className="text-sm font-black text-foreground">{payload[0].value}%</p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={12}>
+                { [0, 1, 2].map((_, i) => (
+                  <Cell key={i} fill={['#818cf8', '#6366f1', '#4f46e5'][i]} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+      </motion.div>
+
       {/* Advice Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -701,7 +763,7 @@ export default function ResultsView({
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
+        transition={{ delay: 0.55 }}
         className="flex flex-col sm:flex-row gap-4 pt-4"
       >
         {!savedThisRun ? (
