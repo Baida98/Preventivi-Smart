@@ -153,29 +153,29 @@ export function judge(price: number, m: MarketAnalysis, categoryId: string = "ed
 
   const labels: Record<VerdictKey, { label: string; short: string; description: string }> = {
     ottimo: {
-      label: "Ottimo",
+      label: "Vantaggioso",
       short: "Sotto la media di mercato",
-      description: `Il preventivo è inferiore al minimo di mercato di circa il ${Math.abs(Math.round(diffPct * 100))}%.`,
+      description: `Il riferimento indica un'offerta economica, circa il ${Math.abs(Math.round(diffPct * 100))}% sotto il benchmark minimo.`,
     },
     equo: {
-      label: "Equo",
-      short: "In linea col mercato",
-      description: `Il preventivo è in linea con i prezzi medi regionali (scostamento ${Math.abs(Math.round(diffPct * 100))}%).`,
+      label: "In Linea",
+      short: "Conforme ai benchmark",
+      description: `Il valore è pienamente coerente con i prezzi medi regionali (scostamento ${Math.abs(Math.round(diffPct * 100))}%).`,
     },
     alto: {
-      label: "Alto",
-      short: "Sopra la media, trattabile",
-      description: `Il preventivo è del ${Math.round(diffPct * 100)}% sopra la media regionale.`,
+      label: "Premium",
+      short: "Sopra la media regionale",
+      description: `Il valore si attesta circa il ${Math.round(diffPct * 100)}% sopra la media: potrebbe includere servizi o materiali superiori.`,
     },
     "troppo-alto": {
-      label: "Troppo alto",
-      short: "Significativamente sopra il mercato",
-      description: `Il preventivo è del ${Math.round(diffPct * 100)}% sopra il mercato locale.`,
+      label: "Fuori Range",
+      short: "Superiore ai massimi di mercato",
+      description: `Il valore supera del ${Math.round(diffPct * 100)}% i benchmark standard: utile approfondire le specifiche tecniche.`,
     },
     sospetto: {
-      label: "Sospetto",
+      label: "Da Verificare",
       short: "Anomalmente basso",
-      description: `Il preventivo è del ${Math.abs(Math.round(diffPct * 100))}% sotto la media: rischio irregolarità.`,
+      description: `Il valore è del ${Math.abs(Math.round(diffPct * 100))}% sotto la media: consigliata una verifica attenta di ciò che è incluso.`,
     },
   };
 

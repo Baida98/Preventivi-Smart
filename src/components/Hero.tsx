@@ -37,11 +37,11 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-balance text-[52px] sm:text-[80px] md:text-[96px] leading-[0.9] font-black tracking-tighter"
+          className="text-balance text-[48px] sm:text-[72px] md:text-[84px] leading-[0.9] font-black tracking-tighter"
         >
-          Analisi Tecnica{" "}
+          Un riferimento chiaro per valutare un{" "}
           <span className="font-serif-display italic text-primary bg-gradient-to-r from-primary to-sky-400 bg-clip-text text-transparent">
-            dei Preventivi
+            preventivo prima di scegliere
           </span>
         </motion.h1>
 
@@ -52,7 +52,7 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           transition={{ duration: 0.8, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
           className="mt-8 mx-auto max-w-3xl text-balance text-lg sm:text-xl text-muted-foreground/80 font-medium leading-relaxed"
         >
-          Strumento professionale per la valutazione dei costi nel settore dell'edilizia e dell'impiantistica. Confronta i tuoi preventivi con i benchmark regionali aggiornati.
+          Ti aiuta a leggere meglio prezzi, variabili e differenze tra le offerte, con un punto di partenza realistico.
         </motion.p>
 
         {/* CTA Buttons */}

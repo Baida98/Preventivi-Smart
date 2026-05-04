@@ -262,7 +262,7 @@ export default function ResultsView({
                     {fmtEUR(analysis.marketMin)} <span className="text-muted-foreground/20 mx-1">/</span> {fmtEUR(analysis.marketMax)}
                   </h3>
                   <p className="text-sm sm:text-base font-medium text-muted-foreground max-w-md leading-relaxed">
-                    Prezzo medio regionale: <span className="text-accent font-bold">{fmtEUR(analysis.marketMid)}</span>. Basato su indici ISTAT 2026 per questa categoria e regione.
+                    La stima può variare in base a materiali, accesso, complessità e condizioni specifiche del lavoro.
                   </p>
                 </div>
               </div>
@@ -307,7 +307,7 @@ export default function ResultsView({
             icon={ShieldCheck} 
             label="Affidabilità" 
             value={`${Math.round(analysis.confidence * 100)}%`}
-            description="Indice di confidenza"
+            description="Più informazioni fornisci, più il riferimento diventa utile"
             color="text-sky-400"
             bg="bg-sky-400/10"
           />
@@ -655,11 +655,11 @@ export default function ResultsView({
       >
         <div className="flex items-center justify-between">
           <div className="space-y-1">
-            <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-indigo-400" />
-              Conformità Normativa e Sicurezza
-            </h4>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Indicatori di affidabilità legale e tecnica</p>
+              <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-indigo-400" />
+                Come leggere questo risultato
+              </h4>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Se il prezzo è molto più basso o molto più alto del range, vale la pena controllare cosa include davvero.</p>
           </div>
           <div className="px-3 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-tighter">
             SCORE: {Math.round((qualityScore + confidenceScore) / 2)}%
@@ -719,9 +719,9 @@ export default function ResultsView({
           <div className="space-y-1">
             <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
               <Lightbulb className="w-5 h-5 text-amber-400" />
-              Strategia Consigliata
+              Domande utili prima di confermare il lavoro
             </h4>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Tutele legali e consigli pratici</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Non sostituisce una ditta: ti aiuta a confrontare meglio le offerte e a fare una scelta più consapevole.</p>
           </div>
           <div className="p-2 rounded-xl bg-amber-400/10 border border-amber-400/20">
             <Gavel className="w-5 h-5 text-amber-400" />
@@ -759,6 +759,16 @@ export default function ResultsView({
         </div>
       </motion.div>
 
+      {/* Closing Statement */}
+      <motion.p
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.52 }}
+        className="text-center text-xs text-muted-foreground/60 font-medium italic"
+      >
+        Usa questo report come riferimento per valutare con più sicurezza i preventivi che ricevi.
+      </motion.p>
+
       {/* Actions */}
       <motion.div
         initial={{ opacity: 0 }}
@@ -767,12 +777,12 @@ export default function ResultsView({
         className="flex flex-col sm:flex-row gap-4 pt-4"
       >
         {!savedThisRun ? (
-          <Button 
+            <Button 
             onClick={onSave} 
             className="flex-1 rounded-[1.5rem] h-14 text-base font-black tracking-tight"
           >
             <History className="w-5 h-5 mr-2" />
-            Salva nell'Archivio Tecnico
+            Visualizza il report completo
           </Button>
         ) : (
           <div className="flex-1 h-14 rounded-[1.5rem] bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center gap-2 text-emerald-400 font-black">
