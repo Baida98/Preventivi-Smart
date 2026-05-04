@@ -3,16 +3,15 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft,
   ArrowRight,
-  Sparkles,
   Search,
   Calculator,
   X,
-  AlertCircle,
   Loader2,
   FileUp,
   BarChart3,
   ChevronRight,
-  ShieldCheck
+  ShieldCheck,
+  DollarSign,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -51,7 +50,7 @@ type Props = {
   onSaved: () => void;
 };
 
-type Step = 1 | 2 | 3;
+type Step = 1 | 2 | 3 | 4;
 
 export default function Wizard({
   mode,
@@ -67,7 +66,8 @@ export default function Wizard({
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [price, setPrice] = useState<string>("");
   const [notes, setNotes] = useState<string>("");
-  
+  const [showPdfUpload, setShowPdfUpload] = useState(false);
+
   // Persistence logic
   useEffect(() => {
     const saved = localStorage.getItem(`wizard_data_${mode}`);
@@ -81,7 +81,7 @@ export default function Wizard({
         if (data.fieldValues) setFieldValues(data.fieldValues);
         if (data.price) setPrice(data.price);
         if (data.notes) setNotes(data.notes);
-        if (data.step && data.step < 3) setStep(data.step);
+        if (data.step && data.step < 4) setStep(data.step);
       } catch (e) {
         console.error("Failed to restore wizard state", e);
       }
@@ -97,38 +97,15 @@ export default function Wizard({
       fieldValues,
       price,
       notes,
-      step
+      step,
     };
     localStorage.setItem(`wizard_data_${mode}`, JSON.stringify(data));
-  }, [categoryId, jobId, regionId, quantity, fieldValues, price, step, mode]);
+  }, [categoryId, jobId, regionId, quantity, fieldValues, price, notes, step, mode]);
 
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<MarketAnalysis | null>(null);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
   const [savedThisRun, setSavedThisRun] = useState(false);
-  const [showPdfUpload, setShowPdfUpload] = useState(false);
-
-  const handlePdfPriceDetected = (detectedPrice: number) => {
-    setPrice(String(detectedPrice));
-    setShowPdfUpload(false);
-    toast.success(`Importo rilevato: €${detectedPrice.toLocaleString('it-IT')}`);
-  };
-
-  // Reset state when mode changes
-  useEffect(() => {
-    setStep(1);
-    setCategoryId(initialCategoryId);
-    setJobId(null);
-    setRegionId("");
-    setQuantity("");
-    setFieldValues({});
-    setPrice("");
-    setNotes("");
-    setAnalysis(null);
-    setVerdict(null);
-    setSavedThisRun(false);
-    setShowPdfUpload(false);
-  }, [mode, initialCategoryId]);
 
   const job: Job | null = (categoryId && jobId) ? findJob(categoryId, jobId) ?? null : null;
   const category = categoryId ? findCategory(categoryId) ?? null : null;
@@ -144,15 +121,25 @@ export default function Wizard({
     }
   }, [jobId, job]);
 
-  const totalSteps = mode === "analizza" ? 3 : 2;
+  const totalSteps = mode === "analizza" ? 4 : 3;
   const progressIndex = step;
 
-  const canStep2Next = regionId && quantity && Number(quantity) > 0 && Object.values(fieldValues).every((v) => v) && (mode !== "analizza" || (price && Number(price) > 0));
+  // Step 2 validation: region, quantity, field values
+  const canStep2Next = regionId && quantity && Number(quantity) > 0 && Object.values(fieldValues).every((v) => v);
+
+  // Step 3 validation: price (for analizza mode)
+  const canStep3Next = mode !== "analizza" || (price && Number(price) > 0);
 
   function pickJob(jid: string) {
     setJobId(jid);
     setStep(2);
   }
+
+  const handlePdfPriceDetected = (detectedPrice: number) => {
+    setPrice(String(detectedPrice));
+    setShowPdfUpload(false);
+    toast.success(`Importo rilevato: €${detectedPrice.toLocaleString('it-IT')}`);
+  };
 
   async function runAnalysis() {
     if (!job || !regionId || !quantity) return;
@@ -181,7 +168,7 @@ export default function Wizard({
         setVerdict(v);
       }
 
-      setStep(3 as Step);
+      setStep(4 as Step);
     } catch (error) {
       console.error("Errore nell'analisi:", error);
       toast.error("Errore durante l'elaborazione tecnica.");
@@ -340,9 +327,9 @@ export default function Wizard({
         {step === 1 && (
           <motion.div
             key="s1"
-            initial={{ opacity: 0, y: 12 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -12 }}
+            exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
             <h2 className="text-3xl font-black tracking-tightest mb-2">Ambito di intervento</h2>
@@ -413,7 +400,7 @@ export default function Wizard({
           </motion.div>
         )}
 
-        {/* Step 2: Technical Configuration */}
+        {/* Step 2: Technical Configuration (ONLY) */}
         {step === 2 && job && (
           <motion.div
             key="s2"
@@ -477,63 +464,6 @@ export default function Wizard({
                       </div>
                     </div>
                   </div>
-
-                  {mode === "analizza" && (
-                    <div className="space-y-4 pt-1">
-                      <div className="space-y-2">
-                        <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1 flex items-center gap-2">
-                          <BarChart3 className="w-3.5 h-3.5" />
-                          Importo totale del preventivo ricevuto
-                        </Label>
-                        <div className="relative">
-                          <Input
-                            type="number"
-                            value={price}
-                            onChange={(e) => setPrice(e.target.value)}
-                            className="h-12 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary focus:ring-primary/20 transition-all text-base font-black pr-12"
-                            placeholder="Es. 2.500"
-                          />
-                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-sm font-bold text-primary/40">
-                            €
-                          </div>
-                        </div>
-                      </div>
-
-                      <AnimatePresence mode="wait">
-                        {!showPdfUpload ? (
-                          <motion.div
-                            key="upload-trigger"
-                            initial={{ opacity: 0, y: 10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                          >
-                            <Button
-                              type="button"
-                              variant="outline"
-                              onClick={() => setShowPdfUpload(true)}
-                              className="w-full h-12 rounded-2xl border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all gap-2 text-xs font-black uppercase tracking-widest text-primary"
-                            >
-                              <FileUp className="w-4 h-4" />
-                              Estrai da PDF o Scansione
-                            </Button>
-                          </motion.div>
-                        ) : (
-                          <motion.div
-                            key="upload-zone"
-                            initial={{ opacity: 0, scale: 0.95 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.95 }}
-                            className="relative"
-                          >
-                            <PdfUploadZone
-                              onPriceDetected={handlePdfPriceDetected}
-                              onDismiss={() => setShowPdfUpload(false)}
-                            />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  )}
                 </div>
 
                 <div className="space-y-4">
@@ -570,16 +500,16 @@ export default function Wizard({
                     <ShieldCheck className="w-4.5 h-4.5 text-primary" />
                   </div>
                   <div>
-                  <h5 className="text-xs font-black text-primary uppercase tracking-wider">Precisione Tecnica</h5>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Questi parametri permettono al sistema di calcolare lo scostamento reale sulla base dei dati ISTAT 2026 della tua regione.
-                      </p>
+                    <h5 className="text-xs font-black text-primary uppercase tracking-wider">Precisione Tecnica</h5>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Questi parametri permettono al sistema di calcolare lo scostamento reale sulla base dei dati ISTAT 2026 della tua regione.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-auto pt-8 border-t border-border/30 flex justify-between items-center">
+            <div className="mt-8 pt-6 border-t border-border/30 flex justify-between items-center">
               <Button
                 variant="ghost"
                 onClick={() => setStep(1)}
@@ -590,7 +520,178 @@ export default function Wizard({
               </Button>
               <Button
                 size="lg"
-                disabled={!canStep2Next || loading}
+                disabled={!canStep2Next}
+                onClick={() => setStep(3)}
+                className={cn(
+                  "h-14 px-10 rounded-2xl font-black text-base shadow-lg transition-all hover:scale-105 active:scale-95",
+                  mode === "analizza" 
+                    ? "bg-primary hover:bg-primary/90 shadow-primary/20" 
+                    : "bg-accent hover:bg-accent/90 shadow-accent/20"
+                )}
+              >
+                Continua
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Step 3: Economic Data Input (PDF or Manual Price) */}
+        {step === 3 && job && (
+          <motion.div
+            key="s3"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="flex flex-col min-h-screen"
+          >
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setStep(2)}
+                  className="rounded-full -ml-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <h2 className="text-3xl font-black tracking-tightest">Dati Economici</h2>
+              </div>
+              <p className="text-muted-foreground mb-8 font-medium">
+                {mode === "analizza" 
+                  ? "Inserisci l'importo del preventivo ricevuto tramite PDF o manualmente."
+                  : "Conferma i parametri per il calcolo della stima."}
+              </p>
+
+              {mode === "analizza" ? (
+                <div className="space-y-6">
+                  {/* Manual Price Input */}
+                  <div className="space-y-3">
+                    <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1 flex items-center gap-2">
+                      <DollarSign className="w-4 h-4" />
+                      Importo totale del preventivo ricevuto
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="h-14 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary focus:ring-primary/20 transition-all text-lg font-black pr-12"
+                        placeholder="Es. 2.500"
+                      />
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-lg font-bold text-primary/40">
+                        €
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Divider */}
+                  <div className="flex items-center gap-4">
+                    <div className="flex-1 h-px bg-border/30" />
+                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Oppure</span>
+                    <div className="flex-1 h-px bg-border/30" />
+                  </div>
+
+                  {/* PDF Upload Section */}
+                  <div className="space-y-3">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center gap-2">
+                      <FileUp className="w-4 h-4" />
+                      Estrai da PDF o Scansione
+                    </Label>
+                    <AnimatePresence mode="wait">
+                      {!showPdfUpload ? (
+                        <motion.div
+                          key="upload-trigger"
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                        >
+                          <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => setShowPdfUpload(true)}
+                            className="w-full h-14 rounded-2xl border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all gap-2 text-sm font-black uppercase tracking-widest text-primary"
+                          >
+                            <FileUp className="w-5 h-5" />
+                            Carica PDF o Scansione
+                          </Button>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="upload-zone"
+                          initial={{ opacity: 0, scale: 0.95 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          exit={{ opacity: 0, scale: 0.95 }}
+                        >
+                          <PdfUploadZone
+                            onPriceDetected={handlePdfPriceDetected}
+                            onDismiss={() => setShowPdfUpload(false)}
+                          />
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Notes Section */}
+                  <div className="space-y-3 pt-2">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                      Note aggiuntive (facoltativo)
+                    </Label>
+                    <Input
+                      type="text"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="h-12 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base"
+                      placeholder="Es. Lavoro urgente, materiali premium, ecc."
+                    />
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="p-6 rounded-2xl bg-accent/5 border border-accent/10">
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
+                        <Calculator className="w-6 h-6 text-accent" />
+                      </div>
+                      <div>
+                        <h4 className="font-black text-foreground mb-1">Modalità Stima</h4>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          Il sistema calcolerà automaticamente la stima di prezzo in base ai parametri tecnici inseriti e ai dati di mercato ISTAT 2026.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Notes Section */}
+                  <div className="space-y-3">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                      Note aggiuntive (facoltativo)
+                    </Label>
+                    <Input
+                      type="text"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      className="h-12 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base"
+                      placeholder="Es. Lavoro urgente, materiali premium, ecc."
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="mt-8 pt-6 border-t border-border/30 flex justify-between items-center">
+              <Button
+                variant="ghost"
+                onClick={() => setStep(2)}
+                className="rounded-xl text-muted-foreground hover:text-foreground"
+              >
+                <ArrowLeft className="w-4 h-4 mr-2" />
+                Indietro
+              </Button>
+              <Button
+                size="lg"
+                disabled={!canStep3Next || loading}
                 onClick={runAnalysis}
                 className={cn(
                   "h-14 px-10 rounded-2xl font-black text-base shadow-lg transition-all hover:scale-105 active:scale-95",
@@ -612,10 +713,10 @@ export default function Wizard({
           </motion.div>
         )}
 
-        {/* Step 3: Results */}
-        {step === 3 && analysis && verdict && job && category && (
+        {/* Step 4: Results */}
+        {step === 4 && analysis && verdict && job && category && (
           <motion.div
-            key="s3"
+            key="s4"
             initial={{ opacity: 0, scale: 0.98 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.4, ease: "easeOut" }}
