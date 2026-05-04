@@ -366,6 +366,38 @@ export default function Wizard({ mode: initialMode, onClose }: Props) {
                 </div>
               )}
 
+              {/* Live Price Preview */}
+              {job && quantity && regionId && Object.values(fieldValues).every((v) => v) && (
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 space-y-3"
+                >
+                  <div className="text-xs font-black uppercase tracking-widest text-muted-foreground">Stima Prezzo</div>
+                  {(() => {
+                    const analysis = computeMarket(job, Number(quantity), fieldValues, regionId, notes);
+                    const pricePerUnit = analysis.marketMid / Number(quantity);
+                    return (
+                      <div className="space-y-2">
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-sm text-muted-foreground">Prezzo medio totale:</span>
+                          <span className="text-2xl font-black text-primary">€{analysis.marketMid.toLocaleString("it-IT", { minimumFractionDigits: 0 })}</span>
+                        </div>
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-sm text-muted-foreground">Prezzo unitario:</span>
+                          <span className="text-lg font-black text-primary">€{pricePerUnit.toLocaleString("it-IT", { minimumFractionDigits: 2 })}/{job.unit}</span>
+                        </div>
+                        <div className="h-px bg-primary/20" />
+                        <div className="flex items-baseline justify-between">
+                          <span className="text-sm font-bold text-muted-foreground">Range mercato:</span>
+                          <span className="text-sm font-black text-primary">€{analysis.marketMin.toLocaleString("it-IT", { minimumFractionDigits: 0 })} - €{analysis.marketMax.toLocaleString("it-IT", { minimumFractionDigits: 0 })}</span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </motion.div>
+              )}
+
               {/* Field Options */}
               {job && (
                 <div className="space-y-4">
