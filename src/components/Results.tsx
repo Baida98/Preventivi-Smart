@@ -180,14 +180,14 @@ export default function ResultsView({
 
               {/* Price comparison bubble */}
               <div className="bg-background/40 backdrop-blur-md rounded-[2rem] p-6 border border-white/5 flex flex-col items-center justify-center min-w-[140px] shadow-2xl">
-                <span className="text-[10px] font-black uppercase text-muted-foreground mb-1.5 tracking-widest">Scostamento</span>
+                <span className="text-[10px] font-black uppercase text-muted-foreground mb-1.5 tracking-widest">Scostamento dal benchmark</span>
                 <div className={cn(
                   "text-3xl font-black tabular-nums tracking-tighter",
                   diff >= 0 ? "text-rose-400" : "text-emerald-400"
                 )}>
                   {diff >= 0 ? "+" : ""}{Math.round(diffPct)}%
                 </div>
-                <div className="text-[10px] font-bold text-muted-foreground/60 mt-1.5 uppercase">Vs benchmark</div>
+                <div className="text-[10px] font-bold text-muted-foreground/60 mt-1.5 uppercase">Rispetto alla media</div>
               </div>
             </div>
           </motion.div>
@@ -203,12 +203,12 @@ export default function ResultsView({
                   <Target className="w-8 h-8 text-accent" />
                 </div>
                 <div>
-                  <div className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70 mb-1.5">Intervallo di mercato stimato</div>
+                  <div className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70 mb-1.5">Intervallo di mercato (ISTAT 2026)</div>
                   <h3 className="text-3xl sm:text-5xl font-black tracking-tighter leading-none text-foreground mb-3">
                     {fmtEUR(analysis.marketMin)} <span className="text-muted-foreground/20 mx-1">/</span> {fmtEUR(analysis.marketMax)}
                   </h3>
                   <p className="text-sm sm:text-base font-medium text-muted-foreground max-w-md leading-relaxed">
-                    Prezzo medio calcolato: <span className="text-accent font-bold">{fmtEUR(analysis.marketMid)}</span>. Fascia basata su indici di costo aggiornati al 2026.
+                    Prezzo medio regionale: <span className="text-accent font-bold">{fmtEUR(analysis.marketMid)}</span>. Basato su indici ISTAT 2026 per questa categoria e regione.
                   </p>
                 </div>
               </div>

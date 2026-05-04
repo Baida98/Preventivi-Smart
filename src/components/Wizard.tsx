@@ -378,7 +378,7 @@ export default function Wizard({
                 <h2 className="text-3xl font-black tracking-tightest">Configurazione Tecnica</h2>
               </div>
               <p className="text-muted-foreground mb-8 font-medium">
-                Dettagli specifici per <span className="text-foreground font-bold">{job.label}</span>.
+                Parametri tecnici per il calcolo del benchmark di <span className="text-foreground font-bold">{job.label}</span>.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -386,10 +386,11 @@ export default function Wizard({
                   <div className="space-y-2">
                     <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
                       Regione dell'intervento
+                      <span className="text-muted-foreground/50 font-normal text-[10px] ml-1">(benchmark ISTAT 2026)</span>
                     </Label>
                     <Select value={regionId} onValueChange={setRegionId}>
                       <SelectTrigger className="h-12 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base font-bold">
-                        <SelectValue placeholder="Seleziona regione..." />
+                        <SelectValue placeholder="Scegli una regione" />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl border-border/60 bg-popover/95 backdrop-blur-xl">
                         {REGIONS.map((r) => (
@@ -403,7 +404,7 @@ export default function Wizard({
 
                   <div className="space-y-2">
                     <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
-                      Quantità ({job.unitLabel})
+                      Quantità di {job.unitLabel}
                     </Label>
                     <div className="relative">
                       <Input
@@ -411,7 +412,7 @@ export default function Wizard({
                         value={quantity}
                         onChange={(e) => setQuantity(e.target.value)}
                         className="h-12 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base font-bold pr-14"
-                        placeholder="0"
+                        placeholder="Es. 50"
                       />
                       <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-muted-foreground uppercase">
                         {job.unit}
@@ -423,14 +424,14 @@ export default function Wizard({
                     <div className="space-y-2 pt-1">
                       <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1 flex items-center gap-2">
                         <BarChart3 className="w-3.5 h-3.5" />
-                        Importo totale (€)
+                        Importo totale del preventivo ricevuto
                       </Label>
                       <Input
                         type="number"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
                         className="h-12 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary focus:ring-primary/20 transition-all text-base font-black"
-                        placeholder="Inserisci il totale..."
+                        placeholder="Es. 2.500"
                       />
                     </div>
                   )}
@@ -470,10 +471,10 @@ export default function Wizard({
                     <ShieldCheck className="w-4.5 h-4.5 text-primary" />
                   </div>
                   <div>
-                    <h5 className="text-xs font-black text-primary uppercase tracking-wider">Precisione Tecnica</h5>
-                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Queste domande permettono all'AI di calcolare lo scostamento reale basato sui parametri ISTAT 2026 della tua regione.
-                    </p>
+                  <h5 className="text-xs font-black text-primary uppercase tracking-wider">Precisione Tecnica</h5>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Questi parametri permettono al sistema di calcolare lo scostamento reale sulla base dei dati ISTAT 2026 della tua regione.
+                      </p>
                   </div>
                 </div>
               </div>
