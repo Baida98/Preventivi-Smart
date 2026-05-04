@@ -52,10 +52,10 @@ type Props = {
   price: number;
   analysis: MarketAnalysis;
   verdict: Verdict | null;
-  savedThisRun: boolean;
+  saved: boolean;
   onSave: () => void;
-  onReset: () => void;
-  onEdit: () => void;
+  onReset?: () => void;
+  onEdit?: () => void;
   qualityScore?: number;
   confidenceScore?: number;
 };
@@ -85,10 +85,10 @@ export default function ResultsView({
   price,
   analysis,
   verdict,
-  savedThisRun,
+  saved: savedThisRun,
   onSave,
-  onReset,
-  onEdit,
+  onReset = () => {},
+  onEdit = () => {},
   qualityScore = 85,
   confidenceScore = 92,
 }: Props) {

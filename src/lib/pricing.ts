@@ -83,18 +83,19 @@ export const CATEGORIES: Category[] = [
         unitLabel: "metri quadri",
         defaultQty: 20,
         fields: [
-          F("complessita", "Complessità", [
-            { value: "semplice", label: "Semplice", multiplier: 1.0 },
-            { value: "media", label: "Media", multiplier: 1.18 },
-            { value: "complessa", label: "Complessa", multiplier: 1.4 },
+          F("complessita", "Complessità strutturale", [
+            { value: "semplice", label: "Lineare (pareti dritte)", multiplier: 1.0 },
+            { value: "media", label: "Media (con angoli/nicchie)", multiplier: 1.18 },
+            { value: "complessa", label: "Alta (archi/strutture curve)", multiplier: 1.4 },
           ]),
-          F("smaltimento", "Smaltimento macerie", [
-            { value: "no", label: "Non incluso", multiplier: 1.0 },
-            { value: "si", label: "Incluso", multiplier: 1.15 },
+          F("accessibilita", "Accessibilità cantiere", [
+            { value: "facile", label: "Piano terra / con ascensore", multiplier: 1.0 },
+            { value: "difficile", label: "Piani alti senza ascensore", multiplier: 1.25 },
+            { value: "centro", label: "Centro storico (ZTL/Logistica)", multiplier: 1.15 },
           ]),
-          F("materiale", "Materiale", [
-            { value: "standard", label: "Standard (Laterizio)", multiplier: 1.0 },
-            { value: "premium", label: "Premium (Ytong/Termico)", multiplier: 1.25 },
+          F("materiale", "Qualità Materiale", [
+            { value: "standard", label: "Laterizio forato standard", multiplier: 1.0 },
+            { value: "premium", label: "Blocchi isolanti (Ytong/Termico)", multiplier: 1.25 },
           ]),
         ],
       },
@@ -108,14 +109,19 @@ export const CATEGORIES: Category[] = [
         defaultQty: 15,
         fields: [
           F("tipo", "Tipo struttura", [
-            { value: "parete", label: "Parete", multiplier: 1.0 },
-            { value: "controsoffitto", label: "Controsoffitto", multiplier: 1.15 },
-            { value: "ribassato", label: "Ribassato decorativo", multiplier: 1.35 },
+            { value: "parete", label: "Parete divisoria", multiplier: 1.0 },
+            { value: "controsoffitto", label: "Controsoffitto piano", multiplier: 1.15 },
+            { value: "ribassato", label: "Velette / Gole luminose", multiplier: 1.45 },
           ]),
-          F("isolamento", "Isolamento termoacustico", [
-            { value: "no", label: "No", multiplier: 1.0 },
-            { value: "lana", label: "Lana di roccia", multiplier: 1.25 },
-            { value: "premium", label: "Fibra poliestere", multiplier: 1.4 },
+          F("lastra", "Tipo di Lastra", [
+            { value: "standard", label: "Standard (Grigia)", multiplier: 1.0 },
+            { value: "idro", label: "Idrorepellente (Verde - Bagni)", multiplier: 1.15 },
+            { value: "fuoco", label: "Ignifuga (Rossa)", multiplier: 1.25 },
+          ]),
+          F("isolamento", "Isolamento interno", [
+            { value: "no", label: "Nessuno", multiplier: 1.0 },
+            { value: "lana", label: "Lana di roccia standard", multiplier: 1.25 },
+            { value: "premium", label: "Pannelli alta densità (Acustico)", multiplier: 1.45 },
           ]),
         ],
       },
@@ -136,19 +142,19 @@ export const CATEGORIES: Category[] = [
         unitLabel: "unità",
         defaultQty: 1,
         fields: [
-          F("btu", "Potenza (BTU)", [
-            { value: "9000", label: "9000 BTU", multiplier: 1.0 },
-            { value: "12000", label: "12000 BTU", multiplier: 1.15 },
-            { value: "18000", label: "18000 BTU", multiplier: 1.4 },
+          F("btu", "Potenza termica", [
+            { value: "9000", label: "9000 BTU (fino a 25mq)", multiplier: 1.0 },
+            { value: "12000", label: "12000 BTU (fino a 40mq)", multiplier: 1.15 },
+            { value: "18000", label: "18000 BTU (oltre 40mq)", multiplier: 1.4 },
           ]),
-          F("distanza", "Distanza Unità Int/Est", [
-            { value: "spalla", label: "Spalla a spalla", multiplier: 1.0 },
-            { value: "media", label: "Fino a 5 metri", multiplier: 1.3 },
-            { value: "lunga", label: "Oltre 5 metri", multiplier: 1.6 },
+          F("posizionamento", "Difficoltà installazione", [
+            { value: "spalla", label: "Spalla a spalla (standard)", multiplier: 1.0 },
+            { value: "balcone", label: "Su balcone (accessibile)", multiplier: 1.1 },
+            { value: "parete", label: "Parete esterna (richiede ponteggio/cestello)", multiplier: 1.8 },
           ]),
-          F("predisposizione", "Predisposizione", [
-            { value: "si", label: "Esistente", multiplier: 1.0 },
-            { value: "no", label: "Da realizzare", multiplier: 1.6 },
+          F("predisposizione", "Stato tubazioni", [
+            { value: "si", label: "Predisposizione esistente", multiplier: 1.0 },
+            { value: "no", label: "Da realizzare (tracce/canalina)", multiplier: 1.6 },
           ]),
         ],
       },
@@ -162,25 +168,26 @@ export const CATEGORIES: Category[] = [
     jobs: [
       {
         id: "finestra-pvc",
-        label: "Finestra PVC Standard",
+        label: "Finestra PVC",
         categoryId: "infissi",
         base: 650,
         unit: "mq",
         unitLabel: "metri quadri",
         defaultQty: 2,
         fields: [
-          F("vetro", "Tipo Vetro", [
-            { value: "doppio", label: "Doppio Vetro", multiplier: 1.0 },
-            { value: "triplo", label: "Triplo Vetro (Termico)", multiplier: 1.25 },
+          F("profilo", "Qualità Profilo", [
+            { value: "standard", label: "5 camere (Standard)", multiplier: 1.0 },
+            { value: "premium", label: "7 camere (Alta efficienza)", multiplier: 1.2 },
           ]),
-          F("apertura", "Tipo Apertura", [
-            { value: "battente", label: "Battente", multiplier: 1.0 },
-            { value: "vasistas", label: "Anta Ribalta", multiplier: 1.1 },
-            { value: "scorrevole", label: "Scorrevole", multiplier: 1.35 },
+          F("vetro", "Configurazione Vetro", [
+            { value: "doppio", label: "Doppio vetro basso emissivo", multiplier: 1.0 },
+            { value: "triplo", label: "Triplo vetro (Efficienza Max)", multiplier: 1.25 },
+            { value: "blindato", label: "Vetro Antisfondamento", multiplier: 1.4 },
           ]),
-          F("posa", "Tipo di Posa", [
-            { value: "standard", label: "Standard (Schiuma)", multiplier: 1.0 },
-            { value: "clima", label: "Posa Clima (Nastri)", multiplier: 1.2 },
+          F("posa", "Metodo di Montaggio", [
+            { value: "standard", label: "Sovrapposizione a telaio esistente", multiplier: 1.0 },
+            { value: "totale", label: "Rimozione totale vecchio telaio", multiplier: 1.25 },
+            { value: "clima", label: "Posa Certificata (PosaClima)", multiplier: 1.35 },
           ]),
         ],
       },
@@ -201,18 +208,19 @@ export const CATEGORIES: Category[] = [
         unitLabel: "kW di picco",
         defaultQty: 3,
         fields: [
-          F("accumulo", "Sistema di Accumulo", [
-            { value: "no", label: "Senza Batterie", multiplier: 1.0 },
-            { value: "5kwh", label: "Batteria 5kWh", multiplier: 1.8 },
-            { value: "10kwh", label: "Batteria 10kWh", multiplier: 2.5 },
+          F("pannello", "Tecnologia Pannelli", [
+            { value: "mono", label: "Monocristallino Standard", multiplier: 1.0 },
+            { value: "half-cut", label: "Half-Cut (Alta resa ombre)", multiplier: 1.15 },
+            { value: "n-type", label: "N-Type (Top di gamma)", multiplier: 1.3 },
           ]),
-          F("tetto", "Tipo Tetto", [
-            { value: "falda", label: "Falda inclinata", multiplier: 1.0 },
-            { value: "piano", label: "Tetto piano", multiplier: 1.15 },
+          F("struttura", "Tipo di Installazione", [
+            { value: "falda", label: "Su tetto a falda (tegole)", multiplier: 1.0 },
+            { value: "piano", label: "Tetto piano (con zavorre)", multiplier: 1.2 },
+            { value: "facciata", label: "Integrazione architettonica", multiplier: 1.5 },
           ]),
-          F("ottimizzatori", "Ottimizzatori", [
-            { value: "no", label: "No", multiplier: 1.0 },
-            { value: "si", label: "Sì (per pannello)", multiplier: 1.2 },
+          F("monitoraggio", "Gestione Energia", [
+            { value: "standard", label: "Inverter standard", multiplier: 1.0 },
+            { value: "ottimizzatori", label: "Con Ottimizzatori (SolarEdge/Tigo)", multiplier: 1.25 },
           ]),
         ],
       },
@@ -226,22 +234,26 @@ export const CATEGORIES: Category[] = [
     jobs: [
       {
         id: "imbiancatura-standard",
-        label: "Imbiancatura standard",
+        label: "Imbiancatura professionale",
         categoryId: "imbiancatura",
         base: 10,
         unit: "mq",
         unitLabel: "metri quadri",
         defaultQty: 60,
         fields: [
-          F("stato", "Stato dei muri", [
-            { value: "buono", label: "Buono", multiplier: 1.0 },
-            { value: "medio", label: "Medio (piccoli ritocchi)", multiplier: 1.15 },
-            { value: "alto", label: "Rovinato (rasatura)", multiplier: 1.35 },
+          F("preparazione", "Preparazione supporti", [
+            { value: "minima", label: "Sola stuccatura buchi", multiplier: 1.0 },
+            { value: "fissativo", label: "Fissativo + 2 mani", multiplier: 1.2 },
+            { value: "rasatura", label: "Rasatura completa (muri rovinati)", multiplier: 1.8 },
           ]),
-          F("pittura", "Qualità Pittura", [
-            { value: "traspirante", label: "Traspirante", multiplier: 1.0 },
-            { value: "lavabile", label: "Lavabile Premium", multiplier: 1.2 },
-            { value: "antimuffa", label: "Antimuffa/Termica", multiplier: 1.35 },
+          F("ambiente", "Tipo di Ambiente", [
+            { value: "vuoto", label: "Casa vuota", multiplier: 1.0 },
+            { value: "arredato", label: "Casa arredata (coperture incluse)", multiplier: 1.25 },
+          ]),
+          F("pittura", "Tipologia Pittura", [
+            { value: "traspirante", label: "Traspirante standard", multiplier: 1.0 },
+            { value: "lavabile", label: "Lavabile acrilica", multiplier: 1.25 },
+            { value: "termica", label: "Termoisolante / Antimuffa", multiplier: 1.45 },
           ]),
         ],
       },
@@ -249,27 +261,26 @@ export const CATEGORIES: Category[] = [
   },
   {
     id: "idraulica",
-    label: "Idraulica",
+    label: "Idraulica & Riscaldamento",
     Icon: Wrench,
     blurb: "Riparazioni, sanitari, caldaia, scaldabagno.",
     jobs: [
       {
-        id: "sostituzione-sanitari",
-        label: "Sostituzione sanitari",
+        id: "rifacimento-bagno",
+        label: "Rifacimento punto idrico",
         categoryId: "idraulica",
-        base: 280,
-        unit: "elemento",
-        unitLabel: "elementi",
-        defaultQty: 1,
+        base: 220,
+        unit: "punto",
+        unitLabel: "punti acqua",
+        defaultQty: 4,
         fields: [
-          F("tipo", "Elemento", [
-            { value: "wc", label: "WC", multiplier: 1.0 },
-            { value: "lavabo", label: "Lavabo", multiplier: 0.9 },
-            { value: "doccia", label: "Piatto doccia", multiplier: 1.5 },
+          F("tubazioni", "Materiale tubi", [
+            { value: "multistrato", label: "Multistrato standard", multiplier: 1.0 },
+            { value: "rame", label: "Rame (Premium)", multiplier: 1.3 },
           ]),
-          F("finitura", "Qualità Elemento", [
-            { value: "standard", label: "Standard", multiplier: 1.0 },
-            { value: "premium", label: "Sospesi / Design", multiplier: 1.4 },
+          F("scarichi", "Rifacimento scarichi", [
+            { value: "no", label: "Solo adduzione", multiplier: 1.0 },
+            { value: "si", label: "Incluso scarichi nuovi", multiplier: 1.45 },
           ]),
         ],
       },
@@ -290,13 +301,19 @@ export const CATEGORIES: Category[] = [
         unitLabel: "punti",
         defaultQty: 6,
         fields: [
-          F("tracce", "Tracce nel muro", [
-            { value: "no", label: "Non necessarie", multiplier: 1.0 },
-            { value: "si", label: "Sì, da realizzare", multiplier: 1.3 },
+          F("tipologia", "Tipo di Punto", [
+            { value: "presa", label: "Presa / Luce standard", multiplier: 1.0 },
+            { value: "shuko", label: "Presa Shuko (Elettrodomestici)", multiplier: 1.2 },
+            { value: "dati", label: "Punto Rete / TV", multiplier: 1.4 },
           ]),
-          F("serie", "Serie civile", [
-            { value: "standard", label: "Standard (es. Bticino Matix)", multiplier: 1.0 },
-            { value: "premium", label: "Premium (es. Living Now)", multiplier: 1.35 },
+          F("posa", "Modalità di posa", [
+            { value: "sottotraccia", label: "Sottotraccia (richiede opere murarie)", multiplier: 1.0 },
+            { value: "esterna", label: "Esterna a vista (canalina)", multiplier: 0.85 },
+          ]),
+          F("serie", "Finitura Placche", [
+            { value: "base", label: "Serie base (es. Matix)", multiplier: 1.0 },
+            { value: "media", label: "Serie media (es. Arkè/Livinglight)", multiplier: 1.25 },
+            { value: "lusso", label: "Serie lusso (es. Eikon/Axolute)", multiplier: 1.6 },
           ]),
         ],
       },
