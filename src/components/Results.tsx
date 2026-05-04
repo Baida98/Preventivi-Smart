@@ -219,7 +219,7 @@ export default function ResultsView({
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1.5">
-                    <span className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70">Analisi tecnica completata</span>
+                    <span className="text-xs sm:text-sm font-bold tracking-normal uppercase text-muted-foreground/70 whitespace-normal">Valuta il tuo preventivo</span>
                     <div className="h-1 w-1 rounded-full bg-muted-foreground/30" />
                     <span className="text-[10px] font-black text-emerald-400">ISTAT 2026</span>
                   </div>
