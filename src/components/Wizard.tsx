@@ -68,26 +68,8 @@ export default function Wizard({
   const [notes, setNotes] = useState<string>("");
   const [showPdfUpload, setShowPdfUpload] = useState(false);
 
-  // Persistence logic
-  useEffect(() => {
-    const saved = localStorage.getItem(`wizard_data_${mode}`);
-    if (saved) {
-      try {
-        const data = JSON.parse(saved);
-        if (data.categoryId) setCategoryId(data.categoryId);
-        if (data.jobId) setJobId(data.jobId);
-        if (data.regionId) setRegionId(data.regionId);
-        if (data.quantity) setQuantity(data.quantity);
-        if (data.fieldValues) setFieldValues(data.fieldValues);
-        if (data.price) setPrice(data.price);
-        if (data.notes) setNotes(data.notes);
-        if (data.step && data.step < 4) setStep(data.step);
-      } catch (e) {
-        console.error("Failed to restore wizard state", e);
-      }
-    }
-  }, []);
-
+  // Session persistence (only for internal navigation)
+  // We remove the initial load from localStorage to ensure we always start from step 1
   useEffect(() => {
     const data = {
       categoryId,
@@ -101,6 +83,13 @@ export default function Wizard({
     };
     localStorage.setItem(`wizard_data_${mode}`, JSON.stringify(data));
   }, [categoryId, jobId, regionId, quantity, fieldValues, price, notes, step, mode]);
+
+  // Clean up storage on unmount (when closing the wizard)
+  useEffect(() => {
+    return () => {
+      localStorage.removeItem(`wizard_data_${mode}`);
+    };
+  }, [mode]);
 
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<MarketAnalysis | null>(null);
@@ -780,7 +769,19 @@ export default function Wizard({
               verdict={verdict}
               onSave={handleSave}
               saved={savedThisRun}
-              onReset={() => setStep(1)}
+              onReset={() => {
+                setStep(1);
+                setJobId(null);
+                setRegionId("");
+                setQuantity("");
+                setFieldValues({});
+                setPrice("");
+                setNotes("");
+                setAnalysis(null);
+                setVerdict(null);
+                setSavedThisRun(false);
+                localStorage.removeItem(`wizard_data_${mode}`);
+              }}
               onEdit={() => setStep(2)}
             />
           </motion.div>
