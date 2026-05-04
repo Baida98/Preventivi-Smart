@@ -228,7 +228,11 @@ export default function Wizard({
       regionLabel: region.label,
       quantity: Number(quantity),
       unitLabel: job.unitLabel,
-      fieldValues,
+      fieldValues: {
+        ...fieldValues,
+        material_quality: fieldValues['material_quality'] || 'standard',
+        urgency: fieldValues['urgency'] || 'standard',
+      },
       fieldLabels: job.fields.map((f: any) => ({
         id: f.id,
         label: f.label,
@@ -236,6 +240,7 @@ export default function Wizard({
           f.options.find((o: any) => o.value === fieldValues[f.id])?.label ?? "",
       })),
       receivedPrice: mode === "analizza" ? Number(price) : undefined,
+      notes: notes || undefined,
       marketMin: analysis.marketMin,
       marketMid: analysis.marketMid,
       marketMax: analysis.marketMax,
@@ -257,7 +262,9 @@ export default function Wizard({
       errore_assoluto: Math.abs(totale - analysis.marketMid),
       errore_percentuale: Math.abs(totale - analysis.marketMid) / analysis.marketMid,
       dentro_range: totale >= analysis.marketMin && totale <= analysis.marketMax,
-      confidence: analysis.confidence
+      confidence: analysis.confidence,
+      materialQuality: fieldValues['material_quality'] || 'standard',
+      urgency: fieldValues['urgency'] || 'standard'
     };
 
     try {
@@ -400,7 +407,7 @@ export default function Wizard({
           </motion.div>
         )}
 
-        {/* Step 2: Technical Configuration (ONLY) */}
+        {/* Step 2: Technical Configuration + Accuracy Inputs + Notes */}
         {step === 2 && job && (
           <motion.div
             key="s2"
@@ -420,13 +427,14 @@ export default function Wizard({
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <h2 className="text-3xl font-black tracking-tightest">Configurazione Tecnica</h2>
+                <h2 className="text-2xl font-black tracking-tightest">Configurazione Tecnica</h2>
               </div>
               <p className="text-muted-foreground mb-8 font-medium">
                 Parametri tecnici per il calcolo del benchmark di <span className="text-foreground font-bold">{job.label}</span>.
               </p>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Primary Technical Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
@@ -494,7 +502,71 @@ export default function Wizard({
                 </div>
               </div>
 
-              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 mt-6">
+              {/* Accuracy Enhancement Section */}
+              <div className="rounded-2xl border border-accent/30 bg-accent/5 p-6 mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <Zap className="w-5 h-5 text-accent" />
+                  <h4 className="text-sm font-black uppercase tracking-wider text-accent">Fattori di Accuratezza</h4>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                  Questi parametri aggiuntivi affinano il calcolo della stima per una maggiore precisione.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                      Qualità Materiali
+                    </Label>
+                    <Select value={fieldValues['material_quality'] || ''} onValueChange={(val) =>
+                      setFieldValues((prev) => ({ ...prev, material_quality: val }))
+                    }>
+                      <SelectTrigger className="h-11 rounded-xl bg-background/40 border-accent/20 hover:border-accent/50 transition-all text-sm font-semibold">
+                        <SelectValue placeholder="Seleziona" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-accent/20 bg-popover/95 backdrop-blur-xl">
+                        <SelectItem value="standard" className="rounded-lg py-1.5 focus:bg-accent/10">Standard</SelectItem>
+                        <SelectItem value="premium" className="rounded-lg py-1.5 focus:bg-accent/10">Premium</SelectItem>
+                        <SelectItem value="luxury" className="rounded-lg py-1.5 focus:bg-accent/10">Lusso</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                      Urgenza Lavoro
+                    </Label>
+                    <Select value={fieldValues['urgency'] || ''} onValueChange={(val) =>
+                      setFieldValues((prev) => ({ ...prev, urgency: val }))
+                    }>
+                      <SelectTrigger className="h-11 rounded-xl bg-background/40 border-accent/20 hover:border-accent/50 transition-all text-sm font-semibold">
+                        <SelectValue placeholder="Seleziona" />
+                      </SelectTrigger>
+                      <SelectContent className="rounded-xl border-accent/20 bg-popover/95 backdrop-blur-xl">
+                        <SelectItem value="standard" className="rounded-lg py-1.5 focus:bg-accent/10">Standard</SelectItem>
+                        <SelectItem value="urgent" className="rounded-lg py-1.5 focus:bg-accent/10">Urgente</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* Notes Section - Moved Here */}
+              <div className="rounded-2xl border border-border/60 bg-card/40 p-6 mb-8">
+                <div className="flex items-center gap-2 mb-4">
+                  <Lightbulb className="w-5 h-5 text-amber-400" />
+                  <h4 className="text-sm font-black uppercase tracking-wider">Note Aggiuntive</h4>
+                </div>
+                <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
+                  Aggiungi dettagli che potrebbero influenzare il prezzo (es. materiali premium, lavoro urgente, difficoltà di accesso).
+                </p>
+                <Input
+                  type="text"
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  className="h-12 rounded-xl bg-background/40 border-border/60 hover:border-primary/50 transition-all text-base"
+                  placeholder="Es. Materiali premium, accesso difficile, lavoro urgente..."
+                />
+              </div>
+
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10">
                 <div className="flex items-start gap-3">
                   <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
                     <ShieldCheck className="w-4.5 h-4.5 text-primary" />
@@ -502,7 +574,7 @@ export default function Wizard({
                   <div>
                     <h5 className="text-xs font-black text-primary uppercase tracking-wider">Precisione Tecnica</h5>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                      Questi parametri permettono al sistema di calcolare lo scostamento reale sulla base dei dati ISTAT 2026 della tua regione.
+                      Tutti questi parametri permettono al sistema di calcolare lo scostamento reale sulla base dei dati ISTAT 2026 della tua regione.
                     </p>
                   </div>
                 </div>
@@ -556,7 +628,7 @@ export default function Wizard({
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <h2 className="text-3xl font-black tracking-tightest">Dati Economici</h2>
+                <h2 className="text-2xl font-black tracking-tightest">Dati Economici</h2>
               </div>
               <p className="text-muted-foreground mb-8 font-medium">
                 {mode === "analizza" 
@@ -633,19 +705,7 @@ export default function Wizard({
                     </AnimatePresence>
                   </div>
 
-                  {/* Notes Section */}
-                  <div className="space-y-3 pt-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
-                      Note aggiuntive (facoltativo)
-                    </Label>
-                    <Input
-                      type="text"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      className="h-12 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base"
-                      placeholder="Es. Lavoro urgente, materiali premium, ecc."
-                    />
-                  </div>
+
                 </div>
               ) : (
                 <div className="space-y-6">
@@ -663,19 +723,7 @@ export default function Wizard({
                     </div>
                   </div>
 
-                  {/* Notes Section */}
-                  <div className="space-y-3">
-                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
-                      Note aggiuntive (facoltativo)
-                    </Label>
-                    <Input
-                      type="text"
-                      value={notes}
-                      onChange={(e) => setNotes(e.target.value)}
-                      className="h-12 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base"
-                      placeholder="Es. Lavoro urgente, materiali premium, ecc."
-                    />
-                  </div>
+
                 </div>
               )}
             </div>

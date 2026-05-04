@@ -10,6 +10,14 @@ import {
   YAxis,
   PieChart,
   Pie,
+  LineChart,
+  Line,
+  Area,
+  AreaChart,
+  Legend,
+  CartesianGrid,
+  ScatterChart,
+  Scatter,
 } from "recharts";
 import {
   CheckCircle2,
@@ -35,7 +43,11 @@ import {
   Scale,
   Wallet,
   Coins,
-  LayoutDashboard
+  LayoutDashboard,
+  LineChart as LineChartIcon,
+  BarChart3 as BarChart3Icon,
+  PieChart as PieChartIcon,
+  TrendingUp as TrendingUpIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fmtEUR, fmtPct } from "@/lib/format";
@@ -58,6 +70,8 @@ type Props = {
   onEdit?: () => void;
   qualityScore?: number;
   confidenceScore?: number;
+  materialQuality?: string;
+  urgency?: string;
 };
 
 const VERDICT_ICON: Record<string, React.ElementType> = {
@@ -91,6 +105,8 @@ export default function ResultsView({
   onEdit = () => {},
   qualityScore = 85,
   confidenceScore = 92,
+  materialQuality = 'standard',
+  urgency = 'standard',
 }: Props) {
   const VerdictIcon = verdict ? VERDICT_ICON[verdict.key] ?? CheckCircle2 : CheckCircle2;
 
@@ -508,11 +524,133 @@ export default function ResultsView({
         </motion.div>
       </div>
 
+      {/* Enhanced Analytics Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Price Trend Analysis */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.35 }}
+          className="rounded-[2rem] border border-border/60 bg-card/40 p-6 sm:p-8 space-y-6 flex flex-col"
+        >
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
+                <LineChartIcon className="w-5 h-5 text-sky-400" />
+                Andamento Prezzi
+              </h4>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Volatilità e tendenze regionali</p>
+            </div>
+            <div className="px-3 py-1 rounded-lg bg-sky-500/10 border border-sky-500/20 text-[10px] font-black text-sky-400 uppercase tracking-tighter">
+              {analysis.volatilityClass.toUpperCase()}
+            </div>
+          </div>
+          <div className="flex-1 min-h-[250px] w-full">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={[
+                { name: "Min", value: analysis.marketMin },
+                { name: "Media", value: analysis.marketMid },
+                { name: "Max", value: analysis.marketMax },
+              ]} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
+                <defs>
+                  <linearGradient id="areaGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="hsl(var(--primary))" stopOpacity={0.3} />
+                    <stop offset="100%" stopColor="hsl(var(--primary))" stopOpacity={0.05} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11, fontWeight: 700 }} />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+                  content={({ active, payload }) => {
+                    if (active && payload && payload.length) {
+                      return (
+                        <div className="bg-popover/90 backdrop-blur-md border border-border/60 p-3 rounded-2xl shadow-2xl">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{payload[0].payload.name}</p>
+                          <p className="text-lg font-black text-foreground">{fmtEUR(payload[0].value)}</p>
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Area type="monotone" dataKey="value" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#areaGradient)" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        </motion.div>
+
+        {/* Quality vs Price Efficiency */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.40 }}
+          className="rounded-[2rem] border border-border/60 bg-card/40 p-6 sm:p-8 space-y-6 flex flex-col"
+        >
+          <div className="flex items-center justify-between">
+            <div className="space-y-1">
+              <h4 className="text-lg font-black tracking-tight flex items-center gap-2">
+                <BarChart3Icon className="w-5 h-5 text-emerald-400" />
+                Efficienza Qualità-Prezzo
+              </h4>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Rapporto qualità e accuratezza</p>
+            </div>
+            <div className="px-3 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black text-emerald-400 uppercase tracking-tighter">
+              {qualityScore}%
+            </div>
+          </div>
+          <div className="space-y-4 flex-1">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-muted-foreground">Qualità Materiali</span>
+                <span className="text-sm font-black text-foreground capitalize">{materialQuality}</span>
+              </div>
+              <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-emerald-400 to-sky-400 rounded-full transition-all duration-500"
+                  style={{
+                    width: materialQuality === 'luxury' ? '100%' : materialQuality === 'premium' ? '75%' : '50%'
+                  }}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-muted-foreground">Urgenza Lavoro</span>
+                <span className="text-sm font-black text-foreground capitalize">{urgency === 'urgent' ? 'Urgente' : 'Standard'}</span>
+              </div>
+              <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-amber-400 to-rose-400 rounded-full transition-all duration-500"
+                  style={{
+                    width: urgency === 'urgent' ? '100%' : '40%'
+                  }}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-bold text-muted-foreground">Affidabilità Stima</span>
+                <span className="text-sm font-black text-foreground">{confidenceScore}%</span>
+              </div>
+              <div className="h-2 rounded-full bg-white/5 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-sky-400 to-primary rounded-full transition-all duration-500"
+                  style={{
+                    width: `${confidenceScore}%`
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+
       {/* Advice Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.35 }}
+        transition={{ delay: 0.45 }}
         className="rounded-[2.5rem] border border-border/60 bg-card/40 p-6 sm:p-8 space-y-6"
       >
         <div className="flex items-center justify-between">
