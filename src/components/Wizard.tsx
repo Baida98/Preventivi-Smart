@@ -81,7 +81,6 @@ export default function Wizard({
     if (job) {
       const initial: Record<string, string> = {};
       for (const f of job.fields) {
-        // Mantiene i valori esistenti se il campo ha lo stesso ID (es. cambio job stessa categoria)
         initial[f.id] = fieldValues[f.id] || f.options[0]!.value;
       }
       setFieldValues(initial);
@@ -364,137 +363,140 @@ export default function Wizard({
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
+            className="flex flex-col min-h-screen"
           >
-            <div className="flex items-center gap-3 mb-2">
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => setStep(1)}
-                className="rounded-full -ml-2"
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-              <h2 className="text-3xl font-black tracking-tightest">Configurazione Tecnica</h2>
-            </div>
-            <p className="text-muted-foreground mb-10 font-medium">
-              Dettagli specifici per <span className="text-foreground font-bold">{job.label}</span>.
-            </p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="space-y-6">
-                <div className="space-y-3">
-                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
-                    Regione dell'intervento
-                  </Label>
-                  <Select value={regionId} onValueChange={setRegionId}>
-                    <SelectTrigger className="h-14 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base font-bold">
-                      <SelectValue placeholder="Seleziona regione..." />
-                    </SelectTrigger>
-                    <SelectContent className="rounded-2xl border-border/60 bg-popover/95 backdrop-blur-xl">
-                      {REGIONS.map((r) => (
-                        <SelectItem key={r.id} value={r.id} className="rounded-xl py-3 focus:bg-primary/10">
-                          {r.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-3">
-                  <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
-                    Quantità ({job.unitLabel})
-                  </Label>
-                  <div className="relative">
-                    <Input
-                      type="number"
-                      value={quantity}
-                      onChange={(e) => setQuantity(e.target.value)}
-                      className="h-14 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base font-bold pr-16"
-                      placeholder="0"
-                    />
-                    <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-muted-foreground uppercase">
-                      {job.unit}
-                    </div>
-                  </div>
-                </div>
-
-                {mode === "analizza" && (
-                  <div className="space-y-3 pt-2">
-                    <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1 flex items-center gap-2">
-                      <BarChart3 className="w-4 h-4" />
-                      Importo totale preventivo (€)
-                    </Label>
-                    <Input
-                      type="number"
-                      value={price}
-                      onChange={(e) => setPrice(e.target.value)}
-                      className="h-14 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary focus:ring-primary/20 transition-all text-lg font-black"
-                      placeholder="Inserisci il totale ricevuto..."
-                    />
-                  </div>
-                )}
+            <div className="flex-1">
+              <div className="flex items-center gap-3 mb-2">
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  onClick={() => setStep(1)}
+                  className="rounded-full -ml-2"
+                >
+                  <ArrowLeft className="w-5 h-5" />
+                </Button>
+                <h2 className="text-3xl font-black tracking-tightest">Configurazione Tecnica</h2>
               </div>
+              <p className="text-muted-foreground mb-8 font-medium">
+                Dettagli specifici per <span className="text-foreground font-bold">{job.label}</span>.
+              </p>
 
-              <div className="space-y-6">
-                {job.fields.map((f) => (
-                  <div key={f.id} className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <div className="space-y-2">
                     <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
-                      {f.label}
+                      Regione dell'intervento
                     </Label>
-                    <Select
-                      value={fieldValues[f.id]}
-                      onValueChange={(val) =>
-                        setFieldValues((prev) => ({ ...prev, [f.id]: val }))
-                      }
-                    >
-                      <SelectTrigger className="h-14 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base font-bold">
-                        <SelectValue />
+                    <Select value={regionId} onValueChange={setRegionId}>
+                      <SelectTrigger className="h-12 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base font-bold">
+                        <SelectValue placeholder="Seleziona regione..." />
                       </SelectTrigger>
                       <SelectContent className="rounded-2xl border-border/60 bg-popover/95 backdrop-blur-xl">
-                        {f.options.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value} className="rounded-xl py-3 focus:bg-primary/10">
-                            {opt.label}
+                        {REGIONS.map((r) => (
+                          <SelectItem key={r.id} value={r.id} className="rounded-xl py-2 focus:bg-primary/10">
+                            {r.label}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
-                ))}
-                
-                <div className="p-5 rounded-3xl bg-primary/5 border border-primary/10 mt-4">
-                  <div className="flex items-start gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <ShieldCheck className="w-5 h-5 text-primary" />
+
+                  <div className="space-y-2">
+                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                      Quantità ({job.unitLabel})
+                    </Label>
+                    <div className="relative">
+                      <Input
+                        type="number"
+                        value={quantity}
+                        onChange={(e) => setQuantity(e.target.value)}
+                        className="h-12 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base font-bold pr-14"
+                        placeholder="0"
+                      />
+                      <div className="absolute right-4 top-1/2 -translate-y-1/2 text-xs font-black text-muted-foreground uppercase">
+                        {job.unit}
+                      </div>
                     </div>
-                    <div>
-                      <h5 className="text-sm font-black text-primary uppercase tracking-wider">Precisione Tecnica</h5>
-                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Queste domande mirate permettono all'AI di calcolare lo scostamento reale basato sui parametri ISTAT 2026 della tua regione.
-                      </p>
+                  </div>
+
+                  {mode === "analizza" && (
+                    <div className="space-y-2 pt-1">
+                      <Label className="text-xs font-black uppercase tracking-widest text-primary ml-1 flex items-center gap-2">
+                        <BarChart3 className="w-3.5 h-3.5" />
+                        Importo totale (€)
+                      </Label>
+                      <Input
+                        type="number"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        className="h-12 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary focus:ring-primary/20 transition-all text-base font-black"
+                        placeholder="Inserisci il totale..."
+                      />
                     </div>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  {job.fields.map((f) => (
+                    <div key={f.id} className="space-y-2">
+                      <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">
+                        {f.label}
+                      </Label>
+                      <Select
+                        value={fieldValues[f.id]}
+                        onValueChange={(val) =>
+                          setFieldValues((prev) => ({ ...prev, [f.id]: val }))
+                        }
+                      >
+                        <SelectTrigger className="h-12 rounded-2xl bg-card/40 border-border/60 hover:border-primary/50 transition-all text-base font-bold">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent className="rounded-2xl border-border/60 bg-popover/95 backdrop-blur-xl">
+                          {f.options.map((opt) => (
+                            <SelectItem key={opt.value} value={opt.value} className="rounded-xl py-2 focus:bg-primary/10">
+                              {opt.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 mt-6">
+                <div className="flex items-start gap-3">
+                  <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 mt-0.5">
+                    <ShieldCheck className="w-4.5 h-4.5 text-primary" />
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-black text-primary uppercase tracking-wider">Precisione Tecnica</h5>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      Queste domande permettono all'AI di calcolare lo scostamento reale basato sui parametri ISTAT 2026 della tua regione.
+                    </p>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="mt-12 flex justify-end">
+            <div className="mt-8 pt-6 border-t border-border/30 flex justify-end">
               <Button
                 size="lg"
                 disabled={!canStep2Next || loading}
                 onClick={runAnalysis}
                 className={cn(
-                  "h-16 px-10 rounded-2xl font-black text-lg shadow-xl transition-all hover:scale-105 active:scale-95",
+                  "h-14 px-8 rounded-2xl font-black text-base shadow-lg transition-all hover:scale-105 active:scale-95",
                   mode === "analizza" 
                     ? "bg-primary hover:bg-primary/90 shadow-primary/20" 
                     : "bg-accent hover:bg-accent/90 shadow-accent/20"
                 )}
               >
                 {loading ? (
-                  <Loader2 className="w-6 h-6 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
                     {mode === "analizza" ? "Analizza Preventivo" : "Calcola Stima"}
-                    <ArrowRight className="w-6 h-6 ml-2" />
+                    <ArrowRight className="w-5 h-5 ml-2" />
                   </>
                 )}
               </Button>
