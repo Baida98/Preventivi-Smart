@@ -567,7 +567,7 @@ export default function ResultsView({
                       return (
                         <div className="bg-popover/90 backdrop-blur-md border border-border/60 p-3 rounded-2xl shadow-2xl">
                           <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">{payload[0].payload.name}</p>
-                          <p className="text-lg font-black text-foreground">{fmtEUR(payload[0].value)}</p>
+                          <p className="text-lg font-black text-foreground">{fmtEUR(Number(payload[0].value))}</p>
                         </div>
                       );
                     }

@@ -43,8 +43,10 @@ import { cn } from "@/lib/utils";
 import ResultsView from "./Results";
 import PdfUploadZone from "./PdfUploadZone";
 
+export type Mode = "analizza" | "stima";
+
 type Props = {
-  mode: "analizza" | "stima";
+  mode: Mode;
   onClose: () => void;
 };
 
@@ -138,27 +140,44 @@ export default function Wizard({ mode: initialMode, onClose }: Props) {
   const handleSave = async () => {
     if (!job || !analysis || !verdict) return;
 
-    if (isGuestLimitReached()) {
+    if (await isGuestLimitReached()) {
       toast.error("Limite di preventivi raggiunto. Accedi per salvare illimitatamente.");
       return;
     }
 
+    const category = findCategory(categoryId);
+    const jobData = findJob(categoryId, jobId || "");
+    const region = REGIONS.find((r) => r.id === regionId);
+    
     const quote: SavedQuote = {
       id: newId(),
-      categoryId,
-      jobId,
-      regionId,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      data: new Date().toLocaleDateString("it-IT"),
+      jobId: jobId || "",
+      jobLabel: jobData?.label || "",
+      categoryLabel: category?.label || "",
+      regionLabel: region?.label || "",
       quantity: Number(quantity),
+      unitLabel: jobData?.unitLabel || "",
       fieldValues,
-      price: mode === "analizza" ? Number(price) : analysis.marketMid,
+      fieldLabels: jobData?.fields.map((f) => ({
+        id: f.id,
+        label: f.label,
+        valueLabel: f.options.find((o) => o.value === fieldValues[f.id])?.label || "",
+      })) || [],
       notes,
-      analysis,
+      receivedPrice: mode === "analizza" ? Number(price) : undefined,
+      marketMin: analysis.marketMin,
+      marketMid: analysis.marketMid,
+      marketMax: analysis.marketMax,
       verdict: verdict.key,
-      timestamp: new Date().toISOString(),
+      verdictLabel: verdict.label,
       mode,
-      errore_percentuale: Math.abs(Number(price) - analysis.marketMid) / analysis.marketMid,
-      dentro_range: Number(price) >= analysis.marketMin && Number(price) <= analysis.marketMax,
-      confidence: analysis.confidence,
+      ambito: category?.label || "",
+      sottotipo: jobData?.label || "",
+      stato: "bozza" as const,
+      source: "manuale" as const,
     };
 
     try {

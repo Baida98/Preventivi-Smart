@@ -110,13 +110,11 @@ export default function App() {
           <Wizard
             key={`${mode}-${presetCategoryId ?? "none"}`}
             mode={mode}
-            initialCategoryId={presetCategoryId}
             onClose={() => {
               setMode(null);
               setPresetCategoryId(null);
               window.scrollTo({ top: 0, behavior: "smooth" });
             }}
-            onSaved={refreshArchive}
           />
         </div>
       )}
