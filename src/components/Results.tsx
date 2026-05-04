@@ -257,12 +257,12 @@ export default function ResultsView({
                   <Target className="w-8 h-8 text-accent" />
                 </div>
                 <div>
-                  <div className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70 mb-1.5">Intervallo di mercato (ISTAT 2026)</div>
+                  <div className="text-[10px] font-black tracking-[0.2em] uppercase text-muted-foreground/70 mb-1.5">Un riferimento chiaro per valutare un preventivo</div>
                   <h3 className="text-3xl sm:text-5xl font-black tracking-tighter leading-none text-foreground mb-3">
                     {fmtEUR(analysis.marketMin)} <span className="text-muted-foreground/20 mx-1">/</span> {fmtEUR(analysis.marketMax)}
                   </h3>
                   <p className="text-sm sm:text-base font-medium text-muted-foreground max-w-md leading-relaxed">
-                    La stima può variare in base a materiali, accesso, complessità e condizioni specifiche del lavoro.
+                    Ti aiuta a leggere meglio prezzi, variabili e differenze tra le offerte, con un punto di partenza realistico.
                   </p>
                 </div>
               </div>
@@ -508,17 +508,17 @@ export default function ResultsView({
           <div className="grid grid-cols-2 gap-3">
             <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-1">
               <div className="flex items-center gap-2 text-[10px] font-black uppercase text-primary tracking-widest">
-                <TrendingUp className="w-3 h-3" /> Inflazione
+                <TrendingUp className="w-3 h-3" /> Costo stimato
               </div>
               <p className="text-xl font-black text-foreground">+{fmtEUR(analysis.inflationImpact)}</p>
-              <p className="text-[10px] font-bold text-muted-foreground/60">Indice ISTAT 2026</p>
+              <p className="text-[10px] font-bold text-muted-foreground/60">Range realistico</p>
             </div>
             <div className="p-4 rounded-2xl bg-accent/5 border border-accent/10 space-y-1">
               <div className="flex items-center gap-2 text-[10px] font-black uppercase text-accent tracking-widest">
-                <Truck className="w-3 h-3" /> Logistica
+                <Truck className="w-3 h-3" /> Affidabilità
               </div>
               <p className="text-xl font-black text-foreground">{fmtEUR(analysis.logisticsImpact >= 0 ? analysis.logisticsImpact : 0)}</p>
-              <p className="text-[10px] font-bold text-muted-foreground/60">Impatto territoriale</p>
+              <p className="text-[10px] font-bold text-muted-foreground/60">Più informazioni fornisci, più il riferimento diventa utile</p>
             </div>
           </div>
         </motion.div>
@@ -659,7 +659,7 @@ export default function ResultsView({
                 <ShieldCheck className="w-5 h-5 text-indigo-400" />
                 Come leggere questo risultato
               </h4>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Se il prezzo è molto più basso o molto più alto del range, vale la pena controllare cosa include davvero.</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Se il prezzo è molto più basso o molto più alto del range, vale la pena controllare cosa include davvero. Non sostituisce una ditta: ti aiuta a confrontare meglio le offerte e a fare una scelta più consapevole.</p>
           </div>
           <div className="px-3 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-[10px] font-black text-indigo-400 uppercase tracking-tighter">
             SCORE: {Math.round((qualityScore + confidenceScore) / 2)}%
@@ -721,7 +721,7 @@ export default function ResultsView({
               <Lightbulb className="w-5 h-5 text-amber-400" />
               Domande utili prima di confermare il lavoro
             </h4>
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Non sostituisce una ditta: ti aiuta a confrontare meglio le offerte e a fare una scelta più consapevole.</p>
+            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Possibili variazioni da considerare: alcuni dettagli non visibili subito possono influire sul prezzo finale.</p>
           </div>
           <div className="p-2 rounded-xl bg-amber-400/10 border border-amber-400/20">
             <Gavel className="w-5 h-5 text-amber-400" />
@@ -729,7 +729,7 @@ export default function ResultsView({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {verdict?.recommendations.map((rec, i) => {
+          {["Il preventivo include tutte le voci principali?", "Ci sono costi extra possibili?", "Quali materiali sono compresi?", "Il prezzo tiene conto di eventuali variabili?"].map((rec, i) => {
             const isLegal = rec.toLowerCase().includes("legale");
             return (
               <motion.div
@@ -766,7 +766,7 @@ export default function ResultsView({
         transition={{ delay: 0.52 }}
         className="text-center text-xs text-muted-foreground/60 font-medium italic"
       >
-        Usa questo report come riferimento per valutare con più sicurezza i preventivi che ricevi.
+        Usa questo report come riferimento per valutare con più sicurezza i preventivi che ricevi. Basato sui dati inseriti · Disponibile subito · Nessun abbonamento
       </motion.p>
 
       {/* Actions */}
