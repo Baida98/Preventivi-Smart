@@ -54,6 +54,7 @@ import { fmtEUR, fmtPct } from "@/lib/format";
 import type { Job, Category, MarketAnalysis } from "@/lib/pricing";
 import type { Verdict } from "@/lib/verdict";
 import { cn } from "@/lib/utils";
+  import LegalDisclaimer from "@/components/LegalDisclaimer";
 
 type Props = {
   mode: "analizza" | "stima";

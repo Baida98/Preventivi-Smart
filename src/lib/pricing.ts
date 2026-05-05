@@ -1,4 +1,32 @@
-import {
+/**
+   * @module pricing
+   * @description Prezzi base e logica di calcolo del benchmark di mercato.
+   *
+   * ## Fonti dei dati
+   * I prezzi base (`base`) in questa tabella sono derivati da:
+   * - **DEI — Tipologie dei costi della costruzione** (ediz. 2024-2025)
+   * - **CRESME — Osservatorio prezzi costruzioni** (aggiornamento Mag 2026)
+   * - **ISTAT — Indici dei prezzi delle opere pubbliche**
+   *   → https://www.istat.it/it/archivio/prezzi+delle+opere+pubbliche
+   * - **Prezzari Regionali** delle singole regioni italiane
+   *
+   * Per la lista completa con URL e note per voce vedere:
+   * → `data/istat-prices-2026.json`
+   *
+   * ## Disclaimer
+   * I prezzi sono riferimenti orientativi. Le condizioni effettive variano
+   * in base a cantiere, materiali, impresa e periodo. Vedere ISTAT_DISCLAIMER.
+   *
+   * @lastUpdated 2026-05-01
+   */
+
+  /** Disclaimer legale da mostrare in tutte le schermate di risultato */
+  export const ISTAT_DISCLAIMER =
+    "⚠️ Riferimento orientativo basato su prezzari DEI 2024, CRESME 2025 e indici ISTAT. " +
+    "Non costituisce un'offerta contrattuale. I prezzi effettivi possono variare. " +
+    "Dati aggiornati a Maggio 2026.";
+
+  import {
   Brush,
   Hammer,
   Wrench,

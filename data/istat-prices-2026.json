@@ -1,0 +1,195 @@
+{
+  "_meta": {
+    "version": "2026-05",
+    "lastUpdated": "2026-05-01",
+    "sources": [
+      {
+        "name": "ISTAT — Indici dei prezzi delle opere pubbliche",
+        "url": "https://www.istat.it/it/archivio/prezzi+delle+opere+pubbliche",
+        "description": "Indici ufficiali ISTAT prezzi costruzioni e impianti"
+      },
+      {
+        "name": "CRESME — Osservatorio prezzi",
+        "url": "https://www.cresme.it",
+        "description": "Prezzi correnti di mercato mano d'opera e materiali edili"
+      },
+      {
+        "name": "DEI — Tipologie dei costi della costruzione",
+        "url": "https://www.deicodice.it",
+        "description": "Prezzario DEI per l'edilizia privata 2024-2025"
+      },
+      {
+        "name": "Prezzari Regionali",
+        "url": "https://www.regione.lombardia.it/wps/portal/istituzionale/HP/servizi-e-informazioni/enti-e-operatori/enti-locali/prezzario-oopp",
+        "description": "Prezzari ufficiali delle singole regioni italiane"
+      }
+    ],
+    "inflationNote": "Fattore inflazione cumulativo 2024-2026 pari a 1.042 (ISTAT FOI, serie storica)",
+    "disclaimer": "I prezzi base sono riferimenti orientativi derivati dai prezzari ufficiali sopra citati. Non costituiscono un'offerta contrattuale. Le condizioni effettive possono variare in base a cantiere, materiali scelti, impresa e periodo."
+  },
+  "prezziBase": {
+    "edilizia": {
+      "muratura": {
+        "base_eur_mq": 45,
+        "fonte": "DEI 2024 — Cap. 4 Murature",
+        "range_mercato": {
+          "min": 38,
+          "max": 65
+        },
+        "unita": "€/mq",
+        "note": "Laterizio forato standard, posa inclusa manodopera"
+      },
+      "cartongesso": {
+        "base_eur_mq": 35,
+        "fonte": "DEI 2024 — Cap. 8 Intonaci e rivestimenti",
+        "range_mercato": {
+          "min": 28,
+          "max": 55
+        },
+        "unita": "€/mq",
+        "note": "Lastra standard grigia 12.5mm, singola parete"
+      }
+    },
+    "clima": {
+      "installazione-clima": {
+        "base_eur_unita": 450,
+        "fonte": "CRESME 2025 — Impianti di climatizzazione",
+        "range_mercato": {
+          "min": 350,
+          "max": 900
+        },
+        "unita": "€/unità",
+        "note": "Mono split 9000 BTU, installazione standard, escluso apparecchio"
+      }
+    },
+    "infissi": {
+      "finestra-pvc": {
+        "base_eur_mq": 650,
+        "fonte": "Prezzario DEI 2024 — Cap. 11 Serramenti",
+        "range_mercato": {
+          "min": 500,
+          "max": 1200
+        },
+        "unita": "€/mq",
+        "note": "Profilo 5 camere, doppio vetro basso emissivo, posa inclusa"
+      }
+    },
+    "fotovoltaico": {
+      "impianto-fv": {
+        "base_eur_kwp": 1800,
+        "fonte": "ENEA / GSE Rapporto Fotovoltaico 2024",
+        "url": "https://www.gse.it/servizi-per-te/fotovoltaico/rapporti",
+        "range_mercato": {
+          "min": 1400,
+          "max": 2600
+        },
+        "unita": "€/kWp",
+        "note": "Impianto residenziale completo di inverter e pratica GSE"
+      }
+    },
+    "imbiancatura": {
+      "imbiancatura-standard": {
+        "base_eur_mq": 10,
+        "fonte": "DEI 2024 — Cap. 9 Tinteggiature",
+        "range_mercato": {
+          "min": 7,
+          "max": 18
+        },
+        "unita": "€/mq",
+        "note": "Pittura traspirante, 2 mani, stuccatura buchi inclusa"
+      }
+    },
+    "idraulica": {
+      "rifacimento-bagno": {
+        "base_eur_punto": 220,
+        "fonte": "CRESME 2025 — Impianti idrico-sanitari",
+        "range_mercato": {
+          "min": 160,
+          "max": 380
+        },
+        "unita": "€/punto",
+        "note": "Punto acqua calda+fredda, tubo multistrato, senza scarichi"
+      }
+    },
+    "elettrico": {
+      "punto-elettrico": {
+        "base_eur_punto": 60,
+        "fonte": "DEI 2024 — Cap. 14 Impianti elettrici",
+        "range_mercato": {
+          "min": 45,
+          "max": 110
+        },
+        "unita": "€/punto",
+        "note": "Presa o luce standard, sottotraccia, esclusa placca"
+      }
+    }
+  },
+  "indiciRegionali": {
+    "fonte": "ISTAT — Retribuzioni contrattuali per regione + costo della vita ISTAT 2024",
+    "url": "https://www.istat.it/it/archivio/retribuzioni+contrattuali",
+    "regioni": {
+      "lombardia": {
+        "indice": 1.12,
+        "note": "Milano e hinterland: costo manodopera +12% vs media nazionale"
+      },
+      "lazio": {
+        "indice": 1.08,
+        "note": "Roma: costo logistico e ZTL incide"
+      },
+      "campania": {
+        "indice": 0.95
+      },
+      "sicilia": {
+        "indice": 0.92
+      },
+      "veneto": {
+        "indice": 1.05
+      },
+      "emilia-romagna": {
+        "indice": 1.06
+      },
+      "piemonte": {
+        "indice": 1.04
+      },
+      "puglia": {
+        "indice": 0.94
+      },
+      "toscana": {
+        "indice": 1.03
+      },
+      "calabria": {
+        "indice": 0.88
+      },
+      "sardegna": {
+        "indice": 0.96
+      },
+      "liguria": {
+        "indice": 1.07
+      },
+      "marche": {
+        "indice": 0.98
+      },
+      "abruzzo": {
+        "indice": 0.96
+      },
+      "friuli-venezia-giulia": {
+        "indice": 1.02
+      },
+      "trentino-alto-adige": {
+        "indice": 1.15
+      },
+      "umbria": {
+        "indice": 0.97
+      },
+      "basilicata": {
+        "indice": 0.91
+      },
+      "molise": {
+        "indice": 0.9
+      },
+      "valle-daosta": {
+        "indice": 1.1
+      }
+    }
+  }
+}
