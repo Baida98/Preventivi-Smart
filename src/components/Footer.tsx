@@ -7,7 +7,7 @@ export default function Footer() {
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-4 h-4 text-primary" />
           <span>
-            © {new Date().getFullYear()} Preventivi-Smart · Analisi Tecnica e Benchmark di Mercato · v1.0.2-test-push
+            © {new Date().getFullYear()} Preventivi-Smart · Analisi Tecnica e Benchmark di Mercato
           </span>
         </div>
         <div className="flex items-center gap-5">
