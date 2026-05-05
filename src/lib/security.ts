@@ -123,7 +123,7 @@ export function validateQuoteForFirestore(quote: Quote, userId: string): {
   if (!quote.ambito || typeof quote.ambito !== "string") errors.push("Ambito di lavoro mancante");
   if (!quote.sottotipo || typeof quote.sottotipo !== "string") errors.push("Tipo di lavoro mancante");
 
-  const validStates = ["bozza", "finalizzato", "inviato", "accettato", "rifiutato", "archiviato"];
+  const validStates = ["bozza", "finalizzato", "inviato", "accettato", "rifiutato", "modificato", "archiviato"];
   if (!quote.stato || !validStates.includes(quote.stato)) {
     errors.push(`Stato non valido: ${quote.stato}`);
   }
