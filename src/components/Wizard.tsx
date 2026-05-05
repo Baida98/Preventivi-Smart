@@ -247,14 +247,14 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4 overflow-y-auto">
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         exit={{ opacity: 0, scale: 0.95 }}
-        className="w-full max-w-2xl max-h-[90vh] overflow-y-auto bg-background rounded-[2.5rem] border border-border/60 shadow-2xl"
+        className="w-full max-w-2xl my-auto bg-background rounded-[2.5rem] border border-border/60 shadow-2xl flex flex-col max-h-[95vh] sm:max-h-[90vh]"
       >
-        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/30 px-6 sm:px-8 py-4 flex items-center justify-between">
+        <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-md border-b border-border/30 px-5 sm:px-8 py-3 sm:py-4 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-4 flex-1">
             <div className="flex items-center gap-2">
               {[1, 2, 3].map((s) => (
@@ -281,7 +281,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
           </Button>
         </div>
 
-        <div className="p-6 sm:p-8 space-y-8">
+        <div className="overflow-y-auto flex-1 p-5 sm:p-8 space-y-6 sm:space-y-8">
           {/* Step 1: Category Selection */}
           {step === 1 && (
             <motion.div
@@ -298,7 +298,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
                 {CATEGORIES.map((cat) => {
                   const Icon = cat.Icon;
                   return (
@@ -465,11 +465,11 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
                 </div>
               )}
 
-              <div className="mt-8 pt-6 border-t border-border/30 flex justify-between items-center">
+              <div className="mt-6 pt-6 border-t border-border/30 flex flex-col-reverse sm:flex-row justify-between items-center gap-3">
                 <Button
                   variant="ghost"
                   onClick={() => setStep(1)}
-                  className="rounded-xl text-muted-foreground hover:text-foreground"
+                  className="w-full sm:w-auto rounded-xl text-muted-foreground hover:text-foreground"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Indietro
@@ -478,7 +478,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
                   size="lg"
                   disabled={!canStep2Next}
                   onClick={() => setStep(3)}
-                  className="h-14 px-10 rounded-2xl font-black text-base shadow-lg transition-all hover:scale-105 active:scale-95 bg-primary hover:bg-primary/90 shadow-primary/20"
+                  className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-10 rounded-2xl font-black text-sm sm:text-base shadow-lg transition-all hover:scale-105 active:scale-95 bg-primary hover:bg-primary/90 shadow-primary/20"
                 >
                   Continua
                   <ArrowRight className="w-4 h-4 ml-2" />
@@ -609,11 +609,11 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
                 </div>
               )}
 
-              <div className="mt-8 pt-6 border-t border-border/30 flex justify-between items-center">
+              <div className="mt-6 pt-6 border-t border-border/30 flex flex-col-reverse sm:flex-row justify-between items-center gap-3">
                 <Button
                   variant="ghost"
                   onClick={() => setStep(2)}
-                  className="rounded-xl text-muted-foreground hover:text-foreground"
+                  className="w-full sm:w-auto rounded-xl text-muted-foreground hover:text-foreground"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
                   Indietro
@@ -623,7 +623,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
                   disabled={!canStep3Next || loading}
                   onClick={runAnalysis}
                   className={cn(
-                    "h-14 px-10 rounded-2xl font-black text-base shadow-lg transition-all hover:scale-105 active:scale-95",
+                    "w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-10 rounded-2xl font-black text-sm sm:text-base shadow-lg transition-all hover:scale-105 active:scale-95",
                     mode === "analizza" 
                       ? "bg-primary hover:bg-primary/90 shadow-primary/20" 
                       : "bg-accent hover:bg-accent/90 shadow-accent/20"

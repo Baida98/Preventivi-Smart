@@ -37,12 +37,11 @@ export default function Hero({ onAnalizza, onStima }: Props) {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="text-balance text-[48px] sm:text-[72px] md:text-[84px] leading-[0.9] font-black tracking-tighter"
+          className="text-balance text-[40px] sm:text-[56px] md:text-[72px] leading-[1.1] font-black tracking-tighter max-w-5xl mx-auto"
         >
-          Un riferimento chiaro per valutare un{" "}
-          <span className="font-serif-display italic text-primary bg-gradient-to-r from-primary to-sky-400 bg-clip-text text-transparent">
-            preventivo prima di scegliere
-          </span>
+          <span className="block text-foreground/90">Un riferimento chiaro</span>
+          <span className="block bg-gradient-to-r from-primary via-sky-400 to-accent bg-clip-text text-transparent font-serif italic">per valutare un preventivo</span>
+          <span className="block text-foreground/80">prima di scegliere</span>
         </motion.h1>
 
         {/* Subtitle */}
