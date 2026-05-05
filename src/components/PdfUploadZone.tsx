@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { runOCRPipeline, type OCRPipelineResult } from '../lib/ocr-pipeline';
+import { validateFileUpload } from '../lib/file-validator';
 import { Button } from './ui/button';
 import {
   AlertCircle,
@@ -35,8 +36,9 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
   const [dragActive, setDragActive] = useState(false);
 
   const handleFile = async (file: File) => {
-    if (!file.type.includes('pdf')) {
-      toast.error('Per favore carica un file PDF');
+    const validation = validateFileUpload(file);
+    if (!validation.success) {
+      toast.error(validation.error);
       return;
     }
 
@@ -242,7 +244,7 @@ const PdfUploadZone: React.FC<PdfUploadZoneProps> = ({
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf"
+        accept=".pdf,image/jpeg,image/png"
         onChange={handleChange}
         className="hidden"
       />
