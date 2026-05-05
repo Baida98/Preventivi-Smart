@@ -120,7 +120,7 @@ export async function loadArchive(): Promise<SavedQuote[]> {
   // Se loggato e Firestore disponibile: carica dal cloud
   if (user && db) {
     try {
-      const col = collection(db, "users", user.uid, "preventivi");
+      const col = collection(db, "users", user.uid, "quotes");
       const q = query(col, orderBy("updatedAt", "desc"), limit(100));
       const snap = await getDocs(q);
       const cloudQuotes = snap.docs.map(d => d.data() as SavedQuote);
@@ -161,7 +161,7 @@ export async function saveQuote(q: SavedQuote) {
   try {
     // FIRESTORE FIRST: Se loggato, salva sempre su Firestore
     if (user && db) {
-      const col = collection(db, "users", user.uid, "preventivi");
+      const col = collection(db, "users", user.uid, "quotes");
       const quoteRef = doc(col, q.id);
       await setDoc(quoteRef, {
         ...quoteWithUid,
@@ -169,7 +169,7 @@ export async function saveQuote(q: SavedQuote) {
       }, { merge: true });
     } else if (db) {
       // Guest: salva su collezione globale guest con uid "guest"
-      const quoteRef = doc(db, "guests", "guest", "preventivi", q.id);
+      const quoteRef = doc(db, "guests", "guest", "quotes", q.id);
       await setDoc(quoteRef, {
         ...quoteWithUid,
         updatedAt: new Date().toISOString()
@@ -207,7 +207,7 @@ export async function syncArchiveWithCloud(): Promise<SavedQuote[]> {
   if (!user || !db) return loadArchive();
 
   try {
-    const col = collection(db, "users", user.uid, "preventivi");
+    const col = collection(db, "users", user.uid, "quotes");
     const q = query(col, orderBy("updatedAt", "desc"), limit(100));
     const snap = await getDocs(q);
     const cloudQuotes = snap.docs.map(d => d.data() as SavedQuote);
@@ -229,10 +229,10 @@ export async function deleteQuote(id: string) {
   try {
     // Firestore first
     if (user && db) {
-      const quoteRef = doc(db, "users", user.uid, "preventivi", id);
+      const quoteRef = doc(db, "users", user.uid, "quotes", id);
       await deleteDoc(quoteRef);
     } else if (db) {
-      const quoteRef = doc(db, "guests", "guest", "preventivi", id);
+      const quoteRef = doc(db, "guests", "guest", "quotes", id);
       await deleteDoc(quoteRef);
     }
 
