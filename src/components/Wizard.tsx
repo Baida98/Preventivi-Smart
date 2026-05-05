@@ -48,12 +48,13 @@ export type Mode = "analizza" | "stima";
 type Props = {
   mode: Mode;
   onClose: () => void;
+  presetCategoryId?: string | null;
 };
 
-export default function Wizard({ mode: initialMode, onClose }: Props) {
+export default function Wizard({ mode: initialMode, onClose, presetCategoryId }: Props) {
   const [mode, setMode] = useState<"analizza" | "stima">(initialMode);
-  const [step, setStep] = useState(1);
-  const [categoryId, setCategoryId] = useState<string>("");
+  const [step, setStep] = useState(presetCategoryId ? 2 : 1);
+  const [categoryId, setCategoryId] = useState<string>(presetCategoryId || "");
   const [jobId, setJobId] = useState<string | null>(null);
   const [regionId, setRegionId] = useState("");
   const [quantity, setQuantity] = useState<string>("");

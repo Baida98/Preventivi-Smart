@@ -110,6 +110,7 @@ export default function App() {
           <Wizard
             key={`${mode}-${presetCategoryId ?? "none"}`}
             mode={mode}
+            presetCategoryId={presetCategoryId}
             onClose={() => {
               setMode(null);
               setPresetCategoryId(null);
