@@ -267,8 +267,8 @@ export default function Wizard({ mode: initialMode, onClose }: Props) {
               className="space-y-6"
             >
               <div>
-                <h2 className="title-elegant-md text-foreground">Seleziona Categoria</h2>
-                <p className="text-muted-foreground mt-3 font-medium">
+                <h2 className="text-3xl font-black tracking-tightest">Seleziona Categoria</h2>
+                <p className="text-muted-foreground mt-2 font-medium">
                   Scegli il tipo di lavoro che desideri analizzare.
                 </p>
               </div>
@@ -321,7 +321,7 @@ export default function Wizard({ mode: initialMode, onClose }: Props) {
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <h2 className="title-elegant-md text-foreground">Configurazione Tecnica</h2>
+                <h2 className="text-2xl font-black tracking-tightest">Configurazione Tecnica</h2>
               </div>
               <p className="text-muted-foreground mb-8 font-medium">
                 Parametri tecnici per il calcolo del benchmark di <span className="text-foreground font-bold">{category.label}</span>.
@@ -480,7 +480,7 @@ export default function Wizard({ mode: initialMode, onClose }: Props) {
                 >
                   <ArrowLeft className="w-5 h-5" />
                 </Button>
-                <h2 className="title-elegant-md text-foreground">Dati Economici</h2>
+                <h2 className="text-2xl font-black tracking-tightest">Dati Economici</h2>
               </div>
               <p className="text-muted-foreground mb-8 font-medium">
                 {mode === "analizza" 
