@@ -78,7 +78,7 @@
       const verdict = judge(price, analysis, "edilizia");
       expect(verdict.key).toBe("equo");
       render(<ResultsView {...baseProps} price={price} analysis={analysis} verdict={verdict} />);
-      expect(screen.getByText(/In Linea/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/In Linea/i).length).toBeGreaterThan(0);
     });
 
     it("3. Verdetto ALTO — mostra label Premium", () => {

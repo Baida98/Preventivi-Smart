@@ -214,8 +214,7 @@
           steps,
           requiresManualFallback: true,
           fallbackReason:
-            `Lettura automatica non sufficientemente precisa (${confidenceResult.overall.toFixed(0)}% < 70%). " +
-            "Controlla i dati pre-compilati e correggi eventuali errori.`,
+            `Confidenza bassa (${(normalizedConfidence * 100).toFixed(0)}%). Inserisci il prezzo manualmente.`,
         };
       }
 

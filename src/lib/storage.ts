@@ -4,6 +4,7 @@ import type { VerdictKey } from "./verdict";
 
 const KEY = "preventivi-smart-archive-v1";
 export const GUEST_QUOTE_LIMIT = 5;
+export const FIREBASE_ENABLED = import.meta.env.VITE_FIREBASE_ENABLED === 'true';
 
 export type SavedQuote = {
   id: string;
@@ -118,7 +119,7 @@ export async function loadArchive(): Promise<SavedQuote[]> {
   const db = getFirestoreInstance();
 
   // Se loggato e Firestore disponibile: carica dal cloud
-  if (user && db) {
+  if (FIREBASE_ENABLED && user && db) {
     try {
       const col = collection(db, "users", user.uid, "quotes");
       const q = query(col, orderBy("updatedAt", "desc"), limit(100));
@@ -160,14 +161,14 @@ export async function saveQuote(q: SavedQuote) {
 
   try {
     // FIRESTORE FIRST: Se loggato, salva sempre su Firestore
-    if (user && db) {
+    if (FIREBASE_ENABLED && user && db) {
       const col = collection(db, "users", user.uid, "quotes");
       const quoteRef = doc(col, q.id);
       await setDoc(quoteRef, {
         ...quoteWithUid,
         updatedAt: new Date().toISOString()
       }, { merge: true });
-    } else if (db) {
+    } else if (FIREBASE_ENABLED && db) {
       // Guest: salva su collezione globale guest con uid "guest"
       const quoteRef = doc(db, "guests", "guest", "quotes", q.id);
       await setDoc(quoteRef, {
@@ -204,7 +205,7 @@ export async function syncArchiveWithCloud(): Promise<SavedQuote[]> {
   const user = getCurrentUser();
   const db = getFirestoreInstance();
 
-  if (!user || !db) return loadArchive();
+  if (!FIREBASE_ENABLED || !user || !db) return loadArchive();
 
   try {
     const col = collection(db, "users", user.uid, "quotes");
@@ -228,10 +229,10 @@ export async function deleteQuote(id: string) {
 
   try {
     // Firestore first
-    if (user && db) {
+    if (FIREBASE_ENABLED && user && db) {
       const quoteRef = doc(db, "users", user.uid, "quotes", id);
       await deleteDoc(quoteRef);
-    } else if (db) {
+    } else if (FIREBASE_ENABLED && db) {
       const quoteRef = doc(db, "guests", "guest", "quotes", id);
       await deleteDoc(quoteRef);
     }
@@ -296,7 +297,7 @@ export async function logEvent(type: QuoteEvent["type"], preventivoId: string, p
 
   try {
     // Firestore: collezione globale events per aggregazione admin
-    if (db) {
+    if (FIREBASE_ENABLED && db) {
       await addDoc(collection(db, "events"), event);
     }
 

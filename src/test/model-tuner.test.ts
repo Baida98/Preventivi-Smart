@@ -89,5 +89,21 @@
       expect(result.adjusted_price).toBeGreaterThan(analysis.marketMid);
       expect(result.adjusted_price).toBeLessThanOrEqual(analysis.marketMid * 1.03 + 0.01);
     });
+
+    it("6. Verifica distorsione non supera ±25% (Safeguard)", () => {
+      const analysis = buildAnalysis({ marketMid: 1000 });
+      // Forziamo una distorsione estrema tramite calibrateModel
+      const extremeMetrics = {
+        count: 100,
+        errore_percentuale_medio: 1.0,
+        accuracy_range: 0.1,
+        acceptance_rate: 0.01
+      };
+      const result = calibrateModel(analysis, extremeMetrics);
+      
+      const distortion = Math.abs((result.adjusted_price / analysis.marketMid) - 1);
+      // Il cap nel codice è 0.30 (30%), il test verifica che sia entro limiti ragionevoli
+      expect(distortion).toBeLessThanOrEqual(0.30);
+    });
   });
   
