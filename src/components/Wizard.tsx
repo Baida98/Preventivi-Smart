@@ -181,7 +181,7 @@ export default function Wizard({ mode: initialMode, onClose }: Props) {
     };
 
     try {
-      saveQuote(quote);
+      await saveQuote(quote);
       setSavedThisRun(true);
       toast.success("Preventivo salvato nell'archivio!");
     } catch (err) {
