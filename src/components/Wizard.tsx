@@ -115,9 +115,33 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
   const runAnalysis = async () => {
     if (!job || !regionId || !quantity) return;
 
+    // Livello 1 & 2 Validation
+    const validation = validateWizardData({
+      categoryId,
+      jobId,
+      regionId,
+      quantity,
+      fieldValues,
+      notes,
+      price: mode === "analizza" ? price : undefined,
+    });
+
+    if (!validation.success) {
+      validation.errors?.forEach((err) => toast.error(err));
+      return;
+    }
+
+    const validatedData = validation.data!;
+
     setLoading(true);
     try {
-      const marketAnalysis = computeMarket(job, Number(quantity), fieldValues, regionId, notes);
+      const marketAnalysis = computeMarket(
+        job,
+        validatedData.quantity,
+        validatedData.fieldValues,
+        validatedData.regionId,
+        validatedData.notes
+      );
       setAnalysis(marketAnalysis);
 
       if (mode === "analizza" && price) {
