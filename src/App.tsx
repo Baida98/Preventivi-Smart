@@ -12,6 +12,8 @@ import Footer from "./components/Footer";
 import Wizard, { type Mode } from "./components/Wizard";
 import Archive from "./components/Archive";
 import { deleteQuote, loadArchive, calculateTotalArchive, type SavedQuote } from "./lib/storage";
+import { withErrorHandler } from "./lib/async-handler";
+import { toast } from "sonner";
 import { onAuthChange, getCurrentUser, signInWithGoogle, signOutUser } from "./lib/firebase-service";
 import type { User } from "firebase/auth";
 
@@ -38,19 +40,25 @@ export default function App() {
     
     // Carica archivio in modo asincrono
     (async () => {
-      const loaded = await loadArchive();
-      setArchive(loaded);
-      const total = await calculateTotalArchive();
-      setArchiveTotal(total);
+      const result = await withErrorHandler(() => loadArchive());
+      if (result.success) {
+        setArchive(result.data);
+        const totalResult = await withErrorHandler(() => calculateTotalArchive());
+        if (totalResult.success) setArchiveTotal(totalResult.data);
+      } else {
+        toast.error("Errore nel caricamento dell'archivio: " + result.error.message);
+      }
     })();
   }, []);
 
   function refreshArchive() {
     (async () => {
-      const updated = await loadArchive();
-      setArchive(updated);
-      const total = await calculateTotalArchive();
-      setArchiveTotal(total);
+      const result = await withErrorHandler(() => loadArchive());
+      if (result.success) {
+        setArchive(result.data);
+        const totalResult = await withErrorHandler(() => calculateTotalArchive());
+        if (totalResult.success) setArchiveTotal(totalResult.data);
+      }
     })();
   }
 
@@ -68,8 +76,13 @@ export default function App() {
 
   function handleDelete(id: string) {
     (async () => {
-      await deleteQuote(id);
-      refreshArchive();
+      const result = await withErrorHandler(() => deleteQuote(id));
+      if (result.success) {
+        toast.success("Preventivo eliminato");
+        refreshArchive();
+      } else {
+        toast.error("Errore durante l'eliminazione: " + result.error.message);
+      }
     })();
   }
 

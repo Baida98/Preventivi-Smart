@@ -38,6 +38,7 @@ import {
 } from "@/lib/pricing";
 import { judge, type Verdict } from "@/lib/verdict";
 import { newId, saveQuote, type SavedQuote, isGuestLimitReached, GUEST_QUOTE_LIMIT } from "@/lib/storage";
+import { withErrorHandler } from "@/lib/async-handler";
 import { validateWizardData } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import ResultsView from "./Results";
@@ -205,13 +206,12 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
       source: "manuale" as const,
     };
 
-    try {
-      await saveQuote(quote);
+    const result = await withErrorHandler(() => saveQuote(quote));
+    if (result.success) {
       setSavedThisRun(true);
       toast.success("Preventivo salvato nell'archivio!");
-    } catch (err) {
-      console.error("Save error:", err);
-      toast.error("Errore nel salvataggio");
+    } else {
+      toast.error("Errore nel salvataggio: " + result.error.message);
     }
   };
 

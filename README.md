@@ -20,23 +20,26 @@ Nessun backend, nessuna registrazione, nessun tracciamento.
 
 ## Avvio rapido
 
-Servono **Node.js 20+** e **npm** (oppure **pnpm** o **yarn**).
+Servono **Node.js 22+** e **pnpm**.
 
 ```bash
 # 1. Installa le dipendenze
-npm install
+pnpm install
 
 # 2. Avvia in sviluppo (http://localhost:5173)
-npm run dev
+pnpm run dev
 
-# 3. Build di produzione (cartella dist/)
-npm run build
+# 3. Esegui i test
+pnpm test
 
-# 4. Anteprima della build
-npm run preview
+# 4. Build di produzione (cartella dist/)
+pnpm run build
 
-# 5. Controllo tipi TypeScript
-npm run typecheck
+# 5. Anteprima della build
+pnpm run preview
+
+# 6. Controllo tipi TypeScript
+pnpm run typecheck
 ```
 
 ## Struttura del progetto
