@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { judge } from '@/lib/verdict';
-import { MarketAnalysis } from '@/lib/pricing';
+import type { MarketAnalysis } from '@/lib/pricing';
 
 describe('judge', () => {
   const mockAnalysis: MarketAnalysis = {
@@ -15,7 +15,7 @@ describe('judge', () => {
     volatilityClass: 'medium',
     inflationImpact: 0,
     logisticsImpact: 0,
-    expiryDate: new Date().toISOString()
+    expiryDate: new Date()
   };
 
   it('identifica un prezzo OTTIMO', () => {

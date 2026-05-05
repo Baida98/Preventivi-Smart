@@ -298,5 +298,62 @@ export async function exportQuoteToPDF(
     throw new Error("Preventivo non trovato");
   }
 
-  throw new Error("Funzionalità non ancora implementata");
+  // Dinamicamente importa le librerie per la generazione PDF
+  const { jsPDF } = await import("jspdf");
+  const html2canvas = (await import("html2canvas")).default;
+  const { PDFGenerator } = await import("./pdf-generator");
+
+  // Genera l'HTML del preventivo
+  const htmlContent = PDFGenerator.generateHTML(quote);
+
+  // Crea un elemento temporaneo per il rendering
+  const tempDiv = document.createElement("div");
+  tempDiv.innerHTML = htmlContent;
+  tempDiv.style.position = "absolute";
+  tempDiv.style.left = "-9999px";
+  tempDiv.style.top = "-9999px";
+  tempDiv.style.width = "210mm"; // Larghezza A4
+  tempDiv.style.backgroundColor = "white";
+  document.body.appendChild(tempDiv);
+
+  try {
+    // Converti l'HTML in canvas
+    const canvas = await html2canvas(tempDiv, {
+      scale: 2,
+      useCORS: true,
+      logging: false,
+      backgroundColor: "#ffffff",
+    });
+
+    // Crea il PDF da canvas
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: "a4",
+    });
+
+    const imgWidth = 210; // Larghezza A4 in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    // Aggiungi le pagine al PDF
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= 297; // Altezza A4 in mm
+
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= 297;
+    }
+
+    // Converti il PDF in Blob
+    const pdfBlob = pdf.output("blob");
+    return pdfBlob;
+  } finally {
+    // Rimuovi l'elemento temporaneo
+    document.body.removeChild(tempDiv);
+  }
 }
