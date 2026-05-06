@@ -129,3 +129,5 @@ hosting statico). Esempi:
 
 MIT — fai quello che vuoi, ma sii chiaro coi tuoi utenti su come stimi
 i prezzi e dichiara la fonte dei dati di mercato.
+
+<!-- Aggiornato da Agente AI -->
