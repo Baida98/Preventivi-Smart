@@ -2,9 +2,9 @@ name: CI - Build & Test
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main ]
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
@@ -29,8 +29,8 @@ jobs:
           cache: 'pnpm'
           cache-dependency-path: '**/pnpm-lock.yaml'
 
-      - name: Install dependencies (Lockfile Fix)
-        run: pnpm install   # Senza --frozen-lockfile per aggiornare automaticamente
+      - name: Install dependencies (Auto Lockfile Fix)
+        run: pnpm install --no-frozen-lockfile
 
       - name: Type Check
         run: pnpm run typecheck
@@ -39,11 +39,3 @@ jobs:
         run: pnpm run build
         env:
           VITE_FIREBASE_ENABLED: ${{ secrets.VITE_FIREBASE_ENABLED || 'false' }}
-
-      - name: ✅ Build Status
-        if: success()
-        run: echo "🎉 Build completata con successo!"
-
-      - name: ❌ Build Failed
-        if: failure()
-        run: echo "❌ Build fallita - controlla i log sopra"
