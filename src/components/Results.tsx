@@ -53,6 +53,9 @@ import AINegotiationCard from "@/components/AINegotiationCard";
 import AIVendorScore from "@/components/AIVendorScore";
 import AIQuoteSummaryCard from "@/components/AIQuoteSummaryCard";
 import AIBidComparator from "@/components/AIBidComparator";
+import AIHistoryChart from "@/components/AIHistoryChart";
+import AIScoreBoard from "@/components/AIScoreBoard";
+import AIPaymentPlan from "@/components/AIPaymentPlan";
 
 type Props = {
   mode: "analizza" | "stima";
@@ -157,6 +160,7 @@ export default function ResultsView({
   onSave,
   onReset,
   onEdit,
+  documentText,
   showBreakdown = false,
   onExportPDF,
   sampleCount = 42,
@@ -465,6 +469,13 @@ export default function ResultsView({
           onNeedSetup={() => setAiSetupOpen(true)}
         />
 
+        {/* AI HISTORY + SCOREBOARD */}
+        <AIHistoryChart
+          categoryId={resolvedCategoryId}
+          currentPctFromMid={((price - analysis.marketMid) / analysis.marketMid) * 100}
+        />
+        <AIScoreBoard categoryId={resolvedCategoryId} />
+
         {/* AI BID COMPARATOR */}
         <AIBidComparator
           jobLabel={resolvedJobLabel}
@@ -521,6 +532,14 @@ export default function ResultsView({
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
+
+        {/* AI PAYMENT PLAN */}
+        <AIPaymentPlan
+          price={price}
+          jobLabel={resolvedJobLabel}
+          categoryId={resolvedCategoryId}
+          onNeedSetup={() => setAiSetupOpen(true)}
+        />
 
         {/* AI CONTRACT GENERATOR */}
         <AIContractGenerator

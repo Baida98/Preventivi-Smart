@@ -35,6 +35,16 @@
   vi.mock("@/components/AIQuoteSummaryCard", () => ({ default: () => null }));
   vi.mock("@/components/AIBidComparator", () => ({ default: () => null }));
   vi.mock("@/lib/ai/bid-comparator", () => ({ compareBids: async () => null }));
+  vi.mock("@/components/AIHistoryChart", () => ({ default: () => null }));
+  vi.mock("@/components/AIScoreBoard", () => ({ default: () => null }));
+  vi.mock("@/components/AIPaymentPlan", () => ({ default: () => null }));
+  vi.mock("@/lib/ai/score-history", () => ({
+    recordAnalysis: () => {},
+    getHistory: () => [],
+    getHistoryForCategory: () => [],
+    getSummaryStats: () => ({ count: 0, avgPctFromMid: 0, verdictCounts: {}, trend: null }),
+  }));
+  vi.mock("@/lib/ai/payment-schedule", () => ({ generatePaymentSchedule: async () => null }));
   vi.mock("@/lib/ai/quote-summary", () => ({ generateQuoteSummary: async () => null }));
   vi.mock("@/lib/ai/vendor-scorer", () => ({ scoreVendor: async () => null }));
   vi.mock("@/lib/ai/seasonal-advisor", () => ({ getSeasonalAdvice: async () => null }));
