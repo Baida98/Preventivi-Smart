@@ -414,6 +414,16 @@ export default function ResultsView({
         {/* AI REPORT */}
         <AIReportPanel {...aiCommonProps} />
 
+        {/* AI MULTI COMPARE */}
+        <AIMultiCompare
+          currentPrice={price}
+          currentLabel={resolvedJobLabel}
+          jobLabel={resolvedJobLabel}
+          regionLabel={regionLabel}
+          marketMid={analysis.marketMid}
+          onNeedSetup={() => setAiSetupOpen(true)}
+        />
+
         {/* AI CHAT */}
         <AIChat {...aiCommonProps} />
 

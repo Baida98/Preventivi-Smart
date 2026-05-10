@@ -43,6 +43,7 @@ import { validateWizardData } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import ResultsView from "./Results";
 import PdfUploadZone from "./PdfUploadZone";
+import AIPriceHint from './AIPriceHint';
 import { smartMemory, MEMORY_KEYS } from '@/lib/ai/smart-memory';
 
 export type Mode = "analizza" | "stima";
@@ -555,6 +556,17 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
                       </div>
                     </div>
                   </motion.div>
+
+                  {/* AI Price Hint */}
+                  {job && regionLabel && (
+                    <AIPriceHint
+                      price={Number(price) || 0}
+                      jobLabel={job.label}
+                      regionLabel={regionLabel}
+                      quantity={Number(quantity) || 1}
+                      unitLabel={job.unitLabel}
+                    />
+                  )}
 
                   {/* Divider */}
                   <div className="w-full max-w-md flex items-center gap-4">
