@@ -30,6 +30,8 @@
   vi.mock("@/components/AIAlertPanel", () => ({ default: () => null }));
   vi.mock("@/components/AISeasonalCard", () => ({ default: () => null }));
   vi.mock("@/components/AIContractGenerator", () => ({ default: () => null }));
+  vi.mock("@/components/AINegotiationCard", () => ({ default: () => null }));
+  vi.mock("@/components/AIVendorScore", () => ({ default: () => null }));
   vi.mock("@/lib/ai/llm-provider", () => ({
     llmKeys: { hasToken: () => false, getToken: () => null },
     callLLM: async () => "{}"

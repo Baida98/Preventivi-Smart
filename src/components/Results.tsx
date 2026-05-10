@@ -48,6 +48,8 @@ import AIReportPanel from "@/components/AIReport";
 import AIMultiCompare from "@/components/AIMultiCompare";
 import AIAlertPanel from "@/components/AIAlertPanel";
 import AISeasonalCard from "@/components/AISeasonalCard";
+import AIContractGenerator from "@/components/AIContractGenerator";
+import AINegotiationCard from "@/components/AINegotiationCard";
 
 type Props = {
   mode: "analizza" | "stima";
@@ -424,6 +426,17 @@ export default function ResultsView({
         {/* AI REPORT */}
         <AIReportPanel {...aiCommonProps} />
 
+        {/* AI NEGOTIATION */}
+        <AINegotiationCard
+          verdict={verdict.key}
+          price={price}
+          marketMid={analysis.marketMid}
+          jobLabel={resolvedJobLabel}
+          categoryId={resolvedCategoryId}
+          regionLabel={regionLabel}
+          onNeedSetup={() => setAiSetupOpen(true)}
+        />
+
         {/* AI ALERT PANEL */}
         <AIAlertPanel
           categoryId={resolvedCategoryId}
@@ -475,6 +488,17 @@ export default function ResultsView({
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
+
+        {/* AI CONTRACT GENERATOR */}
+        <AIContractGenerator
+          categoryId={resolvedCategoryId}
+          jobLabel={resolvedJobLabel}
+          price={price}
+          regionLabel={regionLabel}
+          quantity={quantity}
+          unitLabel={job?.unitLabel ?? ""}
+          onNeedSetup={() => setAiSetupOpen(true)}
+        />
 
         <LegalDisclaimer />
 
