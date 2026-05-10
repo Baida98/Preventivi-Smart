@@ -73,3 +73,7 @@ export function validateVerdictInput(data: any): string[] {
   if (!data.marketMin || !data.marketMax) errors.push("Range di mercato mancante");
   return errors;
 }
+
+
+export const judge = calculateVerdict;
+export type VerdictKey = Verdict;
