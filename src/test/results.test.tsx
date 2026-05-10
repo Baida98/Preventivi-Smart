@@ -32,6 +32,15 @@
   vi.mock("@/components/AIContractGenerator", () => ({ default: () => null }));
   vi.mock("@/components/AINegotiationCard", () => ({ default: () => null }));
   vi.mock("@/components/AIVendorScore", () => ({ default: () => null }));
+  vi.mock("@/components/AIQuoteSummaryCard", () => ({ default: () => null }));
+  vi.mock("@/components/AIBidComparator", () => ({ default: () => null }));
+  vi.mock("@/lib/ai/bid-comparator", () => ({ compareBids: async () => null }));
+  vi.mock("@/lib/ai/quote-summary", () => ({ generateQuoteSummary: async () => null }));
+  vi.mock("@/lib/ai/vendor-scorer", () => ({ scoreVendor: async () => null }));
+  vi.mock("@/lib/ai/seasonal-advisor", () => ({ getSeasonalAdvice: async () => null }));
+  vi.mock("@/lib/ai/alert-engine", () => ({ scanForAlerts: async () => ({ alerts: [], trustScore: 100 }) }));
+  vi.mock("@/lib/ai/negotiation-tips", () => ({ getNegotiationAdvice: async () => null }));
+  vi.mock("@/lib/ai/contract-template", () => ({ generateContractTemplate: async () => null, formatContractAsText: () => "" }));
   vi.mock("@/lib/ai/llm-provider", () => ({
     llmKeys: { hasToken: () => false, getToken: () => null },
     callLLM: async () => "{}"

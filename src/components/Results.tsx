@@ -50,6 +50,9 @@ import AIAlertPanel from "@/components/AIAlertPanel";
 import AISeasonalCard from "@/components/AISeasonalCard";
 import AIContractGenerator from "@/components/AIContractGenerator";
 import AINegotiationCard from "@/components/AINegotiationCard";
+import AIVendorScore from "@/components/AIVendorScore";
+import AIQuoteSummaryCard from "@/components/AIQuoteSummaryCard";
+import AIBidComparator from "@/components/AIBidComparator";
 
 type Props = {
   mode: "analizza" | "stima";
@@ -60,6 +63,7 @@ type Props = {
   categoryLabel?: string;
   regionLabel: string;
   quantity: number;
+  documentText?: string;
   unitLabel?: string;
   price: number;
   analysis: {
@@ -310,6 +314,18 @@ export default function ResultsView({
           </div>
         </motion.div>
 
+        {/* AI QUOTE SUMMARY - first AI card */}
+        <AIQuoteSummaryCard
+          verdict={verdict.key}
+          price={price}
+          marketMin={analysis.marketMin}
+          marketMid={analysis.marketMid}
+          marketMax={analysis.marketMax}
+          jobLabel={resolvedJobLabel}
+          categoryId={resolvedCategoryId}
+          regionLabel={regionLabel}
+        />
+
         {/* AI SEASONAL */}
         <AISeasonalCard
           categoryId={resolvedCategoryId}
@@ -426,6 +442,12 @@ export default function ResultsView({
         {/* AI REPORT */}
         <AIReportPanel {...aiCommonProps} />
 
+        {/* AI VENDOR SCORE */}
+        <AIVendorScore
+          documentText={documentText}
+          jobLabel={resolvedJobLabel}
+        />
+
         {/* AI NEGOTIATION */}
         <AINegotiationCard
           verdict={verdict.key}
@@ -440,6 +462,17 @@ export default function ResultsView({
         {/* AI ALERT PANEL */}
         <AIAlertPanel
           categoryId={resolvedCategoryId}
+          onNeedSetup={() => setAiSetupOpen(true)}
+        />
+
+        {/* AI BID COMPARATOR */}
+        <AIBidComparator
+          jobLabel={resolvedJobLabel}
+          marketMid={analysis.marketMid}
+          marketMin={analysis.marketMin}
+          marketMax={analysis.marketMax}
+          regionLabel={regionLabel}
+          currentPrice={price}
           onNeedSetup={() => setAiSetupOpen(true)}
         />
 
