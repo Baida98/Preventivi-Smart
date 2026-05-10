@@ -40,6 +40,6 @@ export default defineConfig({
     globals: true,
     environment: "jsdom",
     setupFiles: "./src/test/setup.ts",
-    exclude: ["node_modules", "dist", ".idea", ".git", ".cache", "e2e", "src/test/firestore-rules.test.ts"],
+    exclude: ["node_modules", "dist", ".idea", ".git", ".cache", "ue2e", "-src"],
   },
 });
