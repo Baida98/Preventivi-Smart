@@ -45,6 +45,9 @@ import AIInsightCard from "@/components/AIInsightCard";
 import AIChat from "@/components/AIChat";
 import AISetup from "@/components/AISetup";
 import AIReportPanel from "@/components/AIReport";
+import AIMultiCompare from "@/components/AIMultiCompare";
+import AIAlertPanel from "@/components/AIAlertPanel";
+import AISeasonalCard from "@/components/AISeasonalCard";
 
 type Props = {
   mode: "analizza" | "stima";
@@ -305,6 +308,13 @@ export default function ResultsView({
           </div>
         </motion.div>
 
+        {/* AI SEASONAL */}
+        <AISeasonalCard
+          categoryId={resolvedCategoryId}
+          jobLabel={resolvedJobLabel}
+          price={price}
+        />
+
         {/* AI INSIGHT */}
         <AIInsightCard key={hasAIToken ? "ai-on" : "ai-off"} {...aiCommonProps} />
 
@@ -413,6 +423,12 @@ export default function ResultsView({
 
         {/* AI REPORT */}
         <AIReportPanel {...aiCommonProps} />
+
+        {/* AI ALERT PANEL */}
+        <AIAlertPanel
+          categoryId={resolvedCategoryId}
+          onNeedSetup={() => setAiSetupOpen(true)}
+        />
 
         {/* AI MULTI COMPARE */}
         <AIMultiCompare

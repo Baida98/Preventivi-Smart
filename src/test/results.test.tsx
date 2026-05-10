@@ -28,6 +28,8 @@
   vi.mock("@/components/AIReport", () => ({ default: () => null }));
   vi.mock("@/components/AIMultiCompare", () => ({ default: () => null }));
   vi.mock("@/components/AIAlertPanel", () => ({ default: () => null }));
+  vi.mock("@/components/AISeasonalCard", () => ({ default: () => null }));
+  vi.mock("@/components/AIContractGenerator", () => ({ default: () => null }));
   vi.mock("@/lib/ai/llm-provider", () => ({
     llmKeys: { hasToken: () => false, getToken: () => null },
     callLLM: async () => "{}"
