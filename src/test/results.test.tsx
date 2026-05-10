@@ -21,6 +21,22 @@
   import { CATEGORIES, calculateMarketAnalysis, type MarketAnalysis } from "@/lib/pricing";
 
   // Mock recharts per evitare errori nel jsdom environment
+  // Mock componenti AI per evitare errori di import/fetch in jsdom
+  vi.mock("@/components/AIInsightCard", () => ({ default: () => null }));
+  vi.mock("@/components/AIChat", () => ({ default: () => null }));
+  vi.mock("@/components/AISetup", () => ({ default: () => null }));
+  vi.mock("@/components/AIReport", () => ({ default: () => null }));
+  vi.mock("@/components/AIMultiCompare", () => ({ default: () => null }));
+  vi.mock("@/components/AIAlertPanel", () => ({ default: () => null }));
+  vi.mock("@/lib/ai/llm-provider", () => ({
+    llmKeys: { hasToken: () => false, getToken: () => null },
+    callLLM: async () => "{}"
+  }));
+  vi.mock("@/lib/ai/smart-memory", () => ({
+    smartMemory: { remember: () => {}, recall: () => null, appendToList: () => {} },
+    MEMORY_KEYS: { LAST_VERDICT: "lastVerdict", AI_TOKEN_CONFIGURED: "aiTokenConfigured" },
+  }));
+
   vi.mock("recharts", () => ({
     ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
     BarChart: ({ children }: any) => <div>{children}</div>,
