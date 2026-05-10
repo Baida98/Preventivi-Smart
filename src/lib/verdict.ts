@@ -27,7 +27,7 @@ export function calculateVerdict(
   const mid = (marketMin + marketMax) / 2;
   const deviation = ((askedPrice - mid) / mid) * 100;
 
-  // Thresholds ispirati a pattern di validation/reflection dal repo AI
+  // Thresholds migliorati con pattern Reflection dal repo AI
   if (askedPrice < marketMin * 0.78) {
     return {
       verdict: 'Sospetto',
