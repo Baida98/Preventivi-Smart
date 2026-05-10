@@ -18,21 +18,26 @@ import {
   SlidersHorizontal,
   Copy,
   Check,
+  type LucideIcon,
 } from "lucide-react";
+
+import { useState, useMemo, useCallback } from "react";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider"; // assicurati di avere questo componente shadcn
+import { Slider } from "@/components/ui/slider";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+
 import { fmtEUR } from "@/lib/format";
 import type { VerdictResult } from "@/lib/verdict";
 import { cn } from "@/lib/utils";
+
 import LegalDisclaimer from "@/components/LegalDisclaimer";
-import { useState, useMemo, useCallback } from "react";
 
 type Props = {
   mode: "analizza" | "stima";
@@ -52,19 +57,75 @@ type Props = {
   onSave: () => void;
   onReset: () => void;
   onEdit: () => void;
-  // Nuove prop opzionali per funzionalità avanzate
+
   showBreakdown?: boolean;
   onExportPDF?: () => void;
-  sampleCount?: number; // numero di preventivi analizzati
-  similarQuotes?: Array<{ region: string; price: number; date: string }>;
+  sampleCount?: number;
+  similarQuotes?: Array<{
+    region: string;
+    price: number;
+    date: string;
+  }>;
 };
 
-const VerdictConfig: Record<string, { icon: React.ElementType; color: string; bg: string; tooltip: string }> = {
-  Ottimo: { icon: Award, color: "emerald", bg: "emerald", tooltip: "Prezzo inferiore alla media regionale. Ottima opportunità." },
-  Equo: { icon: CheckCircle2, color: "emerald", bg: "emerald", tooltip: "Prezzo in linea con il mercato locale." },
-  Alto: { icon: TrendingUp, color: "amber", bg: "amber", tooltip: "Prezzo superiore alla media, ma non eccessivo." },
-  "Troppo Alto": { icon: AlertTriangle, color: "rose", bg: "rose", tooltip: "Prezzo significativamente sopra la media. Consigliata trattativa." },
-  Sospetto: { icon: ShieldQuestion, color: "rose", bg: "rose", tooltip: "Anomalia rilevata. Verificare dettagli." },
+type VerdictConfigItem = {
+  icon: LucideIcon;
+  colorClass: string;
+  bgClass: string;
+  borderClass: string;
+  tooltip: string;
+};
+
+const VerdictConfig: Record<string, VerdictConfigItem> = {
+  OTTIMO: {
+    icon: Award,
+    colorClass: "text-emerald-500",
+    bgClass: "bg-emerald-500/10",
+    borderClass: "border-emerald-500/30",
+    tooltip:
+      "Prezzo inferiore alla media regionale. Ottima opportunità.",
+  },
+
+  EQUO: {
+    icon: CheckCircle2,
+    colorClass: "text-blue-500",
+    bgClass: "bg-blue-500/10",
+    borderClass: "border-blue-500/30",
+    tooltip: "Prezzo in linea con il mercato locale.",
+  },
+
+  ALTO: {
+    icon: TrendingUp,
+    colorClass: "text-amber-500",
+    bgClass: "bg-amber-500/10",
+    borderClass: "border-amber-500/30",
+    tooltip: "Prezzo superiore alla media, ma non eccessivo.",
+  },
+
+  "TROPPO-ALTO": {
+    icon: AlertTriangle,
+    colorClass: "text-rose-500",
+    bgClass: "bg-rose-500/10",
+    borderClass: "border-rose-500/30",
+    tooltip:
+      "Prezzo significativamente sopra la media. Consigliata trattativa.",
+  },
+
+  SOSPETTO: {
+    icon: ShieldQuestion,
+    colorClass: "text-fuchsia-500",
+    bgClass: "bg-fuchsia-500/10",
+    borderClass: "border-fuchsia-500/30",
+    tooltip: "Anomalia rilevata. Verificare dettagli.",
+  },
+};
+
+const fallbackConfig: VerdictConfigItem = {
+  icon: BarChart3,
+  colorClass: "text-slate-500",
+  bgClass: "bg-slate-500/10",
+  borderClass: "border-slate-500/30",
+  tooltip: "Analisi completata",
 };
 
 export default function ResultsView({
@@ -86,284 +147,361 @@ export default function ResultsView({
   sampleCount = 42,
   similarQuotes = [],
 }: Props) {
-  // Stato per breakdown interattivo
-  const [breakdown, setBreakdown] = useState({ materials: 40, labor: 50, other: 10 });
+  const [breakdown, setBreakdown] = useState({
+    materials: 40,
+    labor: 50,
+    other: 10,
+  });
+
   const [copied, setCopied] = useState(false);
 
   const diff = price - analysis.marketMid;
-  const diffPct = analysis.marketMid > 0 ? Math.round((diff / analysis.marketMid) * 100) : 0;
+
+  const diffPct =
+    analysis.marketMid > 0
+      ? Math.round((diff / analysis.marketMid) * 100)
+      : 0;
+
   const isOverpriced = diff > 0;
 
-  // Calcolo percentile sicuro
   const percentile = useMemo(() => {
     const range = analysis.marketMax - analysis.marketMin;
+
     if (range === 0) return 50;
-    let pos = ((price - analysis.marketMin) / range) * 100;
+
+    let pos =
+      ((price - analysis.marketMin) / range) * 100;
+
     pos = Math.min(100, Math.max(0, pos));
-    return Math.round(100 - pos); // più alto è il prezzo, più alto il percentile
+
+    return Math.round(pos);
   }, [price, analysis]);
 
-  // Posizione indicatore sicura
   const indicatorPosition = useMemo(() => {
     const range = analysis.marketMax - analysis.marketMin;
+
     if (range === 0) return 50;
-    let pos = ((price - analysis.marketMin) / range) * 100;
+
+    let pos =
+      ((price - analysis.marketMin) / range) * 100;
+
     return Math.min(100, Math.max(0, pos));
   }, [price, analysis]);
 
-  const config = verdict ? VerdictConfig[verdict.verdict] : { icon: BarChart3, color: "slate", bg: "slate", tooltip: "Analisi completata" };
+  const verdictKey = verdict?.verdict?.toUpperCase?.();
+
+  const config =
+    (verdictKey && VerdictConfig[verdictKey]) ||
+    fallbackConfig;
+
   const VerdictIcon = config.icon;
 
-  // Copione negoziazione intelligente
   const negotiationScript = useMemo(() => {
     if (!verdict) return "";
+
     const priceFormatted = fmtEUR(price);
     const midFormatted = fmtEUR(analysis.marketMid);
-    const minFormatted = fmtEUR(analysis.marketMin);
-    if (verdict.verdict === "Troppo Alto") {
-      return `Gentile professionista, il suo preventivo di ${priceFormatted} per ${jobLabel} (${quantity} ${unitLabel}) è superiore del ${diffPct}% rispetto alla media della mia zona (${midFormatted}). Può offrirmi un prezzo più in linea, ad esempio ${midFormatted}? Grazie.`;
-    } else if (verdict.verdict === "Alto") {
-      return `Buongiorno, ho ricevuto il suo preventivo di ${priceFormatted}. Volevo chiederle se è possibile applicare uno sconto del 5-10% visto che la media di zona è ${midFormatted}. Attendo un suo cortese riscontro.`;
-    } else if (verdict.verdict === "Equo") {
-      return `Il suo preventivo di ${priceFormatted} è in linea con il mercato. Se accetta un pagamento immediato, può offrirmi un piccolo sconto? La ringrazio.`;
-    } else {
-      return `Buongiorno, ho visto il suo preventivo per ${jobLabel}. Può dettagliarmi meglio i costi? La media nella nostra zona è ${midFormatted}. Resto in attesa.`;
+
+    if (verdictKey === "TROPPO-ALTO") {
+      return `Gentile professionista, il suo preventivo di ${priceFormatted} per ${jobLabel} (${quantity} ${unitLabel}) risulta superiore rispetto alla media di mercato della mia zona (${midFormatted}). È possibile rivedere il prezzo?`;
     }
-  }, [verdict, price, analysis, diffPct, jobLabel, quantity, unitLabel]);
+
+    if (verdictKey === "ALTO") {
+      return `Buongiorno, ho ricevuto il suo preventivo di ${priceFormatted}. Ho notato che è leggermente sopra la media locale (${midFormatted}). È possibile applicare uno sconto?`;
+    }
+
+    if (verdictKey === "EQUO") {
+      return `Il preventivo di ${priceFormatted} risulta in linea con il mercato. È previsto uno sconto per pagamento immediato?`;
+    }
+
+    return `Buongiorno, può fornirmi maggiori dettagli sul preventivo ricevuto per ${jobLabel}?`;
+  }, [
+    verdict,
+    verdictKey,
+    price,
+    analysis.marketMid,
+    jobLabel,
+    quantity,
+    unitLabel,
+  ]);
 
   const copyNegotiationScript = useCallback(() => {
     navigator.clipboard.writeText(negotiationScript);
+
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+
+    setTimeout(() => {
+      setCopied(false);
+    }, 2000);
   }, [negotiationScript]);
 
-  // Se non c'è verdetto (es. loading), mostra skeleton base
   if (!verdict) {
     return (
       <div className="max-w-4xl mx-auto space-y-8">
-        <div className="h-64 bg-muted animate-pulse rounded-3xl" />
-        <div className="h-32 bg-muted animate-pulse rounded-xl" />
-        <div className="h-48 bg-muted animate-pulse rounded-xl" />
+        <div className="h-64 rounded-3xl bg-muted animate-pulse" />
+        <div className="h-32 rounded-xl bg-muted animate-pulse" />
+        <div className="h-48 rounded-xl bg-muted animate-pulse" />
       </div>
     );
   }
 
   return (
     <TooltipProvider>
-      <div className="max-w-4xl mx-auto space-y-10 pb-16" aria-live="polite">
-        {/* Context Header */}
+      <div
+        className="max-w-4xl mx-auto space-y-10 pb-16"
+        aria-live="polite"
+      >
+        {/* HEADER */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted/80 text-sm font-medium border">
+          <div className="inline-flex items-center gap-2 rounded-full border bg-muted/80 px-4 py-1.5 text-sm font-medium">
             {categoryLabel} • {regionLabel}
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-balance">{jobLabel}</h1>
-          <p className="text-muted-foreground text-lg">
-            {quantity} {unitLabel} • <span className="font-semibold text-foreground">{fmtEUR(price)}</span>
+
+          <h1 className="text-3xl font-bold tracking-tight">
+            {jobLabel}
+          </h1>
+
+          <p className="text-lg text-muted-foreground">
+            {quantity} {unitLabel} •{" "}
+            <span className="font-semibold text-foreground">
+              {fmtEUR(price)}
+            </span>
           </p>
         </div>
 
-        {/* VERDETTO PRINCIPALE */}
+        {/* VERDETTO */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className={cn(
-            "rounded-3xl border p-10 text-center relative overflow-hidden",
-            verdict?.color === "green" && "border-emerald-500/40 bg-gradient-to-b from-emerald-950/40 to-background",
-            verdict?.color === "red" && "border-rose-500/40 bg-gradient-to-b from-rose-950/40 to-background",
-            "border-border bg-card"
-          )}
+          className="relative overflow-hidden rounded-3xl border bg-card p-10 text-center"
         >
           <div className="mx-auto mb-8 flex justify-center">
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className={cn(
-                  "w-28 h-28 rounded-3xl flex items-center justify-center border-4 cursor-help",
-                  `border-${config.color}-500/30 bg-${config.bg}-500/10`
-                )}>
-                  <VerdictIcon className={cn("w-16 h-16", `text-${config.color}-500`)} />
+                <div
+                  className={cn(
+                    "flex h-28 w-28 cursor-help items-center justify-center rounded-3xl border-4",
+                    config.borderClass,
+                    config.bgClass
+                  )}
+                >
+                  <VerdictIcon
+                    className={cn(
+                      "h-16 w-16",
+                      config.colorClass
+                    )}
+                  />
                 </div>
               </TooltipTrigger>
-              <TooltipContent>{config.tooltip}</TooltipContent>
+
+              <TooltipContent>
+                {config.tooltip}
+              </TooltipContent>
             </Tooltip>
           </div>
 
-          <h2 className="text-5xl font-black tracking-tighter mb-4">
+          <h2 className="mb-4 text-5xl font-black tracking-tighter">
             {verdict.verdict}
           </h2>
 
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+          <p className="mx-auto max-w-2xl text-xl leading-relaxed text-muted-foreground">
             {verdict.recommendation}
           </p>
 
-          {/* Percentile e scostamento */}
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             {mode === "analizza" && (
-              <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-background/80 border">
-                <span className="text-sm font-medium">SCOSTAMENTO DALLA MEDIA</span>
-                <span className={cn(
-                  "text-3xl font-bold tabular-nums",
-                  isOverpriced ? "text-rose-500" : "text-emerald-500"
-                )}>
-                  {isOverpriced ? "+" : ""}{diffPct}%
+              <div className="inline-flex items-center gap-3 rounded-2xl border bg-background/80 px-6 py-3">
+                <span className="text-sm font-medium">
+                  SCOSTAMENTO DALLA MEDIA
+                </span>
+
+                <span
+                  className={cn(
+                    "text-3xl font-bold tabular-nums",
+                    isOverpriced
+                      ? "text-rose-500"
+                      : "text-emerald-500"
+                  )}
+                >
+                  {isOverpriced ? "+" : ""}
+                  {diffPct}%
                 </span>
               </div>
             )}
-            <div className="inline-flex items-center gap-3 px-6 py-3 rounded-2xl bg-primary/5 border border-primary/20">
-              <span className="text-sm font-medium">PERCENTILE</span>
+
+            <div className="inline-flex items-center gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-6 py-3">
+              <span className="text-sm font-medium">
+                PERCENTILE
+              </span>
+
               <span className="text-3xl font-bold tabular-nums text-primary">
                 {percentile}°
-              </span>
-              <span className="text-xs text-muted-foreground">
-                (più alto del {percentile}% dei preventivi)
               </span>
             </div>
           </div>
         </motion.div>
 
-        {/* GRAFICO 1 - Comparazione Prezzo con indicatore sicuro */}
+        {/* GRAFICO */}
         <Card className="p-8">
-          <div className="flex items-center gap-3 mb-6">
-            <BarChart3 className="w-6 h-6 text-primary" />
-            <h3 className="text-xl font-semibold">Confronto con il Mercato</h3>
-            <span className="text-xs text-muted-foreground ml-auto">
+          <div className="mb-6 flex items-center gap-3">
+            <BarChart3 className="h-6 w-6 text-primary" />
+
+            <h3 className="text-xl font-semibold">
+              Confronto con il Mercato
+            </h3>
+
+            <span className="ml-auto text-xs text-muted-foreground">
               Basato su {sampleCount} preventivi recenti
             </span>
           </div>
 
-          <div className="mt-4 space-y-6">
-            <div className="h-4 bg-muted rounded-full relative overflow-hidden">
+          <div className="space-y-6">
+            <div className="relative h-4 overflow-hidden rounded-full bg-muted">
               <div className="absolute inset-0 bg-gradient-to-r from-emerald-500 via-amber-400 to-rose-500" />
+
               <motion.div
                 initial={false}
-                animate={{ left: `${indicatorPosition}%` }}
-                transition={{ type: "spring", stiffness: 300, damping: 25 }}
-                className="absolute top-1/2 -translate-y-1/2 w-6 h-6 bg-white border-[5px] border-primary rounded-full shadow-xl flex items-center justify-center"
-                style={{ left: `${indicatorPosition}%` }}
+                animate={{
+                  left: `${indicatorPosition}%`,
+                }}
+                transition={{
+                  type: "spring",
+                  stiffness: 300,
+                  damping: 25,
+                }}
+                className="absolute top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full border-[5px] border-primary bg-white shadow-xl"
+                style={{
+                  left: `${indicatorPosition}%`,
+                }}
               >
-                <div className="w-2.5 h-2.5 bg-primary rounded-full" />
+                <div className="h-2.5 w-2.5 rounded-full bg-primary" />
               </motion.div>
             </div>
+
             <div className="flex justify-between text-sm font-medium text-muted-foreground">
               <div>{fmtEUR(analysis.marketMin)}</div>
-              <div className="text-primary font-semibold text-base">{fmtEUR(analysis.marketMid)}</div>
+
+              <div className="text-base font-semibold text-primary">
+                {fmtEUR(analysis.marketMid)}
+              </div>
+
               <div>{fmtEUR(analysis.marketMax)}</div>
             </div>
           </div>
-
-          <p className="text-xs text-center text-muted-foreground mt-6">
-            Il tuo prezzo ({fmtEUR(price)}) si posiziona al {percentile}° percentile.
-          </p>
         </Card>
 
-        {/* GRAFICO 2 - Distribuzione */}
-        <Card className="p-8">
-          <h3 className="text-xl font-semibold mb-8">Distribuzione Prezzi di Mercato</h3>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="text-center space-y-3">
-              <div className="text-emerald-500 text-sm font-semibold tracking-widest">MINIMO</div>
-              <div className="text-4xl font-bold tabular-nums">{fmtEUR(analysis.marketMin)}</div>
-              <div className="h-2.5 bg-emerald-500/30 rounded-full" />
-            </div>
-            <div className="text-center space-y-3 border-t md:border-t-0 md:border-l md:border-r border-border pt-6 md:pt-0 md:px-6">
-              <div className="text-primary text-sm font-semibold tracking-widest">MEDIA REGIONALE</div>
-              <div className="text-5xl font-bold text-primary tabular-nums tracking-tighter">
-                {fmtEUR(analysis.marketMid)}
-              </div>
-              <div className="h-2.5 bg-primary rounded-full" />
-            </div>
-            <div className="text-center space-y-3">
-              <div className="text-rose-500 text-sm font-semibold tracking-widest">MASSIMO</div>
-              <div className="text-4xl font-bold tabular-nums">{fmtEUR(analysis.marketMax)}</div>
-              <div className="h-2.5 bg-rose-500/30 rounded-full" />
-            </div>
-          </div>
-        </Card>
-
-        {/* Breakdown interattivo (opzionale) */}
+        {/* BREAKDOWN */}
         {showBreakdown && (
           <Card className="p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <SlidersHorizontal className="w-5 h-5" />
-              <h3 className="text-xl font-semibold">Simula la composizione del preventivo</h3>
+            <div className="mb-6 flex items-center gap-3">
+              <SlidersHorizontal className="h-5 w-5" />
+
+              <h3 className="text-xl font-semibold">
+                Simula la composizione del preventivo
+              </h3>
             </div>
+
             <div className="space-y-6">
               <div>
-                <div className="flex justify-between text-sm mb-2">
+                <div className="mb-2 flex justify-between text-sm">
                   <span>Materiali</span>
-                  <span className="font-mono">{breakdown.materials}%</span>
+
+                  <span className="font-mono">
+                    {breakdown.materials}%
+                  </span>
                 </div>
+
                 <Slider
                   value={[breakdown.materials]}
-                  onValueChange={(val) => setBreakdown(prev => ({ ...prev, materials: val[0], labor: 100 - val[0] - prev.other }))}
+                  onValueChange={(val) =>
+                    setBreakdown((prev) => ({
+                      ...prev,
+                      materials: val[0],
+                      labor:
+                        100 - val[0] - prev.other,
+                    }))
+                  }
                   max={100 - breakdown.other}
                   step={1}
                 />
-              </div>
-              <div>
-                <div className="flex justify-between text-sm mb-2">
-                  <span>Manodopera</span>
-                  <span className="font-mono">{breakdown.labor}%</span>
-                </div>
-                <Slider
-                  value={[breakdown.labor]}
-                  onValueChange={(val) => setBreakdown(prev => ({ ...prev, labor: val[0], materials: 100 - val[0] - prev.other }))}
-                  max={100 - breakdown.other}
-                  step={1}
-                />
-              </div>
-              <div className="p-4 bg-muted/40 rounded-xl text-center">
-                <p className="text-sm text-muted-foreground">Stima basata sulla tua regione</p>
-                <p className="text-lg font-semibold mt-1">
-                  Materiali: {fmtEUR(price * breakdown.materials / 100)} • Manodopera: {fmtEUR(price * breakdown.labor / 100)} • Altro: {fmtEUR(price * breakdown.other / 100)}
-                </p>
               </div>
             </div>
           </Card>
         )}
 
-        {/* Copione negoziazione */}
-        <Card className="p-6 border-primary/20 bg-primary/5">
+        {/* MESSAGGIO */}
+        <Card className="border-primary/20 bg-primary/5 p-6">
           <div className="flex items-start gap-4">
-            <MessageSquare className="w-6 h-6 text-primary mt-1" />
+            <MessageSquare className="mt-1 h-6 w-6 text-primary" />
+
             <div className="flex-1">
-              <h4 className="font-semibold">Parla con il professionista</h4>
-              <p className="text-sm text-muted-foreground mt-1">
-                Usa questo messaggio già pronto per negoziare:
-              </p>
-              <pre className="mt-3 p-3 bg-background rounded-lg text-sm whitespace-pre-wrap border">
+              <h4 className="font-semibold">
+                Parla con il professionista
+              </h4>
+
+              <pre className="mt-3 whitespace-pre-wrap rounded-lg border bg-background p-3 text-sm">
                 {negotiationScript}
               </pre>
-              <Button size="sm" variant="outline" className="mt-3 gap-2" onClick={copyNegotiationScript}>
-                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-                {copied ? "Copiato!" : "Copia messaggio"}
+
+              <Button
+                size="sm"
+                variant="outline"
+                className="mt-3 gap-2"
+                onClick={copyNegotiationScript}
+              >
+                {copied ? (
+                  <Check className="h-4 w-4" />
+                ) : (
+                  <Copy className="h-4 w-4" />
+                )}
+
+                {copied
+                  ? "Copiato!"
+                  : "Copia messaggio"}
               </Button>
             </div>
           </div>
         </Card>
 
-        {/* Preventivi simili salvati (opzionale) */}
+        {/* SIMILI */}
         {similarQuotes.length > 0 && (
           <Card className="p-6">
-            <h4 className="font-semibold mb-3">I tuoi preventivi passati simili</h4>
+            <h4 className="mb-3 font-semibold">
+              Preventivi simili
+            </h4>
+
             <div className="space-y-2">
               {similarQuotes.map((q, idx) => (
-                <div key={idx} className="flex justify-between text-sm border-b pb-2">
-                  <span>📍 {q.region}</span>
-                  <span className="font-mono">{fmtEUR(q.price)}</span>
-                  <span className="text-muted-foreground">{q.date}</span>
+                <div
+                  key={idx}
+                  className="flex justify-between border-b pb-2 text-sm"
+                >
+                  <span>{q.region}</span>
+
+                  <span className="font-mono">
+                    {fmtEUR(q.price)}
+                  </span>
+
+                  <span className="text-muted-foreground">
+                    {q.date}
+                  </span>
                 </div>
               ))}
             </div>
           </Card>
         )}
 
-        {/* Consigli Operativi */}
-        <Card className="p-8 border-amber-500/20 bg-amber-950/30">
+        {/* CONSIGLI */}
+        <Card className="border-amber-500/20 bg-amber-950/30 p-8">
           <div className="flex items-start gap-4">
-            <Lightbulb className="w-8 h-8 text-amber-500 mt-1 flex-shrink-0" />
+            <Lightbulb className="mt-1 h-8 w-8 flex-shrink-0 text-amber-500" />
+
             <div>
-              <h3 className="font-semibold text-xl mb-3">Cosa ti consigliamo di fare</h3>
+              <h3 className="mb-3 text-xl font-semibold">
+                Cosa ti consigliamo
+              </h3>
+
               <p className="text-lg leading-relaxed text-foreground/90">
                 {verdict.recommendation}
               </p>
@@ -371,28 +509,50 @@ export default function ResultsView({
           </div>
         </Card>
 
-        {/* Azioni Principali */}
-        <div className="flex flex-col sm:flex-row gap-4 pt-6">
+        {/* BUTTONS */}
+        <div className="flex flex-col gap-4 pt-6 sm:flex-row">
           {!saved && (
-            <Button onClick={onSave} size="lg" className="flex-1 h-14 text-base font-medium">
-              <Save className="mr-3 w-5 h-5" />
+            <Button
+              onClick={onSave}
+              size="lg"
+              className="h-14 flex-1 text-base font-medium"
+            >
+              <Save className="mr-3 h-5 w-5" />
               Salva nell’Archivio
             </Button>
           )}
+
           {onExportPDF && (
-            <Button variant="outline" onClick={onExportPDF} size="lg" className="h-14 text-base font-medium">
-              <Printer className="mr-3 w-5 h-5" />
+            <Button
+              variant="outline"
+              onClick={onExportPDF}
+              size="lg"
+              className="h-14 text-base font-medium"
+            >
+              <Printer className="mr-3 h-5 w-5" />
               Esporta PDF
             </Button>
           )}
-          <Button variant="outline" onClick={onEdit} size="lg" className="flex-1 h-14 text-base font-medium">
-            <Edit3 className="mr-3 w-5 h-5" />
+
+          <Button
+            variant="outline"
+            onClick={onEdit}
+            size="lg"
+            className="h-14 flex-1 text-base font-medium"
+          >
+            <Edit3 className="mr-3 h-5 w-5" />
             Modifica Preventivo
           </Button>
-          <Button variant="secondary" onClick={onReset} size="lg" className="flex-1 h-14 text-base font-medium">
-            <RotateCcw className="mr-3 w-5 h-5" />
+
+          <Button
+            variant="secondary"
+            onClick={onReset}
+            size="lg"
+            className="h-14 flex-1 text-base font-medium"
+          >
+            <RotateCcw className="mr-3 h-5 w-5" />
             Nuovo Preventivo
-            <ArrowRight className="ml-2 w-4 h-4" />
+            <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
 
