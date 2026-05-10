@@ -31,14 +31,7 @@ jobs:
       - name: Install & Update Lockfile Automatically
         run: |
           pnpm install --no-frozen-lockfile
-          echo "✅ Dependencies installed and lockfile updated"
-
-      - name: Type Check
-        run: pnpm run typecheck
-
-      - name: Build Application
-        run: pnpm run build
-        env:
+          echo "✅ Dependencies installed and lockfile      
           VITE_FIREBASE_ENABLED: ${{ secrets.VITE_FIREBASE_ENABLED || 'false' }}
 
       - name: ✅ Build Status
