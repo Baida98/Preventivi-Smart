@@ -6,6 +6,7 @@ on:
   pull_request:
     branches: [ main, master ]
 
+# Risolve warning Node 20 deprecation
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
@@ -20,9 +21,9 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 9        # ← Versione stabile e compatibile
+          version: 9.5.0   # Versione stabile e raccomandata
 
-      - name: Setup Node.js 22
+      - name: Setup Node.js 22 LTS
         uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -33,12 +34,17 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Type Check
-        run: pnpm run typecheck || echo "Typecheck skipped"
+        run: pnpm run typecheck
 
-      - name: Build
+      - name: Build Application
         run: pnpm run build
         env:
           VITE_FIREBASE_ENABLED: ${{ secrets.VITE_FIREBASE_ENABLED || 'false' }}
 
-      - name: Show build status
-        run: echo "✅ Build completata con successo"
+      - name: Build Result
+        if: success()
+        run: echo "🎉 Build completata con successo su Node 22 + pnpm 9!"
+
+      - name: Build Failed
+        if: failure()
+        run: echo "❌ Build fallita - controlla i log sopra per i dettagli"
