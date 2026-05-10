@@ -2,38 +2,63 @@ name: CI - Build & Test
 
 on:
   push:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
+
   pull_request:
-    branches: [ main, master ]
+    branches:
+      - main
+      - master
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+  VITE_FIREBASE_ENABLED: ${{ secrets.VITE_FIREBASE_ENABLED || 'false' }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup pnpm
+      - name: 📦 Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9.5.0
 
-      - name: Setup Node.js 22
+      - name: 🟢 Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: 'pnpm'
+          cache: pnpm
 
-      - name: Install & Update Lockfile Automatically
+      - name: 📚 Install dependencies
         run: |
           pnpm install --no-frozen-lockfile
-          echo "✅ Dependencies installed and lockfile      
-          VITE_FIREBASE_ENABLED: ${{ secrets.VITE_FIREBASE_ENABLED || 'false' }}
+
+      - name: 🔍 Debug Environment
+        run: |
+          echo "✅ Dependencies installed and lockfile updated"
+          echo "VITE_FIREBASE_ENABLED: $VITE_FIREBASE_ENABLED"
+
+      - name: 🏗️ Build Project
+        run: |
+          pnpm build
+
+      - name: 🧪 Run Tests
+        run: |
+          pnpm test -- --run
+        continue-on-error: false
 
       - name: ✅ Build Status
         if: success()
-        run: echo "🎉 Build completata con successo!"
+        run: |
+          echo "🎉 Build completata con successo!"
+
+      - name: ❌ Failure Debug
+        if: failure()
+        run: |
+          echo "❌ Build fallita"
+          echo "Controllare logs precedenti"
