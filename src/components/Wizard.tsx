@@ -221,6 +221,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
         mode={mode}
         job={job!}
         category={category!}
+        categoryId={categoryId}
         regionLabel={regionLabel}
         quantity={Number(quantity)}
         price={mode === "analizza" ? Number(price) : analysis.marketMid}
