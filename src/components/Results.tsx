@@ -38,17 +38,18 @@ import type { Verdict } from "@/lib/verdict";
 import type { Category, Job } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 import { llmKeys } from "@/lib/ai/llm-provider";
+import { smartMemory, MEMORY_KEYS } from "@/lib/ai/smart-memory";
 
 import LegalDisclaimer from "@/components/LegalDisclaimer";
 import AIInsightCard from "@/components/AIInsightCard";
 import AIChat from "@/components/AIChat";
 import AISetup from "@/components/AISetup";
+import AIReportPanel from "@/components/AIReport";
 
 type Props = {
   mode: "analizza" | "stima";
   job?: Pick<Job, "label" | "unitLabel">;
   category?: Pick<Category, "label">;
-  /** ID della categoria (es. "edilizia", "clima") — usato dall'AI */
   categoryId?: string;
   jobLabel?: string;
   categoryLabel?: string;
@@ -66,7 +67,6 @@ type Props = {
   onSave: () => void;
   onReset: () => void;
   onEdit: () => void;
-
   showBreakdown?: boolean;
   onExportPDF?: () => void;
   sampleCount?: number;
@@ -153,11 +153,7 @@ export default function ResultsView({
   sampleCount = 42,
   similarQuotes = [],
 }: Props) {
-  const [breakdown, setBreakdown] = useState({
-    materials: 40,
-    labor: 50,
-    other: 10,
-  });
+  const [breakdown, setBreakdown] = useState({ materials: 40, labor: 50, other: 10 });
   const [copied, setCopied] = useState(false);
   const [aiSetupOpen, setAiSetupOpen] = useState(false);
   const [hasAIToken, setHasAIToken] = useState(() => llmKeys.hasToken());
@@ -168,24 +164,19 @@ export default function ResultsView({
   const resolvedCategoryId = categoryId ?? "edilizia";
 
   const diff = price - analysis.marketMid;
-  const diffPct =
-    analysis.marketMid > 0
-      ? Math.round((diff / analysis.marketMid) * 100)
-      : 0;
+  const diffPct = analysis.marketMid > 0 ? Math.round((diff / analysis.marketMid) * 100) : 0;
   const isOverpriced = diff > 0;
 
   const percentile = useMemo(() => {
     const range = analysis.marketMax - analysis.marketMin;
     if (range === 0) return 50;
-    const pos = ((price - analysis.marketMin) / range) * 100;
-    return Math.round(Math.min(100, Math.max(0, pos)));
+    return Math.round(Math.min(100, Math.max(0, ((price - analysis.marketMin) / range) * 100)));
   }, [price, analysis]);
 
   const indicatorPosition = useMemo(() => {
     const range = analysis.marketMax - analysis.marketMin;
     if (range === 0) return 50;
-    const pos = ((price - analysis.marketMin) / range) * 100;
-    return Math.min(100, Math.max(0, pos));
+    return Math.min(100, Math.max(0, ((price - analysis.marketMin) / range) * 100));
   }, [price, analysis]);
 
   const verdictKey = verdict?.key?.toUpperCase?.();
@@ -215,6 +206,14 @@ export default function ResultsView({
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   }, [negotiationScript]);
+
+  // Save verdict to smart memory
+  useMemo(() => {
+    if (verdict) {
+      smartMemory.remember(MEMORY_KEYS.LAST_VERDICT, verdict.key);
+      smartMemory.appendToList("verdicts", `${resolvedJobLabel}: ${verdict.label}`);
+    }
+  }, [verdict, resolvedJobLabel]);
 
   if (!verdict) {
     return (
@@ -294,12 +293,7 @@ export default function ResultsView({
             {mode === "analizza" && (
               <div className="inline-flex items-center gap-3 rounded-2xl border bg-background/80 px-6 py-3">
                 <span className="text-sm font-medium">SCOSTAMENTO DALLA MEDIA</span>
-                <span
-                  className={cn(
-                    "text-3xl font-bold tabular-nums",
-                    isOverpriced ? "text-rose-500" : "text-emerald-500"
-                  )}
-                >
+                <span className={cn("text-3xl font-bold tabular-nums", isOverpriced ? "text-rose-500" : "text-emerald-500")}>
                   {isOverpriced ? "+" : ""}{diffPct}%
                 </span>
               </div>
@@ -311,10 +305,10 @@ export default function ResultsView({
           </div>
         </motion.div>
 
-        {/* AI INSIGHT — analisi approfondita via LLM */}
+        {/* AI INSIGHT */}
         <AIInsightCard key={hasAIToken ? "ai-on" : "ai-off"} {...aiCommonProps} />
 
-        {/* GRAFICO BENCHMARK */}
+        {/* BENCHMARK */}
         <Card className="p-8">
           <div className="mb-6 flex items-center gap-3">
             <BarChart3 className="h-6 w-6 text-primary" />
@@ -323,7 +317,7 @@ export default function ResultsView({
               Dati Verificati
             </span>
             <span className="text-xs text-muted-foreground">
-              Basato su {sampleCount} preventivi recenti
+              Basato su {sampleCount} preventivi
             </span>
           </div>
           <div className="space-y-6">
@@ -363,11 +357,7 @@ export default function ResultsView({
                 <Slider
                   value={[breakdown.materials]}
                   onValueChange={(val) =>
-                    setBreakdown((prev) => ({
-                      ...prev,
-                      materials: val[0],
-                      labor: 100 - val[0] - prev.other,
-                    }))
+                    setBreakdown((prev) => ({ ...prev, materials: val[0], labor: 100 - val[0] - prev.other }))
                   }
                   max={100 - breakdown.other}
                   step={1}
@@ -386,12 +376,7 @@ export default function ResultsView({
               <pre className="mt-3 whitespace-pre-wrap rounded-lg border bg-background p-3 text-sm">
                 {negotiationScript}
               </pre>
-              <Button
-                size="sm"
-                variant="outline"
-                className="mt-3 gap-2"
-                onClick={copyNegotiationScript}
-              >
+              <Button size="sm" variant="outline" className="mt-3 gap-2" onClick={copyNegotiationScript}>
                 {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                 {copied ? "Copiato!" : "Copia messaggio"}
               </Button>
@@ -426,7 +411,10 @@ export default function ResultsView({
           </div>
         </Card>
 
-        {/* AI CHAT — consulente streaming */}
+        {/* AI REPORT */}
+        <AIReportPanel {...aiCommonProps} />
+
+        {/* AI CHAT */}
         <AIChat {...aiCommonProps} />
 
         {/* BUTTONS */}
@@ -471,6 +459,7 @@ export default function ResultsView({
           onConfigured={() => {
             setHasAIToken(true);
             setAiSetupOpen(false);
+            smartMemory.remember(MEMORY_KEYS.AI_TOKEN_CONFIGURED, true);
           }}
         />
       </div>

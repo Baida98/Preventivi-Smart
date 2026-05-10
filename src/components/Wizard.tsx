@@ -43,6 +43,7 @@ import { validateWizardData } from "@/lib/validation";
 import { cn } from "@/lib/utils";
 import ResultsView from "./Results";
 import PdfUploadZone from "./PdfUploadZone";
+import { smartMemory, MEMORY_KEYS } from '@/lib/ai/smart-memory';
 
 export type Mode = "analizza" | "stima";
 
@@ -87,6 +88,15 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
     };
   }, [mode]);
 
+
+  // Pre-fill last used region and category from smart memory
+  useEffect(() => {
+    const lastRegion = smartMemory.recall(MEMORY_KEYS.LAST_REGION);
+    const lastCategory = smartMemory.recall(MEMORY_KEYS.LAST_CATEGORY);
+    if (lastRegion && !regionId) setRegionId(lastRegion as string);
+    if (lastCategory && !categoryId && !presetCategoryId) setCategoryId(lastCategory as string);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<MarketAnalysis | null>(null);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
@@ -309,6 +319,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
                       whileTap={{ scale: 0.95 }}
                       onClick={() => {
                         setCategoryId(cat.id);
+                        smartMemory.remember(MEMORY_KEYS.LAST_CATEGORY, cat.id);
                         setJobId(null);
                         setFieldValues({});
                         setStep(2);
@@ -379,7 +390,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
                   <BarChart3 className="w-4 h-4 inline mr-2" />
                   Regione
                 </Label>
-                <Select value={regionId} onValueChange={setRegionId}>
+                <Select value={regionId} onValueChange={(val) => { setRegionId(val); smartMemory.remember(MEMORY_KEYS.LAST_REGION, val); }}>
                   <SelectTrigger className="h-12 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary">
                     <SelectValue placeholder="Seleziona una regione..." />
                   </SelectTrigger>
