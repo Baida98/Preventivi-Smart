@@ -1,5 +1,5 @@
-// src/lib/verdict.ts
 export type Verdict = 'Sospetto' | 'Ottimo' | 'Equo' | 'Alto' | 'Troppo Alto';
+export type VerdictKey = Verdict; // alias richiesto
 
 export interface VerdictResult {
   verdict: Verdict;
@@ -23,11 +23,7 @@ export function calculateVerdict(
     };
   }
 
-  const range = marketMax - marketMin;
   const mid = (marketMin + marketMax) / 2;
-  const deviation = ((askedPrice - mid) / mid) * 100;
-
-  // Thresholds migliorati con pattern Reflection dal repo AI
   if (askedPrice < marketMin * 0.78) {
     return {
       verdict: 'Sospetto',
@@ -60,7 +56,6 @@ export function calculateVerdict(
       color: 'amber'
     };
   }
-
   return {
     verdict: 'Troppo Alto',
     recommendation: 'Chiedi dettaglio delle singole voci di costo.',
@@ -69,7 +64,9 @@ export function calculateVerdict(
   };
 }
 
-// Utility per reflection (da AI project)
+// ⭐ ESPORTA LA FUNZIONE judge (usata nei test e Wizard)
+export const judge = calculateVerdict;
+
 export function validateVerdictInput(data: any): string[] {
   const errors: string[] = [];
   if (!data.askedPrice) errors.push("Prezzo richiesto mancante");
