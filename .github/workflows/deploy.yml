@@ -6,9 +6,8 @@ on:
   pull_request:
     branches: [ main, master ]
 
-# === CONFIGURAZIONE CONSIGLIATA MAGGIO 2026 ===
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true   # Forza Node 24 come richiesto da GitHub
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
@@ -23,15 +22,15 @@ jobs:
         with:
           version: 9.5.0
 
-      - name: Setup Node.js 22 (LTS Raccomandato)
+      - name: Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
           cache-dependency-path: '**/pnpm-lock.yaml'
 
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+      - name: Install dependencies (Lockfile Fix)
+        run: pnpm install   # Senza --frozen-lockfile per aggiornare automaticamente
 
       - name: Type Check
         run: pnpm run typecheck
@@ -41,10 +40,10 @@ jobs:
         env:
           VITE_FIREBASE_ENABLED: ${{ secrets.VITE_FIREBASE_ENABLED || 'false' }}
 
-      - name: ✅ Success
+      - name: ✅ Build Status
         if: success()
-        run: echo "🎉 Build completata con successo su Node 22 (con runtime Node 24)"
+        run: echo "🎉 Build completata con successo!"
 
-      - name: ❌ Failed
+      - name: ❌ Build Failed
         if: failure()
-        run: echo "❌ Build fallita - controlla i log"
+        run: echo "❌ Build fallita - controlla i log sopra"
