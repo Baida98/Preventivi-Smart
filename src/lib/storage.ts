@@ -1,5 +1,7 @@
+// src/lib/storage.ts
 import { getFirestoreInstance, getCurrentUser } from "./firebase-service";
 import { doc, collection, addDoc, setDoc, getDocs, query, orderBy, limit, Timestamp, deleteDoc } from "firebase/firestore";
+import CryptoJS from 'crypto-js';
 import type { VerdictKey } from "./verdict";
 
 const KEY = "preventivi-smart-archive-v1";
@@ -49,12 +51,12 @@ export type SavedQuote = {
   anomalyScore?: number;
   validated?: boolean;
 
-  // Tracking & Analytics (Standardizzato 0-1)
+  // Tracking & Analytics
   prezzo_suggerito?: number;
   prezzo_finale?: number;
   range_min?: number;
   range_max?: number;
-  confidence?: number; // 0.0 - 1.0
+  confidence?: number;
   model_version?: string;
   segmento?: string;
   outcome?: "bozza" | "inviato" | "accettato" | "rifiutato" | "modificato";
@@ -64,6 +66,8 @@ export type SavedQuote = {
   ocrConfidence?: number;
   parserConfidence?: number;
   uid?: string;
+  fingerprint?: string;     // ← Aggiunto dal pattern AI
+  deviceId?: string;        // ← Aggiunto dal pattern AI
 };
 
 export type QuoteEvent = {
@@ -105,20 +109,29 @@ const EVENTS_KEY = "preventivi-smart-events-v1";
 const ANALYTICS_KEY = "preventivi-smart-analytics-v1";
 const AGGREGATES_KEY = "preventivi-smart-aggregates-v1";
 
-/**
- * COMMIT 1: Firestore è l'unica sorgente di verità
- * localStorage è solo cache locale (read-only per i guest)
- */
+// ==================== MEMORY SYNC PROTOCOL (dal repo AI) ====================
+function generateFingerprint(quote: Partial<SavedQuote>): string {
+  const keyData = {
+    id: quote.id,
+    receivedPrice: quote.receivedPrice,
+    marketMin: quote.marketMin,
+    marketMax: quote.marketMax,
+    totale: quote.totale,
+    updatedAt: quote.updatedAt,
+    jobId: quote.jobId,
+    fieldValues: quote.fieldValues,
+  };
+  return CryptoJS.SHA256(JSON.stringify(keyData)).toString();
+}
 
-/**
- * Carica i preventivi da Firestore (utenti loggati) o localStorage (guest)
- * FIRESTORE FIRST: Prova sempre il cloud prima del locale
- */
+const DEVICE_ID = `device_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
+
+// ==================== FUNZIONI PRINCIPALI ====================
+
 export async function loadArchive(): Promise<SavedQuote[]> {
   const user = getCurrentUser();
   const db = getFirestoreInstance();
 
-  // Se loggato e Firestore disponibile: carica dal cloud
   if (FIREBASE_ENABLED && user && db) {
     try {
       const col = collection(db, "users", user.uid, "quotes");
@@ -126,18 +139,15 @@ export async function loadArchive(): Promise<SavedQuote[]> {
       const snap = await getDocs(q);
       const cloudQuotes = snap.docs.map(d => d.data() as SavedQuote);
       
-      // Aggiorna cache locale
       if (typeof window !== "undefined") {
         window.localStorage.setItem(KEY, JSON.stringify(cloudQuotes));
       }
       return cloudQuotes;
     } catch (error) {
       console.error("Errore nel caricamento da Firestore:", error);
-      // Fallback a cache locale
     }
   }
 
-  // Guest o Firestore non disponibile: carica da localStorage (cache)
   if (typeof window === "undefined") return [];
   try {
     const raw = window.localStorage.getItem(KEY);
@@ -150,57 +160,49 @@ export async function loadArchive(): Promise<SavedQuote[]> {
   }
 }
 
-/**
- * Salva un preventivo su Firestore (sorgente primaria)
- * localStorage viene aggiornato solo come cache
- */
 export async function saveQuote(q: SavedQuote) {
   const user = getCurrentUser();
   const db = getFirestoreInstance();
-  const quoteWithUid = { ...q, uid: user?.uid || "guest" };
+  
+  const fingerprint = generateFingerprint(q);
+  const quoteWithMeta = {
+    ...q,
+    fingerprint,
+    deviceId: DEVICE_ID,
+    updatedAt: new Date().toISOString(),
+    uid: user?.uid || "guest"
+  };
 
   try {
-    // FIRESTORE FIRST: Se loggato, salva sempre su Firestore
-    if (FIREBASE_ENABLED && user && db) {
-      const col = collection(db, "users", user.uid, "quotes");
-      const quoteRef = doc(col, q.id);
-      await setDoc(quoteRef, {
-        ...quoteWithUid,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
-    } else if (FIREBASE_ENABLED && db) {
-      // Guest: salva su collezione globale guest con uid "guest"
-      const quoteRef = doc(db, "guests", "guest", "quotes", q.id);
-      await setDoc(quoteRef, {
-        ...quoteWithUid,
-        updatedAt: new Date().toISOString()
-      }, { merge: true });
+    if (FIREBASE_ENABLED && db) {
+      let quoteRef;
+      if (user) {
+        const col = collection(db, "users", user.uid, "quotes");
+        quoteRef = doc(col, q.id);
+      } else {
+        quoteRef = doc(db, "guests", "guest", "quotes", q.id);
+      }
+      await setDoc(quoteRef, quoteWithMeta, { merge: true });
     }
 
-    // Aggiorna cache locale (fallback per offline)
     if (typeof window !== "undefined") {
       const all = await loadArchive();
       const existingIdx = all.findIndex(item => item.id === q.id);
       if (existingIdx >= 0) {
-        all[existingIdx] = quoteWithUid;
+        all[existingIdx] = quoteWithMeta;
       } else {
-        all.unshift(quoteWithUid);
+        all.unshift(quoteWithMeta);
       }
       window.localStorage.setItem(KEY, JSON.stringify(all.slice(0, 100)));
     }
 
-    // Log evento
     logEvent(q.id ? "UPDATED" : "CREATED", q.id);
-    
   } catch (error) {
     console.error("Errore nel salvataggio del preventivo:", error);
     throw new Error("Impossibile salvare il preventivo.");
   }
 }
 
-/**
- * Sincronizza i dati cloud con la cache locale
- */
 export async function syncArchiveWithCloud(): Promise<SavedQuote[]> {
   const user = getCurrentUser();
   const db = getFirestoreInstance();
@@ -228,16 +230,16 @@ export async function deleteQuote(id: string) {
   const db = getFirestoreInstance();
 
   try {
-    // Firestore first
-    if (FIREBASE_ENABLED && user && db) {
-      const quoteRef = doc(db, "users", user.uid, "quotes", id);
-      await deleteDoc(quoteRef);
-    } else if (FIREBASE_ENABLED && db) {
-      const quoteRef = doc(db, "guests", "guest", "quotes", id);
+    if (FIREBASE_ENABLED && db) {
+      let quoteRef;
+      if (user) {
+        quoteRef = doc(db, "users", user.uid, "quotes", id);
+      } else {
+        quoteRef = doc(db, "guests", "guest", "quotes", id);
+      }
       await deleteDoc(quoteRef);
     }
 
-    // Aggiorna cache locale
     if (typeof window !== "undefined") {
       const all = await loadArchive();
       const filtered = all.filter((q) => q.id !== id);
@@ -264,7 +266,7 @@ export async function getQuoteCount(): Promise<number> {
 
 export async function isGuestLimitReached(): Promise<boolean> {
   const user = getCurrentUser();
-  if (user) return false; // Nessun limite per utenti loggati
+  if (user) return false;
   const count = await getQuoteCount();
   return count >= GUEST_QUOTE_LIMIT;
 }
@@ -279,11 +281,7 @@ export async function calculateTotalArchive(): Promise<number> {
   }, 0);
 }
 
-// ⸻ TRACKING & ANALYTICS ⸻
-
-/**
- * Salva un evento di tracking (Firestore se loggato, localStorage se guest)
- */
+// TRACKING & ANALYTICS (invariate)
 export async function logEvent(type: QuoteEvent["type"], preventivoId: string, payload: Record<string, any> = {}) {
   const user = getCurrentUser();
   const db = getFirestoreInstance();
@@ -296,12 +294,10 @@ export async function logEvent(type: QuoteEvent["type"], preventivoId: string, p
   };
 
   try {
-    // Firestore: collezione globale events per aggregazione admin
     if (FIREBASE_ENABLED && db) {
       await addDoc(collection(db, "events"), event);
     }
 
-    // Local fallback per offline
     if (typeof window !== "undefined") {
       const events = loadEvents();
       events.unshift(event);
@@ -320,10 +316,6 @@ export function loadEvents(): QuoteEvent[] {
   } catch { return []; }
 }
 
-/**
- * Chiude un preventivo e genera un record analytics
- * STANDARDIZZATO: confidence 0-1, prezzi in number
- */
 export async function closePreventivo(preventivo: SavedQuote) {
   const db = getFirestoreInstance();
   
@@ -348,17 +340,15 @@ export async function closePreventivo(preventivo: SavedQuote) {
       errore_percentuale,
       dentro_range,
       outcome: preventivo.outcome || "bozza",
-      confidence: preventivo.confidence || 0.5, // Sempre 0-1
+      confidence: preventivo.confidence || 0.5,
       model_version: preventivo.model_version || "v1.0",
       createdAt: Date.now(),
     };
 
-    // Salva record su Firestore
     if (db) {
       await setDoc(doc(db, "analytics", preventivo.id), record);
     }
 
-    // Local cache
     if (typeof window !== "undefined") {
       const analytics = loadAnalytics();
       analytics.unshift(record);
@@ -405,7 +395,6 @@ export function updateAggregates(segmento: string) {
       lastUpdated: Date.now(),
     };
 
-    // Save
     if (typeof window !== "undefined") {
       const aggregates = loadAggregates();
       const idx = aggregates.findIndex(a => a.segmento === metrics.segmento);
@@ -413,7 +402,6 @@ export function updateAggregates(segmento: string) {
       else aggregates.push(metrics);
       window.localStorage.setItem(AGGREGATES_KEY, JSON.stringify(aggregates));
     }
-    
   } catch (error) {
     console.error("Errore nell'aggiornamento degli aggregati:", error);
   }
@@ -427,9 +415,6 @@ export function loadAggregates(): AggregateMetrics[] {
   } catch { return []; }
 }
 
-/**
- * Ottiene le metriche aggregate per un segmento
- */
 export function getSegmentMetrics(segmento: string): AggregateMetrics | null {
   try {
     const aggregates = loadAggregates();
