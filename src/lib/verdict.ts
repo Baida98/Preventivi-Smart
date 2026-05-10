@@ -1,5 +1,5 @@
 export type Verdict = 'Sospetto' | 'Ottimo' | 'Equo' | 'Alto' | 'Troppo Alto';
-export type VerdictKey = Verdict; // alias richiesto
+export type VerdictKey = Verdict;
 
 export interface VerdictResult {
   verdict: Verdict;
@@ -24,6 +24,7 @@ export function calculateVerdict(
   }
 
   const mid = (marketMin + marketMax) / 2;
+
   if (askedPrice < marketMin * 0.78) {
     return {
       verdict: 'Sospetto',
@@ -64,16 +65,11 @@ export function calculateVerdict(
   };
 }
 
-// ⭐ ESPORTA LA FUNZIONE judge (usata nei test e Wizard)
 export const judge = calculateVerdict;
 
 export function validateVerdictInput(data: any): string[] {
   const errors: string[] = [];
-  if (!data.askedPrice) errors.push("Prezzo richiesto mancante");
-  if (!data.marketMin || !data.marketMax) errors.push("Range di mercato mancante");
+  if (!data?.askedPrice) errors.push("Prezzo richiesto mancante");
+  if (!data?.marketMin || !data?.marketMax) errors.push("Range di mercato mancante");
   return errors;
 }
-
-
-export const judge = calculateVerdict;
-export type VerdictKey = Verdict;
