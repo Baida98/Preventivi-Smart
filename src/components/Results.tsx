@@ -34,25 +34,28 @@ import {
 } from "@/components/ui/tooltip";
 
 import { fmtEUR } from "@/lib/format";
-import type { VerdictResult } from "@/lib/verdict";
+import type { Verdict } from "@/lib/verdict";
+import type { Category, Job } from "@/lib/pricing";
 import { cn } from "@/lib/utils";
 
 import LegalDisclaimer from "@/components/LegalDisclaimer";
 
 type Props = {
   mode: "analizza" | "stima";
-  jobLabel: string;
-  categoryLabel: string;
+  job?: Pick<Job, "label" | "unitLabel">;
+  category?: Pick<Category, "label">;
+  jobLabel?: string;
+  categoryLabel?: string;
   regionLabel: string;
   quantity: number;
-  unitLabel: string;
+  unitLabel?: string;
   price: number;
   analysis: {
     marketMin: number;
     marketMid: number;
     marketMax: number;
   };
-  verdict: VerdictResult | null;
+  verdict: Verdict | null;
   saved: boolean;
   onSave: () => void;
   onReset: () => void;
@@ -130,6 +133,8 @@ const fallbackConfig: VerdictConfigItem = {
 
 export default function ResultsView({
   mode,
+  job,
+  category,
   jobLabel,
   categoryLabel,
   regionLabel,
@@ -154,6 +159,10 @@ export default function ResultsView({
   });
 
   const [copied, setCopied] = useState(false);
+
+  const resolvedJobLabel = jobLabel ?? job?.label ?? "Preventivo";
+  const resolvedCategoryLabel = categoryLabel ?? category?.label ?? "Categoria";
+  const resolvedUnitLabel = unitLabel ?? job?.unitLabel ?? "unità";
 
   const diff = price - analysis.marketMid;
 
@@ -188,13 +197,14 @@ export default function ResultsView({
     return Math.min(100, Math.max(0, pos));
   }, [price, analysis]);
 
-  const verdictKey = verdict?.verdict?.toUpperCase?.();
+  const verdictKey = verdict?.key?.toUpperCase?.();
 
   const config =
     (verdictKey && VerdictConfig[verdictKey]) ||
     fallbackConfig;
 
   const VerdictIcon = config.icon;
+  const primaryRecommendation = verdict?.recommendations?.[0] ?? verdict?.description ?? "Analisi completata.";
 
   const negotiationScript = useMemo(() => {
     if (!verdict) return "";
@@ -203,7 +213,7 @@ export default function ResultsView({
     const midFormatted = fmtEUR(analysis.marketMid);
 
     if (verdictKey === "TROPPO-ALTO") {
-      return `Gentile professionista, il suo preventivo di ${priceFormatted} per ${jobLabel} (${quantity} ${unitLabel}) risulta superiore rispetto alla media di mercato della mia zona (${midFormatted}). È possibile rivedere il prezzo?`;
+      return `Gentile professionista, il suo preventivo di ${priceFormatted} per ${resolvedJobLabel} (${quantity} ${resolvedUnitLabel}) risulta superiore rispetto alla media di mercato della mia zona (${midFormatted}). È possibile rivedere il prezzo?`;
     }
 
     if (verdictKey === "ALTO") {
@@ -214,15 +224,15 @@ export default function ResultsView({
       return `Il preventivo di ${priceFormatted} risulta in linea con il mercato. È previsto uno sconto per pagamento immediato?`;
     }
 
-    return `Buongiorno, può fornirmi maggiori dettagli sul preventivo ricevuto per ${jobLabel}?`;
+    return `Buongiorno, può fornirmi maggiori dettagli sul preventivo ricevuto per ${resolvedJobLabel}?`;
   }, [
     verdict,
     verdictKey,
     price,
     analysis.marketMid,
-    jobLabel,
+    resolvedJobLabel,
     quantity,
-    unitLabel,
+    resolvedUnitLabel,
   ]);
 
   const copyNegotiationScript = useCallback(() => {
@@ -254,15 +264,15 @@ export default function ResultsView({
         {/* HEADER */}
         <div className="text-center space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border bg-muted/80 px-4 py-1.5 text-sm font-medium">
-            {categoryLabel} • {regionLabel}
+            {resolvedCategoryLabel} • {regionLabel}
           </div>
 
           <h1 className="text-3xl font-bold tracking-tight">
-            {jobLabel}
+            {resolvedJobLabel}
           </h1>
 
           <p className="text-lg text-muted-foreground">
-            {quantity} {unitLabel} •{" "}
+            {quantity} {resolvedUnitLabel} •{" "}
             <span className="font-semibold text-foreground">
               {fmtEUR(price)}
             </span>
@@ -302,12 +312,18 @@ export default function ResultsView({
           </div>
 
           <h2 className="mb-4 text-5xl font-black tracking-tighter">
-            {verdict.verdict}
+            {verdict.label}
           </h2>
 
           <p className="mx-auto max-w-2xl text-xl leading-relaxed text-muted-foreground">
-            {verdict.recommendation}
+            {verdict.description}
           </p>
+
+          {verdict.outlierWarning && (
+            <div className="mx-auto mt-6 max-w-2xl rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4 text-sm font-semibold text-amber-100">
+              {verdict.outlierWarning}
+            </div>
+          )}
 
           <div className="mt-8 flex flex-wrap justify-center gap-4">
             {mode === "analizza" && (
@@ -348,10 +364,14 @@ export default function ResultsView({
             <BarChart3 className="h-6 w-6 text-primary" />
 
             <h3 className="text-xl font-semibold">
-              Confronto con il Mercato
+              Benchmark di Mercato
             </h3>
 
-            <span className="ml-auto text-xs text-muted-foreground">
+            <span className="ml-auto rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-200">
+              Dati Verificati
+            </span>
+
+            <span className="text-xs text-muted-foreground">
               Basato su {sampleCount} preventivi recenti
             </span>
           </div>
@@ -503,7 +523,7 @@ export default function ResultsView({
               </h3>
 
               <p className="text-lg leading-relaxed text-foreground/90">
-                {verdict.recommendation}
+                {primaryRecommendation}
               </p>
             </div>
           </div>
@@ -511,7 +531,7 @@ export default function ResultsView({
 
         {/* BUTTONS */}
         <div className="flex flex-col gap-4 pt-6 sm:flex-row">
-          {!saved && (
+          {!saved ? (
             <Button
               onClick={onSave}
               size="lg"
@@ -520,6 +540,11 @@ export default function ResultsView({
               <Save className="mr-3 h-5 w-5" />
               Salva nell’Archivio
             </Button>
+          ) : (
+            <div className="flex h-14 flex-1 items-center justify-center rounded-md border border-emerald-500/30 bg-emerald-500/10 px-4 text-base font-semibold text-emerald-200">
+              <CheckCircle2 className="mr-3 h-5 w-5" />
+              Analisi Salvata
+            </div>
           )}
 
           {onExportPDF && (
@@ -541,7 +566,7 @@ export default function ResultsView({
             className="h-14 flex-1 text-base font-medium"
           >
             <Edit3 className="mr-3 h-5 w-5" />
-            Modifica Preventivo
+            Modifica Dati
           </Button>
 
           <Button
