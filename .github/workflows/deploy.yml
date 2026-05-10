@@ -1,23 +1,46 @@
-name: Build
+name: CI - Build & Test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ main, master ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, master ]
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
         with:
           version: 9.5.0
-      - uses: actions/setup-node@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: 'pnpm'
-      - run: pnpm install --no-frozen-lockfile
-      - run: pnpm run typecheck
-      - run: pnpm run build
+
+      - name: Install & Update Lockfile Automatically
+        run: |
+          pnpm install --no-frozen-lockfile
+          echo "✅ Dependencies installed and lockfile updated"
+
+      - name: Type Check
+        run: pnpm run typecheck
+
+      - name: Build Application
+        run: pnpm run build
+        env:
+          VITE_FIREBASE_ENABLED: ${{ secrets.VITE_FIREBASE_ENABLED || 'false' }}
+
+      - name: ✅ Build Status
+        if: success()
+        run: echo "🎉 Build completata con successo!"
