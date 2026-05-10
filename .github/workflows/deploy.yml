@@ -1,55 +1,48 @@
-name: Deploy to GitHub Pages
+name: CI - Build & Test
 
 on:
   push:
-    branches: ["main", "Baida98-patch-1"]
-  workflow_dispatch:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
 
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: "pages"
-  cancel-in-progress: true
-
+# Forza l'uso di Node 24 per risolvere il warning di deprecazione
 env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true  # ← Aggiunto per Node.js 24
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install pnpm
+
+      - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          version: 10
-      - name: Set up Node
+          version: latest
+
+      - name: Setup Node.js 20 (con Node 24 runtime)
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 20        # mantieni 20 nel progetto per ora
           cache: 'pnpm'
-      - name: Install dependencies
-        run: pnpm install
-      - name: Build
-        run: pnpm build
-      - name: Setup Pages
-        uses: actions/configure-pages@v4
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './dist'
+          cache-dependency-path: '**/pnpm-lock.yaml'
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Type Check
+        run: pnpm run typecheck
+
+      - name: Build
+        run: pnpm run build
+        env:
+          VITE_FIREBASE_ENABLED: ${{ secrets.VITE_FIREBASE_ENABLED || 'false' }}
+          # Aggiungi qui altre variabili se necessario
+          # VITE_FIREBASE_API_KEY: ${{ secrets.VITE_FIREBASE_API_KEY }}
+
+      - name: Test (opzionale)
+        run: pnpm run test
+        if: false  # attivalo quando hai i test
