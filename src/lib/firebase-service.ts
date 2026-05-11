@@ -111,6 +111,26 @@ export function getCurrentUser(): User | null {
   return authInstance.currentUser;
 }
 
+/**
+ * Salva o aggiorna un preventivo con logica di merge intelligente FIX #2
+ */
+export async function saveQuote(userId: string, quote: Quote): Promise<void> {
+  const dbInstance = getFirestoreInstance();
+  if (!dbInstance) throw new Error("Firebase non configurato.");
+
+  const userRef = doc(dbInstance, "users", userId);
+  const quoteRef = doc(userRef, "quotes", quote.id);
+
+  const now = new Date().toISOString();
+  const quoteToSave = {
+    ...quote,
+    updatedAt: now
+  };
+
+  // Usiamo set con merge: true per preservare campi extra se presenti
+  await setDoc(quoteRef, quoteToSave, { merge: true });
+}
+
 export async function createQuote(
   userId: string,
   quoteData: Omit<Quote, "id" | "numero" | "createdAt" | "updatedAt" | "uid">

@@ -115,15 +115,16 @@ export function judge(price: number, m: MarketAnalysis, categoryId: string = "ed
     }
   }
 
-  const minThreshold = analysis.marketMin * 0.8;
-  const maxThreshold = analysis.marketMax * 1.15;
+  // SOGLIE SIMMETRICHE FIX #1
+  const minThreshold = analysis.marketMin * 0.85; // 15% sotto il minimo
+  const maxThreshold = analysis.marketMax * 1.15; // 15% sopra il massimo
   
   let v: VerdictKey;
   let baseConfidence = analysis.confidence;
 
   if (price < minThreshold) {
     v = "sospetto";
-    baseConfidence *= 0.85;
+    baseConfidence *= 0.80; // Penalità maggiore per incertezza estrema
   } else if (price < analysis.marketMin) {
     v = "ottimo";
   } else if (price <= analysis.marketMax) {
@@ -155,7 +156,7 @@ export function judge(price: number, m: MarketAnalysis, categoryId: string = "ed
     ottimo: {
       label: "Vantaggioso",
       short: "Sotto la media di mercato",
-      description: `Il riferimento indica un'offerta economica, circa il ${Math.abs(Math.round(diffPct * 100))}% sotto il benchmark minimo.`,
+      description: `Il riferimento indica un'offerta economica, circa il ${Math.abs(Math.round(diffPct * 100))}% sotto il benchmark medio.`,
     },
     equo: {
       label: "In Linea",

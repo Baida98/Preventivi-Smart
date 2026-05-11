@@ -146,7 +146,7 @@ export function isValidQuote(quote: unknown): quote is Quote {
   
   // Servizi
   if (!Array.isArray(q.servizi)) return false;
-  if (q.servizi.length === 0) return false;
+  // if (q.servizi.length === 0) return false; // Permettiamo preventivi vuoti in fase di bozza
   
   return true;
 }

@@ -66,8 +66,28 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
   const [notes, setNotes] = useState<string>("");
   const [showPdfUpload, setShowPdfUpload] = useState(false);
 
-  // Session persistence (only for internal navigation)
-  // We remove the initial load from localStorage to ensure we always start from step 1
+  // FIX #3: AUTOSAVE & RECOVERY LOGIC
+  useEffect(() => {
+    const saved = localStorage.getItem(`wizard_autosave_${mode}`);
+    if (saved) {
+      try {
+        const data = JSON.parse(saved);
+        setCategoryId(data.categoryId || "");
+        setJobId(data.jobId || null);
+        setRegionId(data.regionId || "");
+        setQuantity(data.quantity || "");
+        setFieldValues(data.fieldValues || {});
+        setPrice(data.price || "");
+        setNotes(data.notes || "");
+        if (data.step > 1) setStep(data.step);
+        
+        toast.info("Abbiamo ripristinato i dati della tua ultima sessione.");
+      } catch (e) {
+        console.error("Failed to restore wizard data", e);
+      }
+    }
+  }, [mode]);
+
   useEffect(() => {
     const data = {
       categoryId,
@@ -79,16 +99,8 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
       notes,
       step,
     };
-    localStorage.setItem(`wizard_data_${mode}`, JSON.stringify(data));
+    localStorage.setItem(`wizard_autosave_${mode}`, JSON.stringify(data));
   }, [categoryId, jobId, regionId, quantity, fieldValues, price, notes, step, mode]);
-
-  // Clean up storage on unmount (when closing the wizard)
-  useEffect(() => {
-    return () => {
-      localStorage.removeItem(`wizard_data_${mode}`);
-    };
-  }, [mode]);
-
 
   // Pre-fill last used region and category from smart memory
   useEffect(() => {
@@ -98,6 +110,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
     if (lastCategory && !categoryId && !presetCategoryId) setCategoryId(lastCategory as string);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   const [loading, setLoading] = useState(false);
   const [analysis, setAnalysis] = useState<MarketAnalysis | null>(null);
   const [verdict, setVerdict] = useState<Verdict | null>(null);
@@ -127,7 +140,6 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
   const runAnalysis = async () => {
     if (!job || !regionId || !quantity) return;
 
-    // Livello 1 & 2 Validation
     const validation = validateWizardData({
       categoryId,
       jobId,
@@ -166,6 +178,8 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
       }
 
       setStep(4);
+      // Pulisci l'autosave al completamento con successo
+      localStorage.removeItem(`wizard_autosave_${mode}`);
     } catch (err) {
       console.error("Analysis error:", err);
       toast.error("Errore durante l'analisi");
@@ -251,7 +265,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
           setAnalysis(null);
           setVerdict(null);
           setSavedThisRun(false);
-          localStorage.removeItem(`wizard_data_${mode}`);
+          localStorage.removeItem(`wizard_autosave_${mode}`);
         }}
         onEdit={() => setStep(2)}
       />
@@ -294,7 +308,6 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
         </div>
 
         <div className="overflow-y-auto flex-1 p-5 sm:p-8 space-y-6 sm:space-y-8">
-          {/* Step 1: Category Selection */}
           {step === 1 && (
             <motion.div
               key="step1"
@@ -303,45 +316,39 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div>
-                <h2 className="text-3xl font-black tracking-tightest">Seleziona Categoria</h2>
-                <p className="text-muted-foreground mt-2 font-medium">
-                  Scegli il tipo di lavoro che desideri analizzare.
-                </p>
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight">Cosa vuoi analizzare?</h2>
+                <p className="text-muted-foreground">Seleziona la categoria del lavoro per iniziare.</p>
               </div>
-
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4">
-                {CATEGORIES.map((cat) => {
-                  const Icon = cat.Icon;
-                  return (
-                    <motion.button
-                      key={cat.id}
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => {
-                        setCategoryId(cat.id);
-                        smartMemory.remember(MEMORY_KEYS.LAST_CATEGORY, cat.id);
-                        setJobId(null);
-                        setFieldValues({});
-                        setStep(2);
-                      }}
-                      className={cn(
-                        "p-4 rounded-[1.5rem] border-2 transition-all text-center space-y-2",
-                        categoryId === cat.id
-                          ? "border-primary bg-primary/10"
-                          : "border-border/30 bg-card/40 hover:border-primary/50"
-                      )}
-                    >
-                      <Icon className="w-6 h-6 mx-auto text-primary" />
-                      <div className="text-xs font-black uppercase tracking-widest">{cat.label}</div>
-                    </motion.button>
-                  );
-                })}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                {CATEGORIES.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setCategoryId(cat.id);
+                      setJobId(null);
+                      setStep(2);
+                    }}
+                    className={cn(
+                      "flex items-center gap-4 p-4 rounded-2xl border transition-all text-left group",
+                      categoryId === cat.id
+                        ? "bg-primary/10 border-primary text-primary"
+                        : "bg-card border-border/40 hover:border-primary/50 hover:bg-primary/5"
+                    )}
+                  >
+                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
+                      {cat.icon}
+                    </div>
+                    <div>
+                      <div className="font-bold">{cat.label}</div>
+                      <div className="text-xs text-muted-foreground line-clamp-1">{cat.description}</div>
+                    </div>
+                  </button>
+                ))}
               </div>
             </motion.div>
           )}
 
-          {/* Step 2: Job & Region Selection */}
           {step === 2 && category && (
             <motion.div
               key="step2"
@@ -350,157 +357,89 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setStep(1)}
-                  className="rounded-full"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <h2 className="text-2xl font-black tracking-tightest">Configurazione Tecnica</h2>
-              </div>
-              <p className="text-muted-foreground mb-8 font-medium">
-                Parametri tecnici per il calcolo del benchmark di <span className="text-foreground font-bold">{category.label}</span>.
-              </p>
-
-              {/* Job Selection */}
-              <div className="space-y-3">
-                <Label className="text-xs font-black uppercase tracking-widest text-primary">
-                  <Search className="w-4 h-4 inline mr-2" />
-                  Tipo di Lavoro
-                </Label>
-                <Select value={jobId || ""} onValueChange={setJobId}>
-                  <SelectTrigger className="h-12 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary">
-                    <SelectValue placeholder="Seleziona un lavoro..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {category.jobs.map((j) => (
-                      <SelectItem key={j.id} value={j.id}>
-                        {j.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Region Selection */}
-              <div className="space-y-3">
-                <Label className="text-xs font-black uppercase tracking-widest text-primary">
-                  <BarChart3 className="w-4 h-4 inline mr-2" />
-                  Regione
-                </Label>
-                <Select value={regionId} onValueChange={(val) => { setRegionId(val); smartMemory.remember(MEMORY_KEYS.LAST_REGION, val); }}>
-                  <SelectTrigger className="h-12 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary">
-                    <SelectValue placeholder="Seleziona una regione..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {REGIONS.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Quantity Input */}
-              {job && (
-                <div className="space-y-3">
-                  <Label className="text-xs font-black uppercase tracking-widest text-primary">
-                    Quantità ({job.unitLabel})
-                  </Label>
-                  <Input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="h-12 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary"
-                    placeholder={`Es. ${job.defaultQty}`}
-                    min="0"
-                    step="0.1"
-                  />
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-primary">
+                  <span className="text-xl">{category.icon}</span>
+                  <span className="font-bold">{category.label}</span>
                 </div>
-              )}
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight">Dettagli del lavoro</h2>
+              </div>
 
+              <div className="space-y-5">
+                <div className="space-y-2">
+                  <Label>Tipo di intervento</Label>
+                  <Select value={jobId || ""} onValueChange={setJobId}>
+                    <SelectTrigger className="h-12 rounded-xl">
+                      <SelectValue placeholder="Seleziona lavoro specifico..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {category.jobs.map((j) => (
+                        <SelectItem key={j.id} value={j.id}>
+                          {j.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-
-              {/* Field Options */}
-              {job && (
-                <div className="space-y-4">
-                  {job.fields.map((field) => (
-                    <div key={field.id} className="space-y-3">
-                      <Label className="text-xs font-black uppercase tracking-widest text-primary">
-                        {field.label}
-                      </Label>
-                      <Select
-                        value={fieldValues[field.id] || ""}
-                        onValueChange={(val) =>
-                          setFieldValues((prev) => ({ ...prev, [field.id]: val }))
-                        }
-                      >
-                        <SelectTrigger className="h-12 rounded-2xl bg-primary/5 border-primary/30 focus:border-primary">
-                          <SelectValue placeholder={`Seleziona ${field.label.toLowerCase()}...`} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {field.options.map((opt) => (
-                            <SelectItem key={opt.value} value={opt.value}>
-                              {opt.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                {job && (
+                  <>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Regione</Label>
+                        <Select value={regionId} onValueChange={setRegionId}>
+                          <SelectTrigger className="h-12 rounded-xl">
+                            <SelectValue placeholder="Seleziona regione..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {REGIONS.map((r) => (
+                              <SelectItem key={r.id} value={r.id}>
+                                {r.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Quantità ({job.unitLabel})</Label>
+                        <Input
+                          type="number"
+                          placeholder={`Es: ${job.unitLabel === "mq" ? "50" : "1"}`}
+                          value={quantity}
+                          onChange={(e) => setQuantity(e.target.value)}
+                          className="h-12 rounded-xl"
+                        />
+                      </div>
                     </div>
-                  ))}
-                </div>
-              )}
 
-              {/* Notes */}
-              <div className="space-y-3">
-                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground">
-                  <Lightbulb className="w-4 h-4 inline mr-2" />
-                  Note Aggiuntive (Opzionale)
-                </Label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full h-20 p-4 rounded-2xl bg-white/5 border border-border/30 focus:border-primary focus:ring-primary/20 transition-all resize-none text-sm font-medium placeholder:text-muted-foreground/30"
-                  placeholder="Es. Urgente, Rame, Rifacimento..."
-                />
-              </div>
-
-              {jobId && ["muratura", "imbiancatura-standard", "posa-piastrelle"].includes(jobId) && quantityNum > 0 && quantityNum < 2 && (
-                <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/30 mt-6">
-                  <div className="flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                    <p className="text-sm text-destructive font-medium">La quantità minima per questo lavoro è 2 {job?.unitLabel}.</p>
-                  </div>
-                </div>
-              )}
-
-              <div className="mt-6 pt-6 border-t border-border/30 flex flex-col-reverse sm:flex-row justify-between items-center gap-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => setStep(1)}
-                  className="w-full sm:w-auto rounded-xl text-muted-foreground hover:text-foreground"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Indietro
-                </Button>
-                <Button
-                  size="lg"
-                  disabled={!canStep2Next}
-                  onClick={() => setStep(3)}
-                  className="w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-10 rounded-2xl font-black text-sm sm:text-base shadow-lg transition-all hover:scale-105 active:scale-95 bg-primary hover:bg-primary/90 shadow-primary/20"
-                >
-                  Continua
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
+                    {job.fields.map((field) => (
+                      <div key={field.id} className="space-y-2">
+                        <Label>{field.label}</Label>
+                        <Select
+                          value={fieldValues[field.id] || ""}
+                          onValueChange={(val) =>
+                            setFieldValues((prev) => ({ ...prev, [field.id]: val }))
+                          }
+                        >
+                          <SelectTrigger className="h-12 rounded-xl">
+                            <SelectValue placeholder={`Seleziona ${field.label.toLowerCase()}...`} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {field.options.map((opt) => (
+                              <SelectItem key={opt.value} value={opt.value}>
+                                {opt.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    ))}
+                  </>
+                )}
               </div>
             </motion.div>
           )}
 
-          {/* Step 3: Price Input */}
           {step === 3 && (
             <motion.div
               key="step3"
@@ -509,167 +448,117 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
               exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div className="flex items-center gap-4 mb-6">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setStep(2)}
-                  className="rounded-full"
-                >
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-                <h2 className="text-2xl font-black tracking-tightest">Dati Economici</h2>
+              <div className="space-y-2">
+                <h2 className="text-2xl sm:text-3xl font-black tracking-tight">
+                  {mode === "analizza" ? "Prezzo del preventivo" : "Note aggiuntive"}
+                </h2>
+                <p className="text-muted-foreground">
+                  {mode === "analizza" 
+                    ? "Inserisci il totale del preventivo ricevuto per confrontarlo con i prezzi di mercato."
+                    : "Aggiungi dettagli extra per affinare la stima (es. difficoltà accesso, urgenza)."}
+                </p>
               </div>
-              <p className="text-muted-foreground mb-8 font-medium">
-                {mode === "analizza" 
-                  ? "Inserisci l'importo del preventivo ricevuto tramite PDF o manualmente."
-                  : "Conferma i parametri per il calcolo della stima."}
-              </p>
 
-              {mode === "analizza" ? (
-                <div className="space-y-6 flex flex-col items-center w-full">
-                  {/* Manual Price Input Card */}
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="w-full max-w-md rounded-[2.5rem] border border-primary/30 bg-gradient-to-br from-primary/10 to-primary/5 p-8 space-y-6 shadow-lg shadow-primary/10"
-                  >
-                    <div className="text-center space-y-2">
-                      <div className="flex justify-center">
-                        <div className="w-14 h-14 rounded-2xl bg-primary/20 flex items-center justify-center">
-                          <Euro className="w-7 h-7 text-primary" />
-                        </div>
+              <div className="space-y-6">
+                {mode === "analizza" && (
+                  <div className="space-y-4">
+                    <div className="relative group">
+                      <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                        <Euro className="w-6 h-6" />
                       </div>
-                      <h3 className="text-lg font-black text-foreground">Importo del Preventivo</h3>
-                      <p className="text-xs text-muted-foreground font-medium">Inserisci l'importo ricevuto</p>
-                    </div>
-                    <div className="relative">
                       <Input
                         type="number"
+                        placeholder="0,00"
                         value={price}
                         onChange={(e) => setPrice(e.target.value)}
-                        className="h-16 rounded-2xl bg-background/40 border-primary/50 focus:border-primary focus:ring-primary/30 transition-all text-2xl font-black text-center pr-12 placeholder:text-muted-foreground/30"
-                        placeholder="0,00"
+                        className="h-20 pl-12 text-3xl font-black rounded-3xl border-2 focus:border-primary transition-all"
                       />
-                      <div className="absolute right-5 top-1/2 -translate-y-1/2 text-2xl font-black text-primary/60">
-                        €
-                      </div>
                     </div>
-                  </motion.div>
-
-                  {/* AI Price Hint */}
-                  {job && regionLabel && (
-                    <AIPriceHint
-                      price={Number(price) || 0}
-                      jobLabel={job.label}
-                      regionLabel={regionLabel}
-                      quantity={Number(quantity) || 1}
-                      unitLabel={job.unitLabel}
-                    />
-                  )}
-
-                  {/* Divider */}
-                  <div className="w-full max-w-md flex items-center gap-4">
-                    <div className="flex-1 h-px bg-border/30" />
-                    <span className="text-xs font-black uppercase tracking-widest text-muted-foreground/60 px-2">Oppure</span>
-                    <div className="flex-1 h-px bg-border/30" />
-                  </div>
-
-                  {/* PDF Upload Section */}
-                  <div className="w-full max-w-md space-y-3">
-                    <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1 flex items-center justify-center gap-2">
-                      <FileUp className="w-4 h-4" />
-                      Estrai da PDF o Scansione
-                    </Label>
-                    <AnimatePresence mode="wait">
-                      {!showPdfUpload ? (
-                        <motion.div
-                          key="upload-trigger"
-                          initial={{ opacity: 0, y: 10 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -10 }}
-                        >
-                          <Button
-                            type="button"
-                            variant="outline"
-                            onClick={() => setShowPdfUpload(true)}
-                            className="w-full h-14 rounded-2xl border-dashed border-primary/30 bg-primary/5 hover:bg-primary/10 hover:border-primary/50 transition-all gap-2 text-sm font-black uppercase tracking-widest text-primary"
-                          >
-                            <FileUp className="w-5 h-5" />
-                            Carica PDF o Scansione
-                          </Button>
-                        </motion.div>
-                      ) : (
-                        <motion.div
-                          key="upload-zone"
-                          initial={{ opacity: 0, scale: 0.95 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          exit={{ opacity: 0, scale: 0.95 }}
-                        >
-                          <PdfUploadZone
-                            onPriceDetected={handlePdfPriceDetected}
-                            onDismiss={() => setShowPdfUpload(false)}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="p-6 rounded-2xl bg-accent/5 border border-accent/10">
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-accent/10 flex items-center justify-center shrink-0">
-                        <Calculator className="w-6 h-6 text-accent" />
-                      </div>
-                      <div>
-                        <h4 className="font-black text-foreground mb-1">Modalità Stima</h4>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          Il sistema calcolerà automaticamente la stima di prezzo in base ai parametri tecnici inseriti e ai dati di mercato ISTAT 2026.
-                        </p>
-                      </div>
+                    
+                    <div className="flex items-center gap-2 p-4 rounded-2xl bg-primary/5 border border-primary/20">
+                      <Lightbulb className="w-5 h-5 text-primary shrink-0" />
+                      <p className="text-sm">
+                        Puoi anche caricare il PDF per estrarre i dati automaticamente.
+                      </p>
                     </div>
-                  </div>
-                </div>
-              )}
 
-              <div className="mt-6 pt-6 border-t border-border/30 flex flex-col-reverse sm:flex-row justify-between items-center gap-3">
-                <Button
-                  variant="ghost"
-                  onClick={() => setStep(2)}
-                  className="w-full sm:w-auto rounded-xl text-muted-foreground hover:text-foreground"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Indietro
-                </Button>
-                <Button
-                  size="lg"
-                  disabled={!canStep3Next || loading}
-                  onClick={runAnalysis}
-                  className={cn(
-                    "w-full sm:w-auto h-12 sm:h-14 px-6 sm:px-10 rounded-2xl font-black text-sm sm:text-base shadow-lg transition-all hover:scale-105 active:scale-95",
-                    mode === "analizza" 
-                      ? "bg-primary hover:bg-primary/90 shadow-primary/20" 
-                      : "bg-accent hover:bg-accent/90 shadow-accent/20"
-                  )}
-                >
-                  {loading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Analizzando...
-                    </>
-                  ) : (
-                    <>
-                      Analizza
-                      <ChevronRight className="w-5 h-5 ml-2" />
-                    </>
-                  )}
-                </Button>
+                    <Button
+                      variant="outline"
+                      className="w-full h-14 rounded-2xl border-dashed gap-2"
+                      onClick={() => setShowPdfUpload(true)}
+                    >
+                      <FileUp className="w-5 h-5" />
+                      Carica PDF Preventivo
+                    </Button>
+                  </div>
+                )}
+
+                <div className="space-y-2">
+                  <Label>Note o dettagli particolari (opzionale)</Label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Esempio: lavori in centro storico, accesso difficile, materiali di pregio..."
+                    className="w-full min-h-[120px] p-4 rounded-2xl bg-background border border-input focus:ring-2 focus:ring-primary outline-none transition-all resize-none"
+                  />
+                </div>
               </div>
             </motion.div>
           )}
         </div>
+
+        <div className="sticky bottom-0 z-10 bg-background/95 backdrop-blur-md border-t border-border/30 px-5 sm:px-8 py-4 sm:py-6 flex items-center justify-between gap-4 flex-shrink-0">
+          {step > 1 ? (
+            <Button
+              variant="ghost"
+              onClick={() => setStep(step - 1)}
+              className="h-12 px-6 rounded-xl gap-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Indietro
+            </Button>
+          ) : (
+            <div />
+          )}
+
+          <Button
+            onClick={step === 3 ? runAnalysis : () => setStep(step + 1)}
+            disabled={
+              (step === 1 && !categoryId) ||
+              (step === 2 && !canStep2Next) ||
+              (step === 3 && !canStep3Next) ||
+              loading
+            }
+            className="h-12 px-8 rounded-xl font-bold gap-2 min-w-[140px] shadow-lg shadow-primary/20"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Analisi in corso...
+              </>
+            ) : step === 3 ? (
+              <>
+                {mode === "analizza" ? "Analizza Ora" : "Genera Stima"}
+                <Zap className="w-4 h-4 fill-current" />
+              </>
+            ) : (
+              <>
+                Avanti
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
+          </Button>
+        </div>
       </motion.div>
+
+      <AnimatePresence>
+        {showPdfUpload && (
+          <PdfUploadZone
+            onClose={() => setShowPdfUpload(false)}
+            onPriceDetected={handlePdfPriceDetected}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
