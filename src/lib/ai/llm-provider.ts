@@ -32,6 +32,7 @@ export const llmKeys = {
   getToken: (p: Provider): string => localStorage.getItem(STORAGE_KEY_PREFIX + p) ?? "",
   setToken: (p: Provider, token: string): void => localStorage.setItem(STORAGE_KEY_PREFIX + p, token),
   hasAnyToken: (): boolean => Object.values(PROVIDERS).some(p => !!llmKeys.getToken(p)),
+  hasToken: (): boolean => Object.values(PROVIDERS).some(p => !!llmKeys.getToken(p)),
   getAllTokens: () => {
     const tokens: Record<string, string> = {};
     Object.values(PROVIDERS).forEach(p => {
