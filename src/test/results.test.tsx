@@ -21,6 +21,45 @@
   import { CATEGORIES, calculateMarketAnalysis, type MarketAnalysis } from "@/lib/pricing";
 
   // Mock recharts per evitare errori nel jsdom environment
+  // Mock componenti AI per evitare errori di import/fetch in jsdom
+  vi.mock("@/components/AIInsightCard", () => ({ default: () => null }));
+  vi.mock("@/components/AIChat", () => ({ default: () => null }));
+  vi.mock("@/components/AISetup", () => ({ default: () => null }));
+  vi.mock("@/components/AIReport", () => ({ default: () => null }));
+  vi.mock("@/components/AIMultiCompare", () => ({ default: () => null }));
+  vi.mock("@/components/AIAlertPanel", () => ({ default: () => null }));
+  vi.mock("@/components/AISeasonalCard", () => ({ default: () => null }));
+  vi.mock("@/components/AIContractGenerator", () => ({ default: () => null }));
+  vi.mock("@/components/AINegotiationCard", () => ({ default: () => null }));
+  vi.mock("@/components/AIVendorScore", () => ({ default: () => null }));
+  vi.mock("@/components/AIQuoteSummaryCard", () => ({ default: () => null }));
+  vi.mock("@/components/AIBidComparator", () => ({ default: () => null }));
+  vi.mock("@/lib/ai/bid-comparator", () => ({ compareBids: async () => null }));
+  vi.mock("@/components/AIHistoryChart", () => ({ default: () => null }));
+  vi.mock("@/components/AIScoreBoard", () => ({ default: () => null }));
+  vi.mock("@/components/AIPaymentPlan", () => ({ default: () => null }));
+  vi.mock("@/lib/ai/score-history", () => ({
+    recordAnalysis: () => {},
+    getHistory: () => [],
+    getHistoryForCategory: () => [],
+    getSummaryStats: () => ({ count: 0, avgPctFromMid: 0, verdictCounts: {}, trend: null }),
+  }));
+  vi.mock("@/lib/ai/payment-schedule", () => ({ generatePaymentSchedule: async () => null }));
+  vi.mock("@/lib/ai/quote-summary", () => ({ generateQuoteSummary: async () => null }));
+  vi.mock("@/lib/ai/vendor-scorer", () => ({ scoreVendor: async () => null }));
+  vi.mock("@/lib/ai/seasonal-advisor", () => ({ getSeasonalAdvice: async () => null }));
+  vi.mock("@/lib/ai/alert-engine", () => ({ scanForAlerts: async () => ({ alerts: [], trustScore: 100 }) }));
+  vi.mock("@/lib/ai/negotiation-tips", () => ({ getNegotiationAdvice: async () => null }));
+  vi.mock("@/lib/ai/contract-template", () => ({ generateContractTemplate: async () => null, formatContractAsText: () => "" }));
+  vi.mock("@/lib/ai/llm-provider", () => ({
+    llmKeys: { hasToken: () => false, getToken: () => null },
+    callLLM: async () => "{}"
+  }));
+  vi.mock("@/lib/ai/smart-memory", () => ({
+    smartMemory: { remember: () => {}, recall: () => null, appendToList: () => {} },
+    MEMORY_KEYS: { LAST_VERDICT: "lastVerdict", AI_TOKEN_CONFIGURED: "aiTokenConfigured" },
+  }));
+
   vi.mock("recharts", () => ({
     ResponsiveContainer: ({ children }: any) => <div>{children}</div>,
     BarChart: ({ children }: any) => <div>{children}</div>,
