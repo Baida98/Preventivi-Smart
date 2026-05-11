@@ -1,68 +1,45 @@
 /**
- * LLM Provider — Multi-Provider Router
- * Supporta HuggingFace, Groq, OpenRouter e Google Gemini.
+ * LLM Provider — Intelligent Auto-Fallback Router
+ * Tenta i provider in ordine di potenza e disponibilità.
  */
 
 export const PROVIDERS = {
-  HF: "huggingface",
+  GEMINI: "gemini",
   GROQ: "groq",
   OPENROUTER: "openrouter",
-  GEMINI: "gemini",
+  HF: "huggingface",
 } as const;
 
 export type Provider = typeof PROVIDERS[keyof typeof PROVIDERS];
 
 const ENDPOINTS = {
-  [PROVIDERS.HF]: "https://router.huggingface.co/v1/chat/completions",
+  [PROVIDERS.GEMINI]: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
   [PROVIDERS.GROQ]: "https://api.groq.com/openai/v1/chat/completions",
   [PROVIDERS.OPENROUTER]: "https://openrouter.ai/api/v1/chat/completions",
-  [PROVIDERS.GEMINI]: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+  [PROVIDERS.HF]: "https://router.huggingface.co/v1/chat/completions",
 };
 
 export const MODELS = {
-  [PROVIDERS.HF]: {
-    smart: "Qwen/Qwen2.5-72B-Instruct",
-    fast: "mistralai/Mistral-Nemo-Instruct-2407",
-    deep: "meta-llama/Llama-3.3-70B-Instruct",
-  },
-  [PROVIDERS.GROQ]: {
-    smart: "llama-3.3-70b-versatile",
-    fast: "llama-3.1-8b-instant",
-    deep: "deepseek-r1-distill-llama-70b",
-  },
-  [PROVIDERS.OPENROUTER]: {
-    smart: "google/gemini-2.0-flash-001",
-    fast: "meta-llama/llama-3.3-70b-instruct",
-    deep: "deepseek/deepseek-r1",
-  },
-  [PROVIDERS.GEMINI]: {
-    smart: "gemini-2.0-flash",
-    fast: "gemini-2.0-flash-lite",
-    deep: "gemini-1.5-pro",
-  },
+  [PROVIDERS.GEMINI]: { smart: "gemini-2.0-flash", fast: "gemini-2.0-flash-lite" },
+  [PROVIDERS.GROQ]: { smart: "llama-3.3-70b-versatile", fast: "llama-3.1-8b-instant" },
+  [PROVIDERS.OPENROUTER]: { smart: "google/gemini-2.0-flash-001", fast: "meta-llama/llama-3.3-70b-instruct" },
+  [PROVIDERS.HF]: { smart: "Qwen/Qwen2.5-72B-Instruct", fast: "mistralai/Mistral-Nemo-Instruct-2407" },
 };
 
-const STORAGE_KEYS = {
-  TOKEN: "preventivi_ai_token",
-  PROVIDER: "preventivi_ai_provider",
-};
+const STORAGE_KEY_PREFIX = "preventivi_ai_token_";
 
 export const llmKeys = {
-  getToken: (): string => {
-    return localStorage.getItem(STORAGE_KEYS.TOKEN) ?? "";
-  },
-  getProvider: (): Provider => {
-    return (localStorage.getItem(STORAGE_KEYS.PROVIDER) as Provider) ?? PROVIDERS.HF;
-  },
-  setCredentials: (token: string, provider: Provider): void => {
-    localStorage.setItem(STORAGE_KEYS.TOKEN, token);
-    localStorage.setItem(STORAGE_KEYS.PROVIDER, provider);
-  },
-  hasToken: (): boolean => !!llmKeys.getToken(),
-  clear: (): void => {
-    localStorage.removeItem(STORAGE_KEYS.TOKEN);
-    localStorage.removeItem(STORAGE_KEYS.PROVIDER);
-  },
+  getToken: (p: Provider): string => localStorage.getItem(STORAGE_KEY_PREFIX + p) ?? "",
+  setToken: (p: Provider, token: string): void => localStorage.setItem(STORAGE_KEY_PREFIX + p, token),
+  hasAnyToken: (): boolean => Object.values(PROVIDERS).some(p => !!llmKeys.getToken(p)),
+  getAllTokens: () => {
+    const tokens: Record<string, string> = {};
+    Object.values(PROVIDERS).forEach(p => {
+      const t = llmKeys.getToken(p);
+      if (t) tokens[p] = t;
+    });
+    return tokens;
+  }
 };
 
 export interface LLMMessage {
@@ -70,114 +47,113 @@ export interface LLMMessage {
   content: string;
 }
 
-export interface LLMOptions {
-  model?: string;
-  temperature?: number;
-  maxTokens?: number;
-  jsonMode?: boolean;
-}
-
+/**
+ * Chiama LLM con sistema di fallback automatico.
+ * Tenta i provider in ordine: Gemini -> Groq -> OpenRouter -> HF
+ */
 export async function callLLM(
   messages: LLMMessage[],
-  options: LLMOptions = {}
+  options: { model?: string; temperature?: number; jsonMode?: boolean } = {}
 ): Promise<string> {
-  const token = llmKeys.getToken();
-  const provider = llmKeys.getProvider();
+  const tokens = llmKeys.getAllTokens();
+  const order: Provider[] = [PROVIDERS.GEMINI, PROVIDERS.GROQ, PROVIDERS.OPENROUTER, PROVIDERS.HF];
   
-  if (!token) throw new Error("AI non configurata. Inserisci una chiave API nel setup.");
+  let lastError = "Nessuna chiave API configurata.";
 
-  const providerModels = MODELS[provider] || MODELS[PROVIDERS.HF];
-  const model = options.model || providerModels.smart;
+  for (const provider of order) {
+    const token = tokens[provider];
+    if (!token) continue;
 
-  const body: Record<string, unknown> = {
-    model,
-    messages,
-    temperature: options.temperature ?? 0.2,
-    max_tokens: options.maxTokens ?? 2048,
-    stream: false,
-  };
+    try {
+      const model = options.model || MODELS[provider].smart;
+      const body: any = {
+        model,
+        messages,
+        temperature: options.temperature ?? 0.2,
+        stream: false,
+      };
 
-  if (options.jsonMode && provider !== PROVIDERS.HF) {
-    body.response_format = { type: "json_object" };
-  }
-
-  const response = await fetch(ENDPOINTS[provider], {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(provider === PROVIDERS.OPENROUTER ? {
-        "HTTP-Referer": window.location.origin,
-        "X-Title": "Preventivi Smart",
-      } : {}),
-    },
-    body: JSON.stringify(body),
-  });
-
-  if (!response.ok) {
-    const errData = await response.json().catch(() => ({ error: { message: "Errore sconosciuto" } }));
-    throw new Error(errData.error?.message || `Errore ${response.status}`);
-  }
-
-  const data = await response.json();
-  return data.choices[0]?.message?.content ?? "";
-}
-
-export async function streamLLM(
-  messages: LLMMessage[],
-  onChunk: (chunk: string) => void,
-  options: LLMOptions = {}
-): Promise<string> {
-  const token = llmKeys.getToken();
-  const provider = llmKeys.getProvider();
-
-  if (!token) throw new Error("AI non configurata.");
-
-  const providerModels = MODELS[provider] || MODELS[PROVIDERS.HF];
-  const model = options.model || providerModels.fast;
-
-  const response = await fetch(ENDPOINTS[provider], {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages,
-      temperature: options.temperature ?? 0.5,
-      max_tokens: options.maxTokens ?? 1500,
-      stream: true,
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Errore streaming ${response.status}`);
-  }
-
-  if (!response.body) throw new Error("Nessun body nella risposta.");
-
-  const reader = response.body.getReader();
-  const decoder = new TextDecoder();
-  let fullContent = "";
-
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const chunk = decoder.decode(value, { stream: true });
-    for (const line of chunk.split("\n")) {
-      if (line.startsWith("data: ") && line !== "data: [DONE]") {
-        try {
-          const data = JSON.parse(line.slice(6));
-          const content = data.choices[0]?.delta?.content ?? "";
-          if (content) {
-            fullContent += content;
-            onChunk(content);
-          }
-        } catch { /* skip */ }
+      if (options.jsonMode && provider !== PROVIDERS.HF) {
+        body.response_format = { type: "json_object" };
       }
+
+      const response = await fetch(ENDPOINTS[provider], {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          ...(provider === PROVIDERS.OPENROUTER ? { "HTTP-Referer": window.location.origin, "X-Title": "Preventivi Smart" } : {}),
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        throw new Error(err.error?.message || `Status ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices[0]?.message?.content ?? "";
+    } catch (e: any) {
+      console.warn(`Fallback: ${provider} fallito, provo il prossimo...`, e.message);
+      lastError = `${provider}: ${e.message}`;
     }
   }
 
-  return fullContent;
+  throw new Error(`Tutti i provider hanno fallito. Ultimo errore: ${lastError}`);
+}
+
+/**
+ * Streaming con fallback (più complesso, tenta il primo disponibile)
+ */
+export async function streamLLM(
+  messages: LLMMessage[],
+  onChunk: (chunk: string) => void,
+  options: { model?: string; temperature?: number } = {}
+): Promise<string> {
+  const tokens = llmKeys.getAllTokens();
+  const order: Provider[] = [PROVIDERS.GEMINI, PROVIDERS.GROQ, PROVIDERS.OPENROUTER, PROVIDERS.HF];
+
+  for (const provider of order) {
+    const token = tokens[provider];
+    if (!token) continue;
+
+    try {
+      const model = options.model || MODELS[provider].fast;
+      const response = await fetch(ENDPOINTS[provider], {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ model, messages, temperature: options.temperature ?? 0.5, stream: true }),
+      });
+
+      if (!response.ok) throw new Error(`Status ${response.status}`);
+      if (!response.body) throw new Error("No body");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = decoder.decode(value, { stream: true });
+        for (const line of chunk.split("\n")) {
+          if (line.startsWith("data: ") && line !== "data: [DONE]") {
+            try {
+              const data = JSON.parse(line.slice(6));
+              const content = data.choices[0]?.delta?.content ?? "";
+              if (content) {
+                fullContent += content;
+                onChunk(content);
+              }
+            } catch { /* skip */ }
+          }
+        }
+      }
+      return fullContent;
+    } catch (e) {
+      console.warn(`Fallback streaming fallito per ${provider}`);
+    }
+  }
+  throw new Error("Nessun provider disponibile per lo streaming.");
 }
