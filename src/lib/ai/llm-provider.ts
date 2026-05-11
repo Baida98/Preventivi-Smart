@@ -1,12 +1,13 @@
 /**
  * LLM Provider — Multi-Provider Router
- * Supporta HuggingFace, Groq e OpenRouter.
+ * Supporta HuggingFace, Groq, OpenRouter e Google Gemini.
  */
 
 export const PROVIDERS = {
   HF: "huggingface",
   GROQ: "groq",
   OPENROUTER: "openrouter",
+  GEMINI: "gemini",
 } as const;
 
 export type Provider = typeof PROVIDERS[keyof typeof PROVIDERS];
@@ -15,6 +16,7 @@ const ENDPOINTS = {
   [PROVIDERS.HF]: "https://router.huggingface.co/v1/chat/completions",
   [PROVIDERS.GROQ]: "https://api.groq.com/openai/v1/chat/completions",
   [PROVIDERS.OPENROUTER]: "https://openrouter.ai/api/v1/chat/completions",
+  [PROVIDERS.GEMINI]: "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
 };
 
 export const MODELS = {
@@ -32,6 +34,11 @@ export const MODELS = {
     smart: "google/gemini-2.0-flash-001",
     fast: "meta-llama/llama-3.3-70b-instruct",
     deep: "deepseek/deepseek-r1",
+  },
+  [PROVIDERS.GEMINI]: {
+    smart: "gemini-2.0-flash",
+    fast: "gemini-2.0-flash-lite",
+    deep: "gemini-1.5-pro",
   },
 };
 
