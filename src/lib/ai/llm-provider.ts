@@ -1,45 +1,60 @@
 /**
- * LLM Provider — HuggingFace Router (OpenAI-compatible)
- *
- * Adattato dal progetto AI (Baida98/AI) per Preventivi-Smart.
- * Usa il router HF per accedere a modelli top-tier gratuitamente.
- *
- * Modelli disponibili:
- *   smart → Qwen/Qwen2.5-72B-Instruct  (ottimo per italiano strutturato)
- *   fast  → mistralai/Mistral-Nemo-Instruct-2407  (veloce per chat)
- *   deep  → meta-llama/Llama-3.3-70B-Instruct  (deep reasoning)
+ * LLM Provider — Multi-Provider Router
+ * Supporta HuggingFace, Groq e OpenRouter.
  */
 
-const HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions";
-
-export const HF_MODELS = {
-  smart: "Qwen/Qwen2.5-72B-Instruct",
-  fast: "mistralai/Mistral-Nemo-Instruct-2407",
-  deep: "meta-llama/Llama-3.3-70B-Instruct",
+export const PROVIDERS = {
+  HF: "huggingface",
+  GROQ: "groq",
+  OPENROUTER: "openrouter",
 } as const;
 
-const TOKEN_KEY = "preventivi_hf_token";
+export type Provider = typeof PROVIDERS[keyof typeof PROVIDERS];
+
+const ENDPOINTS = {
+  [PROVIDERS.HF]: "https://router.huggingface.co/v1/chat/completions",
+  [PROVIDERS.GROQ]: "https://api.groq.com/openai/v1/chat/completions",
+  [PROVIDERS.OPENROUTER]: "https://openrouter.ai/api/v1/chat/completions",
+};
+
+export const MODELS = {
+  [PROVIDERS.HF]: {
+    smart: "Qwen/Qwen2.5-72B-Instruct",
+    fast: "mistralai/Mistral-Nemo-Instruct-2407",
+    deep: "meta-llama/Llama-3.3-70B-Instruct",
+  },
+  [PROVIDERS.GROQ]: {
+    smart: "llama-3.3-70b-versatile",
+    fast: "llama-3.1-8b-instant",
+    deep: "deepseek-r1-distill-llama-70b",
+  },
+  [PROVIDERS.OPENROUTER]: {
+    smart: "google/gemini-2.0-flash-001",
+    fast: "meta-llama/llama-3.3-70b-instruct",
+    deep: "deepseek/deepseek-r1",
+  },
+};
+
+const STORAGE_KEYS = {
+  TOKEN: "preventivi_ai_token",
+  PROVIDER: "preventivi_ai_provider",
+};
 
 export const llmKeys = {
   getToken: (): string => {
-    const envToken = import.meta.env.VITE_HF_TOKEN as string | undefined;
-    if (envToken) return envToken;
-    try {
-      return localStorage.getItem(TOKEN_KEY) ?? "";
-    } catch {
-      return "";
-    }
+    return localStorage.getItem(STORAGE_KEYS.TOKEN) ?? "";
   },
-  setToken: (token: string): void => {
-    try {
-      localStorage.setItem(TOKEN_KEY, token);
-    } catch { /* ignore */ }
+  getProvider: (): Provider => {
+    return (localStorage.getItem(STORAGE_KEYS.PROVIDER) as Provider) ?? PROVIDERS.HF;
+  },
+  setCredentials: (token: string, provider: Provider): void => {
+    localStorage.setItem(STORAGE_KEYS.TOKEN, token);
+    localStorage.setItem(STORAGE_KEYS.PROVIDER, provider);
   },
   hasToken: (): boolean => !!llmKeys.getToken(),
-  clearToken: (): void => {
-    try {
-      localStorage.removeItem(TOKEN_KEY);
-    } catch { /* ignore */ }
+  clear: (): void => {
+    localStorage.removeItem(STORAGE_KEYS.TOKEN);
+    localStorage.removeItem(STORAGE_KEYS.PROVIDER);
   },
 };
 
@@ -49,26 +64,23 @@ export interface LLMMessage {
 }
 
 export interface LLMOptions {
-  model?: keyof typeof HF_MODELS | string;
+  model?: string;
   temperature?: number;
   maxTokens?: number;
   jsonMode?: boolean;
 }
 
-/**
- * Chiama LLM e ritorna risposta completa (non-streaming).
- */
 export async function callLLM(
   messages: LLMMessage[],
   options: LLMOptions = {}
 ): Promise<string> {
   const token = llmKeys.getToken();
-  if (!token) throw new Error("Token HuggingFace non configurato.");
+  const provider = llmKeys.getProvider();
+  
+  if (!token) throw new Error("AI non configurata. Inserisci una chiave API nel setup.");
 
-  const model =
-    options.model && options.model in HF_MODELS
-      ? HF_MODELS[options.model as keyof typeof HF_MODELS]
-      : (options.model ?? HF_MODELS.smart);
+  const providerModels = MODELS[provider] || MODELS[PROVIDERS.HF];
+  const model = options.model || providerModels.smart;
 
   const body: Record<string, unknown> = {
     model,
@@ -78,47 +90,46 @@ export async function callLLM(
     stream: false,
   };
 
-  if (options.jsonMode) {
+  if (options.jsonMode && provider !== PROVIDERS.HF) {
     body.response_format = { type: "json_object" };
   }
 
-  const response = await fetch(HF_ROUTER_URL, {
+  const response = await fetch(ENDPOINTS[provider], {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
+      ...(provider === PROVIDERS.OPENROUTER ? {
+        "HTTP-Referer": window.location.origin,
+        "X-Title": "Preventivi Smart",
+      } : {}),
     },
     body: JSON.stringify(body),
   });
 
   if (!response.ok) {
-    const errText = await response.text().catch(() => "");
-    throw new Error(`LLM Error ${response.status}: ${errText.slice(0, 200)}`);
+    const errData = await response.json().catch(() => ({ error: { message: "Errore sconosciuto" } }));
+    throw new Error(errData.error?.message || `Errore ${response.status}`);
   }
 
-  const data = (await response.json()) as {
-    choices: Array<{ message: { content: string } }>;
-  };
+  const data = await response.json();
   return data.choices[0]?.message?.content ?? "";
 }
 
-/**
- * Chiama LLM in streaming — onChunk viene chiamato per ogni frammento.
- */
 export async function streamLLM(
   messages: LLMMessage[],
   onChunk: (chunk: string) => void,
   options: LLMOptions = {}
 ): Promise<string> {
   const token = llmKeys.getToken();
-  if (!token) throw new Error("Token HuggingFace non configurato.");
+  const provider = llmKeys.getProvider();
 
-  const model =
-    options.model && options.model in HF_MODELS
-      ? HF_MODELS[options.model as keyof typeof HF_MODELS]
-      : (options.model ?? HF_MODELS.fast);
+  if (!token) throw new Error("AI non configurata.");
 
-  const response = await fetch(HF_ROUTER_URL, {
+  const providerModels = MODELS[provider] || MODELS[PROVIDERS.HF];
+  const model = options.model || providerModels.fast;
+
+  const response = await fetch(ENDPOINTS[provider], {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -134,11 +145,10 @@ export async function streamLLM(
   });
 
   if (!response.ok) {
-    const errText = await response.text().catch(() => "");
-    throw new Error(`LLM Error ${response.status}: ${errText.slice(0, 200)}`);
+    throw new Error(`Errore streaming ${response.status}`);
   }
 
-  if (!response.body) throw new Error("Nessun body nella risposta streaming.");
+  if (!response.body) throw new Error("Nessun body nella risposta.");
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
@@ -151,15 +161,13 @@ export async function streamLLM(
     for (const line of chunk.split("\n")) {
       if (line.startsWith("data: ") && line !== "data: [DONE]") {
         try {
-          const data = JSON.parse(line.slice(6)) as {
-            choices: Array<{ delta: { content?: string } }>;
-          };
+          const data = JSON.parse(line.slice(6));
           const content = data.choices[0]?.delta?.content ?? "";
           if (content) {
             fullContent += content;
             onChunk(content);
           }
-        } catch { /* chunk incompleto */ }
+        } catch { /* skip */ }
       }
     }
   }
