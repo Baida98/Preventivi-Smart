@@ -17,6 +17,11 @@ import { toast } from "sonner";
 import { onAuthChange, getCurrentUser, signInWithGoogle, signOutUser } from "./lib/firebase-service";
 import type { User } from "firebase/auth";
 
+// IMPORT AI COMPONENTS
+import AIBanner from "./components/AIBanner";
+import AISetup from "./components/AISetup";
+import { llmKeys } from "./lib/ai/llm-provider";
+
 export default function App() {
   const [mode, setMode] = useState<Mode | null>(null);
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -24,6 +29,8 @@ export default function App() {
   const [archiveTotal, setArchiveTotal] = useState(0);
   const [user, setUser] = useState<User | null>(null);
   const [presetCategoryId, setPresetCategoryId] = useState<string | null>(null);
+  const [aiSetupOpen, setAiSetupOpen] = useState(false);
+  const [hasAIToken, setHasAIToken] = useState(() => llmKeys.hasToken());
   const wizardRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -108,6 +115,12 @@ export default function App() {
             onAnalizza={() => startMode("analizza")}
             onStima={() => startMode("stima")}
           />
+          
+          {/* AI PROMO BANNER */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+            <AIBanner onSetupClick={() => setAiSetupOpen(true)} />
+          </div>
+
           <HowItWorks />
           <Categories
             onPickCategory={(id) => startMode("analizza", id)}
@@ -140,6 +153,17 @@ export default function App() {
         onOpenChange={setArchiveOpen}
         quotes={archive}
         onDelete={handleDelete}
+      />
+
+      {/* AI SETUP DIALOG */}
+      <AISetup
+        open={aiSetupOpen}
+        onClose={() => setAiSetupOpen(false)}
+        onConfigured={() => {
+          setHasAIToken(true);
+          setAiSetupOpen(false);
+          toast.success("AI configurata con successo!");
+        }}
       />
 
       <Toaster richColors theme="dark" position="bottom-right" />
