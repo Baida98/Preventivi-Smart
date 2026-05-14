@@ -20,11 +20,11 @@ const ENDPOINTS = {
 };
 
 export const MODELS = {
-  [PROVIDERS.GEMINI]: { smart: "gemini-2.0-flash", fast: "gemini-2.0-flash-lite" },
-  [PROVIDERS.GROQ]: { smart: "llama-3.3-70b-versatile", fast: "llama-3.1-8b-instant" },
-  [PROVIDERS.OPENROUTER]: { smart: "google/gemini-2.0-flash-001", fast: "meta-llama/llama-3.3-70b-instruct" },
-  [PROVIDERS.HF]: { smart: "Qwen/Qwen2.5-72B-Instruct", fast: "mistralai/Mistral-Nemo-Instruct-2407" },
-};
+  gemini: { smart: "gemini-2.0-flash", fast: "gemini-2.0-flash-lite" },
+  groq: { smart: "llama-3.3-70b-versatile", fast: "llama-3.1-8b-instant" },
+  openrouter: { smart: "google/gemini-2.0-flash-001", fast: "meta-llama/llama-3.3-70b-instruct" },
+  huggingface: { smart: "Qwen/Qwen2.5-72B-Instruct", fast: "mistralai/Mistral-Nemo-Instruct-2407" },
+} as const;
 
 const STORAGE_KEY_PREFIX = "preventivi_ai_token_";
 
@@ -54,7 +54,7 @@ export interface LLMMessage {
  */
 export async function callLLM(
   messages: LLMMessage[],
-  options: { model?: string; temperature?: number; jsonMode?: boolean } = {}
+  options: { model?: string; temperature?: number; jsonMode?: boolean; maxTokens?: number } = {}
 ): Promise<string> {
   const tokens = llmKeys.getAllTokens();
   const order: Provider[] = [PROVIDERS.GEMINI, PROVIDERS.GROQ, PROVIDERS.OPENROUTER, PROVIDERS.HF];
@@ -66,12 +66,13 @@ export async function callLLM(
     if (!token) continue;
 
     try {
-      const model = options.model || MODELS[provider].smart;
+      const model = options.model || (MODELS as any)[provider].smart;
       const body: any = {
         model,
         messages,
         temperature: options.temperature ?? 0.2,
         stream: false,
+        ...(options.maxTokens ? { max_tokens: options.maxTokens } : {}),
       };
 
       if (options.jsonMode && provider !== PROVIDERS.HF) {
@@ -110,7 +111,7 @@ export async function callLLM(
 export async function streamLLM(
   messages: LLMMessage[],
   onChunk: (chunk: string) => void,
-  options: { model?: string; temperature?: number } = {}
+  options: { model?: string; temperature?: number; maxTokens?: number } = {}
 ): Promise<string> {
   const tokens = llmKeys.getAllTokens();
   const order: Provider[] = [PROVIDERS.GEMINI, PROVIDERS.GROQ, PROVIDERS.OPENROUTER, PROVIDERS.HF];
@@ -120,11 +121,17 @@ export async function streamLLM(
     if (!token) continue;
 
     try {
-      const model = options.model || MODELS[provider].fast;
+      const model = options.model || (MODELS as any)[provider].fast;
       const response = await fetch(ENDPOINTS[provider], {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ model, messages, temperature: options.temperature ?? 0.5, stream: true }),
+        body: JSON.stringify({ 
+          model, 
+          messages, 
+          temperature: options.temperature ?? 0.5, 
+          stream: true,
+          ...(options.maxTokens ? { max_tokens: options.maxTokens } : {})
+        }),
       });
 
       if (!response.ok) throw new Error(`Status ${response.status}`);

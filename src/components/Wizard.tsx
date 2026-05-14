@@ -337,11 +337,11 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
                     )}
                   >
                     <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-2xl group-hover:scale-110 transition-transform">
-                      {cat.icon}
+                      <cat.Icon className="h-6 w-6" />
                     </div>
                     <div>
                       <div className="font-bold">{cat.label}</div>
-                      <div className="text-xs text-muted-foreground line-clamp-1">{cat.description}</div>
+                      <div className="text-xs text-muted-foreground line-clamp-1">{cat.blurb}</div>
                     </div>
                   </button>
                 ))}
@@ -359,7 +359,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
             >
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-primary">
-                  <span className="text-xl">{category.icon}</span>
+                  <category.Icon className="h-6 w-6" />
                   <span className="font-bold">{category.label}</span>
                 </div>
                 <h2 className="text-2xl sm:text-3xl font-black tracking-tight">Dettagli del lavoro</h2>
@@ -554,7 +554,7 @@ export default function Wizard({ mode: initialMode, onClose, presetCategoryId }:
       <AnimatePresence>
         {showPdfUpload && (
           <PdfUploadZone
-            onClose={() => setShowPdfUpload(false)}
+            onDismiss={() => setShowPdfUpload(false)}
             onPriceDetected={handlePdfPriceDetected}
           />
         )}

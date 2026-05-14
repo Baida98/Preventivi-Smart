@@ -465,8 +465,9 @@ export default function ResultsView({
 
         {/* AI ALERT PANEL */}
         <AIAlertPanel
-          categoryId={resolvedCategoryId}
-          onNeedSetup={() => setAiSetupOpen(true)}
+          extractedText={documentText}
+          price={price}
+          autoScan={true}
         />
 
         {/* AI HISTORY + SCOREBOARD */}
